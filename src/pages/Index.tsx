@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { CustomOrderCard } from "@/components/CustomOrderCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -328,6 +329,9 @@ export default function Index() {
               <div className="flex items-center gap-3 mb-6">
                 <h2 className="text-xl sm:text-2xl font-semibold font-heading">Popular Restaurants</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin">Admin Panel</Link>
+                </Button>
               </div>
               
               {restaurantsLoading ? (
