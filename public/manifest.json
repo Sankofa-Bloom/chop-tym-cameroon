@@ -1,0 +1,41 @@
+{
+  "name": "ChopTym - Food Delivery in Limbe",
+  "short_name": "ChopTym",
+  "description": "Your favorite meals, right on time. Food delivery in Limbe, Cameroon.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FF6B35",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["food", "delivery", "lifestyle"],
+  "icons": [
+    {
+      "src": "/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Food",
+      "short_name": "Browse",
+      "description": "Browse available dishes and restaurants",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
