@@ -54,21 +54,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  if (!user) {
-    return <AdminAuth onAuthStateChange={() => {}} />;
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Alert className="max-w-md">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Access denied. You need admin privileges to access this area.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
+  if (!user || !isAdmin) {
+    return <AdminAuth />;
   }
 
   return (
@@ -83,8 +70,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <h1 className="text-lg font-semibold">ChopTym Admin</h1>
             </div>
           </header>
-
-          <AdminAuth onAuthStateChange={() => {}} />
           
           <main className="flex-1 overflow-auto p-6">
             {children}

@@ -1,57 +1,93 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useAdminAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw error;
+      }
+
+      setIsAdmin(!!data);
+    } catch (err) {
+      console.error("Error checking admin status:", err);
+      setError("Failed to verify admin permissions");
+      setIsAdmin(false);
+    }
+  };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setUser(session?.user ?? null);
+        
         if (session?.user) {
-          checkAdminRole(session.user.id);
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
-          setLoading(false);
         }
+        
+        setLoading(false);
       }
     );
+
+    // Check current session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await checkAdminStatus(session.user.id);
+      }
+      
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const { data, error } = await supabase
-        .rpc('is_admin', { user_id: userId });
-      
-      if (error) {
-        console.error('Error checking admin role:', error);
-        setIsAdmin(false);
-      } else {
-        setIsAdmin(data || false);
-      }
-    } catch (error) {
-      console.error('Error checking admin role:', error);
-      setIsAdmin(false);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
       setLoading(false);
     }
   };
 
-  return { user, isAdmin, loading };
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsAdmin(false);
+  };
+
+  return {
+    user,
+    isAdmin,
+    loading,
+    error,
+    signIn,
+    signOut
+  };
 };
