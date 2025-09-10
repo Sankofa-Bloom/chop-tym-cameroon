@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CustomOrderCard } from "@/components/CustomOrderCard";
+import { WaitlistSignup } from "@/components/WaitlistSignup";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,7 +51,7 @@ const staggerContainer = {
 };
 
 export default function Index() {
-  const [selectedTown, setSelectedTown] = useState("Douala");
+  const [selectedTown, setSelectedTown] = useState("Limbe");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [appState, setAppState] = useState<AppState>("browsing");
@@ -59,6 +60,8 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("home");
   const [showSearch, setShowSearch] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [waitlistTown, setWaitlistTown] = useState("");
 
   // Fetch data from database
   const { restaurants, loading: restaurantsLoading } = useRestaurants();
@@ -178,6 +181,15 @@ export default function Index() {
     }, 100);
   };
 
+  const handleTownChange = (town: string, isActive: boolean) => {
+    if (isActive) {
+      setSelectedTown(town);
+    } else {
+      setWaitlistTown(town);
+      setShowWaitlist(true);
+    }
+  };
+
   // Filter dishes based on search query
   const filteredDishes = searchQuery 
     ? dishesWithPricing.filter(dish => 
@@ -295,7 +307,10 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <TownSelector selectedTown={selectedTown} onTownChange={setSelectedTown} />
+                <TownSelector 
+                  selectedTown={selectedTown} 
+                  onTownChange={handleTownChange}
+                />
               </motion.div>
               
               {/* Conditional Search Bar */}
@@ -407,6 +422,22 @@ export default function Index() {
                   </motion.div>
                 </CardContent>
               </Card>
+            </motion.section>
+
+            {/* Admin Access */}
+            <motion.section 
+              className="mb-8 sm:mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin/towns">Town Management</Link>
+                </Button>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border" />
+              </div>
             </motion.section>
 
             {/* Featured Dishes */}

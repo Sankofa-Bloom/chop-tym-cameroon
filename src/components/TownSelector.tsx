@@ -1,62 +1,84 @@
-import { MapPin, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, ChevronDown } from "lucide-react";
+import { useTowns } from "@/hooks/useTowns";
 
 interface TownSelectorProps {
   selectedTown: string;
-  onTownChange: (town: string) => void;
+  onTownChange: (town: string, isActive: boolean) => void;
 }
 
-const towns = [
-  { id: "limbe", name: "Limbe", available: true },
-  { id: "douala", name: "Douala", available: false },
-  { id: "yaounde", name: "Yaoundé", available: false },
-  { id: "buea", name: "Buea", available: false },
-];
+export function TownSelector({ selectedTown, onTownChange }: TownSelectorProps) {
+  const { activeTowns, inactiveTowns, loading } = useTowns();
 
-export const TownSelector = ({ selectedTown, onTownChange }: TownSelectorProps) => {
+  if (loading) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-12 bg-muted rounded-lg w-48"></div>
+      </div>
+    );
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="w-full justify-between chop-input hover:bg-primary/5"
+    <Card className="border-2 border-primary/20 bg-card/95 backdrop-blur-sm shadow-lg">
+      <div className="p-3">
+        <Select 
+          value={selectedTown} 
+          onValueChange={(value) => {
+            const town = [...activeTowns, ...inactiveTowns].find(t => t.name === value);
+            if (town) {
+              onTownChange(value, town.is_active);
+            }
+          }}
         >
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="font-medium">Delivering to {selectedTown}</span>
-          </div>
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-full min-w-[300px]">
-        {towns.map((town) => (
-          <DropdownMenuItem
-            key={town.id}
-            onClick={() => town.available && onTownChange(town.name)}
-            className={`flex items-center justify-between ${
-              !town.available ? "opacity-50 cursor-not-allowed" : ""
-            } ${selectedTown === town.name ? "bg-primary/10 text-primary" : ""}`}
-            disabled={!town.available}
-          >
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>{town.name}</span>
+          <SelectTrigger className="border-0 bg-transparent focus:ring-0 focus:ring-offset-0 h-auto p-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-xs text-muted-foreground">Delivering to</div>
+                <SelectValue className="text-sm font-medium text-foreground">
+                  {selectedTown}
+                </SelectValue>
+              </div>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </div>
-            {!town.available && (
-              <span className="text-xs text-muted-foreground">Coming Soon</span>
+          </SelectTrigger>
+          <SelectContent className="max-w-xs">
+            {activeTowns.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Available Now</div>
+                {activeTowns.map((town) => (
+                  <SelectItem key={town.id} value={town.name}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      {town.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </>
             )}
-            {selectedTown === town.name && (
-              <span className="text-xs text-primary font-medium">Selected</span>
+            
+            {inactiveTowns.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground mt-2">Coming Soon</div>
+                {inactiveTowns.map((town) => (
+                  <SelectItem key={town.id} value={town.name}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span>{town.name}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">Soon</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </>
             )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </SelectContent>
+        </Select>
+      </div>
+    </Card>
   );
-};
+}
