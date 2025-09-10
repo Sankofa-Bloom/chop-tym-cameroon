@@ -147,7 +147,7 @@
   }
 
   .card-interactive {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl transition-all duration-300 ease-out hover:shadow-strong;
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl transition-all duration-300 ease-out;
     background: linear-gradient(135deg, hsl(var(--card) / 0.8), hsl(var(--card) / 0.9));
   }
 
