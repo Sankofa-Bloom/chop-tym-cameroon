@@ -250,6 +250,8 @@ export default function AdminRestaurants() {
       });
     }
   };
+
+  const resetForm = () => {
     setEditingRestaurant(null);
     setFormData({
       name: "",
@@ -291,6 +293,7 @@ export default function AdminRestaurants() {
     );
   }
 
+  return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
