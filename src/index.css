@@ -83,7 +83,7 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background: linear-gradient(135deg, hsl(18 85% 88%) 0%, hsl(20 80% 92%) 50%, hsl(25 75% 90%) 100%);
+    background: var(--gradient-warm);
     position: relative;
   }
 
@@ -248,57 +248,57 @@
 
 @layer base {
   :root {
-    /* Base colors - Clean and fresh */
-    --background: 0 0% 100%;
-    --foreground: 20 8% 20%;
+    /* Base colors - Warm cream theme matching reference */
+    --background: 35 25% 92%;      /* Warm cream background */
+    --foreground: 25 15% 25%;      /* Dark brown text */
 
     /* Card system - Clean with subtle warmth */
-    --card: 0 0% 100%;
-    --card-foreground: 20 8% 20%;
+    --card: 35 30% 95%;            /* Slightly lighter cream for cards */
+    --card-foreground: 25 15% 25%;
 
     /* Popover system */
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 8% 20%;
+    --popover: 35 30% 95%;
+    --popover-foreground: 25 15% 25%;
 
-    /* ChopTym Brand Colors - From the orange mascot */
-    --primary: 18 95% 60%;         /* Vibrant ChopTym Orange #FF6B35 */
+    /* ChopTym Brand Colors - Matching reference image */
+    --primary: 25 60% 55%;         /* Warm orange accent */
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 25 100% 65%;   /* Brighter orange for effects */
+    --primary-glow: 30 70% 60%;    /* Brighter orange for effects */
     
-    /* Fresh green accent - for success, fresh food */
-    --secondary: 122 39% 49%;      /* Fresh Green #4CAF50 */
-    --secondary-foreground: 0 0% 98%;
+    /* Rich brown - for headers and important elements */
+    --secondary: 25 35% 25%;       /* Rich brown from reference */
+    --secondary-foreground: 35 25% 92%;
     
-    /* Warm brown - from mascot's earthy tones */
-    --tertiary: 30 45% 35%;        /* Warm Brown */
+    /* Warm brown variations */
+    --tertiary: 20 25% 35%;        /* Medium brown */
     --tertiary-foreground: 0 0% 98%;
 
-    /* Neutral system - Clean grays */
-    --muted: 0 0% 96.1%;           /* Light Gray #F5F5F5 */
-    --muted-foreground: 20 5% 46%;
+    /* Neutral system - Warm tones */
+    --muted: 35 20% 88%;           /* Warm muted background */
+    --muted-foreground: 25 10% 45%;
     
-    --accent: 45 100% 70%;         /* Golden Yellow accent */
-    --accent-foreground: 20 8% 20%;
+    --accent: 25 60% 55%;          /* Orange accent matching primary */
+    --accent-foreground: 0 0% 98%;
 
     /* System colors */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 20 10% 91%;
-    --input: 20 10% 91%;
-    --ring: 18 95% 60%;
+    --border: 35 15% 85%;          /* Subtle warm borders */
+    --input: 35 20% 88%;
+    --ring: 25 60% 55%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;              /* Slightly less rounded to match reference */
 
     /* ChopTym Custom Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-food: linear-gradient(145deg, hsl(var(--primary)), hsl(var(--accent)));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(var(--muted)));
+    --gradient-warm: linear-gradient(180deg, hsl(35 25% 92%), hsl(35 20% 88%));
+    --gradient-brown: linear-gradient(180deg, hsl(25 35% 25%), hsl(20 30% 20%));
     
     /* ChopTym Shadows */
-    --shadow-card: 0 4px 20px -2px hsl(var(--primary) / 0.1);
-    --shadow-food: 0 8px 30px -4px hsl(var(--primary) / 0.15);
-    --shadow-elegant: 0 10px 40px -10px hsl(var(--primary) / 0.2);
+    --shadow-card: 0 2px 10px -2px hsl(25 15% 25% / 0.1);
+    --shadow-soft: 0 4px 15px -3px hsl(25 15% 25% / 0.15);
+    --shadow-elegant: 0 8px 25px -5px hsl(25 15% 25% / 0.2);
     
     /* Animation timing */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
