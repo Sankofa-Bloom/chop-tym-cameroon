@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Restaurant, Dish } from "@/hooks/useRealTimeData";
 
@@ -36,6 +36,14 @@ export default function AdminMenu() {
     is_available: true,
   });
   const { toast } = useToast();
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
 
   useEffect(() => {
     fetchData();
@@ -79,7 +87,7 @@ export default function AdminMenu() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const priceInCents = Math.round(formData.price * 100);
+      const priceInCents = Math.round(formData.price);
       
       if (editingItem) {
         const { error } = await supabase
@@ -133,7 +141,7 @@ export default function AdminMenu() {
     setFormData({
       restaurant_id: item.restaurant_id,
       dish_id: item.dish_id,
-      price: item.price / 100, // Convert from cents to dollars
+      price: item.price, // Already in XAF, no conversion needed
       is_available: item.is_available,
     });
     setIsDialogOpen(true);
@@ -279,7 +287,7 @@ export default function AdminMenu() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price">Price (XAF)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -343,8 +351,8 @@ export default function AdminMenu() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
-                      {(item.price / 100).toFixed(2)}
+                      <span className="text-xs text-muted-foreground">XAF</span>
+                      {formatPrice(item.price)}
                     </div>
                   </TableCell>
                   <TableCell>

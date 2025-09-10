@@ -33,6 +33,14 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -184,7 +192,7 @@ export default function AdminOrders() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(orders.reduce((sum, o) => sum + o.total, 0) / 100).toFixed(2)}
+              {formatPrice(orders.reduce((sum, o) => sum + o.total, 0))}
             </div>
           </CardContent>
         </Card>
@@ -217,7 +225,7 @@ export default function AdminOrders() {
                       <p className="text-sm text-muted-foreground">{order.customer_phone}</p>
                     </div>
                   </TableCell>
-                  <TableCell>${(order.total / 100).toFixed(2)}</TableCell>
+                  <TableCell>{formatPrice(order.total)}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{order.payment_method}</Badge>
                   </TableCell>
@@ -290,7 +298,7 @@ export default function AdminOrders() {
                                         {item.restaurant} × {item.quantity}
                                       </p>
                                     </div>
-                                    <p>${(item.price * item.quantity / 100).toFixed(2)}</p>
+                                    <p>{formatPrice(item.price * item.quantity)}</p>
                                   </div>
                                 ))}
                               </div>
@@ -299,15 +307,15 @@ export default function AdminOrders() {
                             <div className="border-t pt-4">
                               <div className="flex justify-between">
                                 <span>Subtotal:</span>
-                                <span>${(selectedOrder.subtotal / 100).toFixed(2)}</span>
+                                <span>{formatPrice(selectedOrder.subtotal)}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span>Delivery Fee:</span>
-                                <span>${(selectedOrder.delivery_fee / 100).toFixed(2)}</span>
+                                <span>{formatPrice(selectedOrder.delivery_fee)}</span>
                               </div>
                               <div className="flex justify-between font-semibold text-lg">
                                 <span>Total:</span>
-                                <span>${(selectedOrder.total / 100).toFixed(2)}</span>
+                                <span>{formatPrice(selectedOrder.total)}</span>
                               </div>
                             </div>
                             
