@@ -1,129 +1,90 @@
-import { useState } from "react";
-import { Utensils, MapPin, Search, ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { BottomNavigation } from "@/components/BottomNavigation";
-import { TownSelector } from "@/components/TownSelector";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Search, ShoppingCart, Star, Users } from "lucide-react";
 import { FoodCard } from "@/components/FoodCard";
+import { FoodDetail } from "@/components/FoodDetail";
 import { CartSheet } from "@/components/CartSheet";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
-
-import { FoodDetail } from "@/components/FoodDetail";
-
-// Import beautiful generated food images
-import jollofRiceHero from "@/assets/jollof-rice-hero.jpg";
-import ndoleStew from "@/assets/ndole-stew.jpg";
-import grilledFishAttieke from "@/assets/grilled-fish-attieke.jpg";
+import { TownSelector } from "@/components/TownSelector";
+import { BottomNavigation } from "@/components/BottomNavigation";
+import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
 
 type AppState = "browsing" | "detail" | "checkout" | "confirmation";
 
-// Mock data for MVP
-const mockRestaurants = [
-  {
-    id: 1,
-    name: "Mama Joy's Kitchen",
-    category: "Local Cuisine",
-    rating: 4.8,
-    deliveryTime: "25-35 min",
-    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop"
-  },
-  {
-    id: 2,
-    name: "Limbe Fish Grill",
-    category: "Seafood",
-    rating: 4.6,
-    deliveryTime: "30-40 min",
-    image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=300&fit=crop"
-  },
-  {
-    id: 3,
-    name: "Sunshine Bakery",
-    category: "Bakery & Snacks",
-    rating: 4.7,
-    deliveryTime: "15-25 min",
-    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop"
-  }
-];
+interface CartItem {
+  id: string;
+  name: string;
+  restaurant: string;
+  price: number;
+  quantity: number;
+  image: string;
+  restaurantId: string;
+}
 
-const mockDishes = [
-  {
-    id: 1,
-    name: "Jollof Rice with Chicken",
-    restaurant: "Mama Joy's Kitchen",
-    price: 2500,
-    description: "Perfectly spiced jollof rice with tender grilled chicken, served with plantain",
-    image: jollofRiceHero,
-    category: "Main Course"
-  },
-  {
-    id: 2,
-    name: "Grilled Fish with Attieké",
-    restaurant: "Limbe Fish Grill",
-    price: 3000,
-    description: "Fresh grilled fish served with cassava couscous and spicy tomato sauce",
-    image: grilledFishAttieke,
-    category: "Seafood"
-  },
-  {
-    id: 3,
-    name: "Ndolé with Plantain",
-    restaurant: "Mama Joy's Kitchen",
-    price: 2800,
-    description: "Traditional Cameroonian ndolé stew with beef, fish, and groundnuts",
-    image: ndoleStew,
-    category: "Local Cuisine"
-  },
-  {
-    id: 4,
-    name: "Fresh Croissants",
-    restaurant: "Sunshine Bakery",
-    price: 500,
-    description: "Buttery, flaky croissants baked fresh every morning",
-    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop",
-    category: "Bakery"
-  }
-];
-
-const Index = () => {
-  const [selectedTown, setSelectedTown] = useState("Limbe");
+export default function Index() {
+  const [selectedTown, setSelectedTown] = useState("Douala");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [appState, setAppState] = useState<AppState>("browsing");
-  const [selectedDish, setSelectedDish] = useState<any>(null);
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [orderData, setOrderData] = useState<any>(null);
 
-  const addToCart = (dish: any, quantity: number = 1) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === dish.id);
-      if (existingItem) {
-        return prev.map(item => 
-          item.id === dish.id 
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, { ...dish, quantity }];
-    });
+  // Fetch data from database
+  const { restaurants, loading: restaurantsLoading } = useRestaurants();
+  const { dishes, loading: dishesLoading } = useDishes();
+  const { restaurantDishes, loading: restaurantDishesLoading } = useRestaurantDishes();
+
+  // Transform data for display
+  const dishesWithPricing = useMemo(() => {
+    return dishes.map(dish => {
+      const dishRestaurants = restaurantDishes.filter(rd => rd.dish_id === dish.id);
+      const prices = dishRestaurants.map(rd => rd.price);
+      const ratings = dishRestaurants.map(rd => rd.restaurant.rating);
+      
+      return {
+        ...dish,
+        minPrice: Math.min(...prices) || 0,
+        maxPrice: Math.max(...prices) || 0,
+        restaurantCount: dishRestaurants.length,
+        avgRating: ratings.reduce((a, b) => a + b, 0) / ratings.length || 0,
+      };
+    }).filter(dish => dish.restaurantCount > 0);
+  }, [dishes, restaurantDishes]);
+
+  const addToCart = (dish: Dish, quantity: number, restaurantId: string, price: number) => {
+    const restaurant = restaurants.find(r => r.id === restaurantId);
+    const existingItem = cart.find(item => 
+      item.id === dish.id && item.restaurantId === restaurantId
+    );
+    
+    if (existingItem) {
+      setCart(cart.map(item => 
+        item.id === dish.id && item.restaurantId === restaurantId
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      ));
+    } else {
+      const newItem: CartItem = {
+        id: dish.id,
+        name: dish.name,
+        restaurant: restaurant?.name || 'Unknown Restaurant',
+        price,
+        quantity,
+        image: dish.image_url,
+        restaurantId,
+      };
+      setCart([...cart, newItem]);
+    }
   };
 
-  const handleViewDetail = (dish: any) => {
+  const handleViewDetail = (dish: Dish) => {
     setSelectedDish(dish);
     setAppState("detail");
-  };
-
-  const filteredDishes = mockDishes.filter(dish => 
-    dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dish.restaurant.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-  const handleCheckout = () => {
-    setIsCartOpen(false);
-    setAppState("checkout");
   };
 
   const handlePlaceOrder = async (data: any) => {
@@ -139,7 +100,6 @@ const Index = () => {
       const result = await response.json();
       
       if (result.success) {
-        // If payment URL is provided, redirect to payment
         if (result.paymentUrl) {
           window.open(result.paymentUrl, '_blank');
         }
@@ -149,7 +109,7 @@ const Index = () => {
           orderId: result.orderId,
           orderNumber: result.orderNumber
         });
-        setCartItems([]);
+        setCart([]);
         setAppState("confirmation");
       } else {
         alert(`Error processing order: ${result.error}`);
@@ -166,6 +126,17 @@ const Index = () => {
     setOrderData(null);
   };
 
+  // Filter dishes based on search query
+  const filteredDishes = searchQuery 
+    ? dishesWithPricing.filter(dish => 
+        dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dish.category.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : dishesWithPricing;
+
+  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+
   // Render different screens based on app state
   if (appState === "detail" && selectedDish) {
     return (
@@ -180,7 +151,7 @@ const Index = () => {
   if (appState === "checkout") {
     return (
       <CheckoutForm
-        items={cartItems}
+        items={cart}
         total={cartTotal}
         onBack={() => setAppState("browsing")}
         onPlaceOrder={handlePlaceOrder}
@@ -198,10 +169,10 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background pb-20">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="px-4 py-4">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img 
@@ -219,7 +190,7 @@ const Index = () => {
               variant="outline"
               size="sm"
               className="relative"
-              onClick={() => setIsCartOpen(true)}
+              onClick={() => document.getElementById('cart-trigger')?.click()}
             >
               <ShoppingCart className="w-4 h-4" />
               {cartItemCount > 0 && (
@@ -235,84 +206,101 @@ const Index = () => {
           <div className="relative mt-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search for dishes or restaurants..."
+              placeholder="Search for dishes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 chop-input"
+              className="pl-10"
             />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="px-4 py-6">
-        {/* Welcome Section */}
-        <section className="mb-8">
-          <div className="chop-card p-6 chop-gradient text-white">
-            <h2 className="text-2xl font-bold mb-2">Welcome to {selectedTown}! 🍽️</h2>
-            <p className="text-white/90 mb-4">Your favorite meals, delivered right on time</p>
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4" />
-              <span>Delivering in {selectedTown}</span>
-            </div>
-          </div>
-        </section>
-
+      <main className="container mx-auto px-4 py-6 space-y-8">
         {/* Popular Restaurants */}
-        <section className="mb-8">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Utensils className="w-5 h-5 text-primary" />
-            Popular Restaurants
-          </h3>
-          <div className="grid gap-4">
-            {mockRestaurants.map((restaurant) => (
-              <div key={restaurant.id} className="chop-card p-4 flex items-center gap-4">
-                <img
-                  src={restaurant.image}
-                  alt={restaurant.name}
-                  className="w-16 h-16 rounded-xl object-cover"
-                />
-                <div className="flex-1">
-                  <h4 className="font-semibold">{restaurant.name}</h4>
-                  <p className="text-sm text-muted-foreground">{restaurant.category}</p>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-sm text-secondary">★ {restaurant.rating}</span>
-                    <span className="text-sm text-muted-foreground">{restaurant.deliveryTime}</span>
-                  </div>
-                </div>
+        <section>
+          {restaurantsLoading ? (
+            <div className="text-center py-8">Loading restaurants...</div>
+          ) : (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Popular Restaurants</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {restaurants.map((restaurant) => (
+                  <Card key={restaurant.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="relative">
+                      <img 
+                        src={restaurant.image_url} 
+                        alt={restaurant.name}
+                        className="w-full h-32 object-cover"
+                      />
+                      <div className="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-1">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          <span className="text-xs font-medium">{restaurant.rating}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-1">{restaurant.name}</h3>
+                      <p className="text-sm text-gray-500 mb-2 line-clamp-2">{restaurant.description}</p>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">{restaurant.delivery_time}</span>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span className="text-xs">Popular</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </section>
 
         {/* Featured Dishes */}
         <section>
-          <h3 className="text-lg font-semibold mb-4">
-            {searchQuery ? `Search Results (${filteredDishes.length})` : "Featured Dishes"}
-          </h3>
-          <div className="grid gap-4">
-            {filteredDishes.map((dish) => (
-              <FoodCard
-                key={dish.id}
-                dish={dish}
-                onViewDetail={handleViewDetail}
-              />
-            ))}
-          </div>
+          {dishesLoading || restaurantDishesLoading ? (
+            <div className="text-center py-8">Loading dishes...</div>
+          ) : (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">
+                {searchQuery ? `Search Results for "${searchQuery}"` : "Featured Dishes"}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredDishes.map((dish) => (
+                  <FoodCard
+                    key={dish.id}
+                    dish={dish}
+                    onViewDetail={handleViewDetail}
+                  />
+                ))}
+              </div>
+              {filteredDishes.length === 0 && searchQuery && (
+                <div className="text-center py-8 text-gray-500">
+                  No dishes found matching "{searchQuery}"
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </main>
 
       <BottomNavigation />
-      <CartSheet 
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        setItems={setCartItems}
-        total={cartTotal}
-        onCheckout={handleCheckout}
-      />
+      
+      <Sheet>
+        <SheetTrigger asChild>
+          <button id="cart-trigger" className="hidden" />
+        </SheetTrigger>
+        <CartSheet 
+          isOpen={false}
+          onClose={() => {}}
+          items={cart}
+          setItems={setCart}
+          total={cartTotal}
+          onCheckout={() => setAppState("checkout")}
+        />
+      </Sheet>
     </div>
   );
-};
-
-export default Index;
+}

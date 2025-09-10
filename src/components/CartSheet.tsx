@@ -10,12 +10,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   restaurant: string;
   price: number;
   quantity: number;
   image: string;
+  restaurantId: string;
 }
 
 interface CartSheetProps {
@@ -39,18 +40,21 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
     }).format(price);
   };
 
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity === 0) {
-      setItems(items.filter(item => item.id !== id));
-    } else {
-      setItems(items.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      ));
+  const updateQuantity = (id: string, restaurantId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(id, restaurantId);
+      return;
     }
+    
+    setItems(items.map(item => 
+      item.id === id && item.restaurantId === restaurantId 
+        ? { ...item, quantity: newQuantity } 
+        : item
+    ));
   };
 
-  const removeItem = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
+  const removeItem = (id: string, restaurantId: string) => {
+    setItems(items.filter(item => !(item.id === id && item.restaurantId === restaurantId)));
   };
 
   const handleCheckout = () => {
@@ -81,7 +85,7 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
             <>
               <div className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl">
+                  <div key={`${item.id}-${item.restaurantId}`} className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl">
                     <img
                       src={item.image}
                       alt={item.name}
@@ -99,7 +103,7 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
                         variant="outline"
                         size="sm"
                         className="w-8 h-8 p-0"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, item.restaurantId, item.quantity - 1)}
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
@@ -110,7 +114,7 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
                         variant="outline"
                         size="sm"
                         className="w-8 h-8 p-0"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.id, item.restaurantId, item.quantity + 1)}
                       >
                         <Plus className="w-3 h-3" />
                       </Button>
@@ -118,7 +122,7 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
                         variant="outline"
                         size="sm"
                         className="w-8 h-8 p-0 text-destructive hover:bg-destructive/10"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item.id, item.restaurantId)}
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>

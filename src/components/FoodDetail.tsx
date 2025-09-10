@@ -1,35 +1,31 @@
-import { ArrowLeft, Plus, Minus, Clock, Star, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Star, Clock, Minus, Plus, MapPin } from "lucide-react";
+import { Dish, useRestaurantsByDish } from "@/hooks/useRealTimeData";
 
 interface FoodDetailProps {
-  dish: {
-    id: number;
-    name: string;
-    restaurant: string;
-    price: number;
-    description: string;
-    image: string;
-    category: string;
-  };
+  dish: Dish;
   onBack: () => void;
-  onAddToCart: (dish: any, quantity: number) => void;
+  onAddToCart: (dish: any, quantity: number, restaurantId: string, price: number) => void;
 }
 
 export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
   const [quantity, setQuantity] = useState(1);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
+  const { restaurantDishes, loading } = useRestaurantsByDish(dish.id);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-CM', {
-      style: 'currency',
-      currency: 'XAF',
-      minimumFractionDigits: 0,
-    }).format(price);
+    return `${price.toLocaleString()} F`;
   };
 
+  const selectedRestaurantDish = restaurantDishes.find(rd => rd.restaurant_id === selectedRestaurant);
+
   const handleAddToCart = () => {
-    onAddToCart(dish, quantity);
-    onBack(); // Return to home after adding
+    if (!selectedRestaurantDish) return;
+    onAddToCart(dish, quantity, selectedRestaurantDish.restaurant_id, selectedRestaurantDish.price);
+    onBack();
   };
 
   return (
@@ -49,93 +45,129 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
         </div>
       </div>
 
-      {/* Food Image */}
-      <div className="aspect-[16/10] relative">
-        <img
-          src={dish.image}
+      <div className="relative mb-6">
+        <img 
+          src={dish.image_url} 
           alt={dish.name}
-          className="w-full h-full object-cover"
+          className="w-full h-64 object-cover rounded-lg"
         />
         <div className="absolute top-4 left-4">
-          <span className="bg-primary/90 text-primary-foreground text-sm px-3 py-1 rounded-full font-medium">
+          <Badge className="bg-white/90 text-gray-800">
             {dish.category}
-          </span>
-        </div>
-        <div className="absolute top-4 right-4">
-          <div className="flex items-center gap-1 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium">4.8</span>
-          </div>
+          </Badge>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6 space-y-6">
-        {/* Basic Info */}
+      <div className="space-y-4 p-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">{dish.name}</h2>
-          <div className="flex items-center gap-2 text-muted-foreground mb-4">
-            <MapPin className="w-4 h-4" />
-            <span>{dish.restaurant}</span>
-          </div>
-          <p className="text-muted-foreground leading-relaxed">{dish.description}</p>
+          <h1 className="text-2xl font-bold mb-2">{dish.name}</h1>
+          <p className="text-gray-700">{dish.description}</p>
         </div>
 
-        {/* Delivery Info */}
-        <div className="chop-card p-4">
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-primary" />
+        {loading ? (
+          <div className="text-center py-4">Loading restaurants...</div>
+        ) : (
+          <>
             <div>
-              <p className="font-medium">Delivery Time</p>
-              <p className="text-sm text-muted-foreground">25-35 minutes</p>
+              <h2 className="text-lg font-semibold mb-3">Choose Restaurant</h2>
+              <div className="space-y-2">
+                {restaurantDishes.map((rd) => (
+                  <Card 
+                    key={rd.id} 
+                    className={`cursor-pointer transition-colors ${
+                      selectedRestaurant === rd.restaurant_id 
+                        ? 'ring-2 ring-primary bg-primary/5' 
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => setSelectedRestaurant(rd.restaurant_id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={rd.restaurant.image_url} 
+                            alt={rd.restaurant.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h3 className="font-semibold">{rd.restaurant.name}</h3>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                <span>{rd.restaurant.rating}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{rd.restaurant.delivery_time}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(rd.price)}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Price & Quantity */}
-        <div className="chop-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Price per item</p>
-              <p className="text-2xl font-bold text-primary">{formatPrice(dish.price)}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-              <span className="font-semibold text-lg min-w-[3rem] text-center">{quantity}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+            {selectedRestaurant && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-lg font-semibold">Price per item</span>
+                    <span className="text-xl font-bold text-primary">
+                      {formatPrice(selectedRestaurantDish?.price || 0)}
+                    </span>
+                  </div>
 
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-medium">Total</span>
-              <span className="text-xl font-bold text-primary">
-                {formatPrice(dish.price * quantity)}
-              </span>
-            </div>
-            
-            <Button
-              onClick={handleAddToCart}
-              className="w-full chop-btn-primary h-12 text-base font-semibold"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add {quantity} to Cart
-            </Button>
-          </div>
-        </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-lg font-semibold">Quantity</span>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        disabled={quantity <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="text-lg font-semibold w-8 text-center">
+                        {quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setQuantity(quantity + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b">
+                    <span className="text-xl font-bold">Total</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {formatPrice((selectedRestaurantDish?.price || 0) * quantity)}
+                    </span>
+                  </div>
+
+                  <Button 
+                    onClick={handleAddToCart}
+                    className="w-full text-lg py-6"
+                    size="lg"
+                  >
+                    Add to Cart
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

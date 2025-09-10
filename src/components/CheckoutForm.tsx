@@ -7,11 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 
 interface CheckoutItem {
-  id: number;
+  id: string;
   name: string;
   restaurant: string;
   price: number;
   quantity: number;
+  image: string;
+  restaurantId: string;
 }
 
 interface CheckoutFormProps {

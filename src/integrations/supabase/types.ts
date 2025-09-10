@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      dishes: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -64,6 +94,84 @@ export type Database = {
           payment_status?: string
           subtotal?: number
           total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      restaurant_dishes: {
+        Row: {
+          created_at: string
+          dish_id: string
+          id: string
+          is_available: boolean | null
+          price: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dish_id: string
+          id?: string
+          is_available?: boolean | null
+          price: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dish_id?: string
+          id?: string
+          is_available?: boolean | null
+          price?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_dishes_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          created_at: string
+          delivery_time: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_time?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_time?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          rating?: number | null
           updated_at?: string
         }
         Relationships: []
