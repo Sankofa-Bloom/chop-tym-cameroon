@@ -9,12 +9,14 @@ import { CartSheet } from "@/components/CartSheet";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
 
+import { FoodDetail } from "@/components/FoodDetail";
+
 // Import beautiful generated food images
 import jollofRiceHero from "@/assets/jollof-rice-hero.jpg";
 import ndoleStew from "@/assets/ndole-stew.jpg";
 import grilledFishAttieke from "@/assets/grilled-fish-attieke.jpg";
 
-type AppState = "browsing" | "checkout" | "confirmation";
+type AppState = "browsing" | "detail" | "checkout" | "confirmation";
 
 // Mock data for MVP
 const mockRestaurants = [
@@ -89,20 +91,26 @@ const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [appState, setAppState] = useState<AppState>("browsing");
+  const [selectedDish, setSelectedDish] = useState<any>(null);
   const [orderData, setOrderData] = useState<any>(null);
 
-  const addToCart = (dish: any) => {
+  const addToCart = (dish: any, quantity: number = 1) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === dish.id);
       if (existingItem) {
         return prev.map(item => 
           item.id === dish.id 
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { ...dish, quantity: 1 }];
+      return [...prev, { ...dish, quantity }];
     });
+  };
+
+  const handleViewDetail = (dish: any) => {
+    setSelectedDish(dish);
+    setAppState("detail");
   };
 
   const filteredDishes = mockDishes.filter(dish => 
@@ -126,10 +134,21 @@ const Index = () => {
 
   const handleGoHome = () => {
     setAppState("browsing");
+    setSelectedDish(null);
     setOrderData(null);
   };
 
   // Render different screens based on app state
+  if (appState === "detail" && selectedDish) {
+    return (
+      <FoodDetail
+        dish={selectedDish}
+        onBack={() => setAppState("browsing")}
+        onAddToCart={addToCart}
+      />
+    );
+  }
+
   if (appState === "checkout") {
     return (
       <CheckoutForm
@@ -248,7 +267,7 @@ const Index = () => {
               <FoodCard
                 key={dish.id}
                 dish={dish}
-                onAddToCart={addToCart}
+                onViewDetail={handleViewDetail}
               />
             ))}
           </div>

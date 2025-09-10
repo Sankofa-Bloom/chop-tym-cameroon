@@ -11,10 +11,10 @@ interface FoodCardProps {
     image: string;
     category: string;
   };
-  onAddToCart: (dish: any) => void;
+  onViewDetail: (dish: any) => void;
 }
 
-export const FoodCard = ({ dish, onAddToCart }: FoodCardProps) => {
+export const FoodCard = ({ dish, onViewDetail }: FoodCardProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
       style: 'currency',
@@ -24,7 +24,7 @@ export const FoodCard = ({ dish, onAddToCart }: FoodCardProps) => {
   };
 
   return (
-    <div className="chop-card overflow-hidden">
+    <div className="chop-card overflow-hidden cursor-pointer" onClick={() => onViewDetail(dish)}>
       <div className="aspect-[16/10] relative overflow-hidden">
         <img
           src={dish.image}
@@ -63,12 +63,14 @@ export const FoodCard = ({ dish, onAddToCart }: FoodCardProps) => {
           </div>
           
           <Button
-            onClick={() => onAddToCart(dish)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetail(dish);
+            }}
             size="sm"
             className="chop-btn-primary px-4 py-2 gap-2"
           >
-            <Plus className="w-4 h-4" />
-            Add
+            View Details
           </Button>
         </div>
       </div>
