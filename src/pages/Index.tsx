@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Star, Users } from "lucide-react";
+import { Search, ShoppingCart, Star, Users, MapPin, Clock } from "lucide-react";
 import { FoodCard } from "@/components/FoodCard";
 import { FoodDetail } from "@/components/FoodDetail";
 import { CartSheet } from "@/components/CartSheet";
@@ -25,6 +25,27 @@ interface CartItem {
   image: string;
   restaurantId: string;
 }
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  in: { opacity: 1, y: 0 },
+  out: { opacity: 0, y: -20 }
+};
+
+const pageTransition = {
+  type: "tween" as const,
+  ease: [0.25, 0.46, 0.45, 0.94] as const,
+  duration: 0.4
+};
+
+const staggerContainer = {
+  initial: {},
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 export default function Index() {
   const [selectedTown, setSelectedTown] = useState("Douala");
@@ -138,169 +159,320 @@ export default function Index() {
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   // Render different screens based on app state
-  if (appState === "detail" && selectedDish) {
-    return (
-      <FoodDetail
-        dish={selectedDish}
-        onBack={() => setAppState("browsing")}
-        onAddToCart={addToCart}
-      />
-    );
-  }
-
-  if (appState === "checkout") {
-    return (
-      <CheckoutForm
-        items={cart}
-        total={cartTotal}
-        onBack={() => setAppState("browsing")}
-        onPlaceOrder={handlePlaceOrder}
-      />
-    );
-  }
-
-  if (appState === "confirmation" && orderData) {
-    return (
-      <OrderConfirmation
-        orderData={orderData}
-        onGoHome={handleGoHome}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png" 
-                alt="ChopTym"
-                className="w-10 h-10"
-              />
-              <div>
-                <h1 className="text-xl font-bold text-primary">ChopTym</h1>
-                <p className="text-xs text-muted-foreground">Right on time ⏰</p>
-              </div>
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              className="relative"
-              onClick={() => document.getElementById('cart-trigger')?.click()}
-            >
-              <ShoppingCart className="w-4 h-4" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartItemCount}
-                </span>
-              )}
-            </Button>
-          </div>
-
-          <TownSelector selectedTown={selectedTown} onTownChange={setSelectedTown} />
-          
-          <div className="relative mt-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search for dishes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 space-y-8">
-        {/* Popular Restaurants */}
-        <section>
-          {restaurantsLoading ? (
-            <div className="text-center py-8">Loading restaurants...</div>
-          ) : (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Popular Restaurants</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {restaurants.map((restaurant) => (
-                  <Card key={restaurant.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="relative">
-                      <img 
-                        src={restaurant.image_url} 
-                        alt={restaurant.name}
-                        className="w-full h-32 object-cover"
-                      />
-                      <div className="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-1">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs font-medium">{restaurant.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-1">{restaurant.name}</h3>
-                      <p className="text-sm text-gray-500 mb-2 line-clamp-2">{restaurant.description}</p>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">{restaurant.delivery_time}</span>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          <span className="text-xs">Popular</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Featured Dishes */}
-        <section>
-          {dishesLoading || restaurantDishesLoading ? (
-            <div className="text-center py-8">Loading dishes...</div>
-          ) : (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">
-                {searchQuery ? `Search Results for "${searchQuery}"` : "Featured Dishes"}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredDishes.map((dish) => (
-                  <FoodCard
-                    key={dish.id}
-                    dish={dish}
-                    onViewDetail={handleViewDetail}
-                  />
-                ))}
-              </div>
-              {filteredDishes.length === 0 && searchQuery && (
-                <div className="text-center py-8 text-gray-500">
-                  No dishes found matching "{searchQuery}"
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      </main>
-
-      <BottomNavigation />
-      
-      <Sheet>
-        <SheetTrigger asChild>
-          <button id="cart-trigger" className="hidden" />
-        </SheetTrigger>
-        <CartSheet 
-          isOpen={false}
-          onClose={() => {}}
-          items={cart}
-          setItems={setCart}
-          total={cartTotal}
-          onCheckout={() => setAppState("checkout")}
+    <AnimatePresence mode="wait" initial={false}>
+      {appState === "detail" && selectedDish ? (
+        <FoodDetail
+          key="detail"
+          dish={selectedDish}
+          onBack={() => setAppState("browsing")}
+          onAddToCart={addToCart}
         />
-      </Sheet>
-    </div>
+      ) : appState === "checkout" ? (
+        <motion.div
+          key="checkout"
+          initial="initial"
+          animate="in"
+          exit="out"
+          variants={pageVariants}
+          transition={pageTransition}
+        >
+          <CheckoutForm
+            items={cart}
+            total={cartTotal}
+            onBack={() => setAppState("browsing")}
+            onPlaceOrder={handlePlaceOrder}
+          />
+        </motion.div>
+      ) : appState === "confirmation" && orderData ? (
+        <motion.div
+          key="confirmation"
+          initial="initial"
+          animate="in"
+          exit="out"
+          variants={pageVariants}
+          transition={pageTransition}
+        >
+          <OrderConfirmation
+            orderData={orderData}
+            onGoHome={handleGoHome}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="browsing"
+          initial="initial"
+          animate="in"
+          exit="out"
+          variants={pageVariants}
+          transition={pageTransition}
+          className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background pb-20"
+        >
+          {/* Header */}
+          <motion.header 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50 shadow-soft"
+          >
+            <div className="container mx-auto px-4 py-4 max-w-7xl">
+              <div className="flex items-center justify-between mb-6">
+                <motion.div 
+                  className="flex items-center gap-3"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <img 
+                    src="/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png" 
+                    alt="ChopTym"
+                    className="w-10 h-10 sm:w-12 sm:h-12"
+                  />
+                  <div>
+                    <h1 className="text-xl sm:text-2xl font-bold font-heading text-primary">ChopTym</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Right on time ⏰</p>
+                  </div>
+                </motion.div>
+                
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="relative hover:bg-primary/5 hover:border-primary/30"
+                    onClick={() => document.getElementById('cart-trigger')?.click()}
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <AnimatePresence>
+                      {cartItemCount > 0 && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium"
+                        >
+                          {cartItemCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Button>
+                </motion.div>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <TownSelector selectedTown={selectedTown} onTownChange={setSelectedTown} />
+              </motion.div>
+              
+              <motion.div 
+                className="relative mt-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search for dishes or cuisine..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background transition-all duration-300"
+                />
+              </motion.div>
+            </div>
+          </motion.header>
+
+          {/* Main Content */}
+          <main className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+            {/* Welcome Section */}
+            <motion.section 
+              className="mb-8 sm:mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="overflow-hidden border-0 shadow-medium bg-gradient-to-r from-primary via-primary-light to-primary-dark">
+                <CardContent className="p-6 sm:p-8 text-primary-foreground">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-heading mb-3 text-balance">
+                      Welcome to {selectedTown}! 🍽️
+                    </h2>
+                    <p className="text-primary-foreground/90 mb-4 text-lg text-pretty">
+                      Your favorite meals, delivered right on time
+                    </p>
+                    <div className="flex items-center gap-2 text-sm sm:text-base">
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Delivering in {selectedTown}</span>
+                    </div>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.section>
+
+            {/* Popular Restaurants */}
+            <motion.section 
+              className="mb-8 sm:mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-xl sm:text-2xl font-semibold font-heading">Popular Restaurants</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+              </div>
+              
+              {restaurantsLoading ? (
+                <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                      className="bg-muted/30 rounded-xl h-32"
+                    />
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate="animate"
+                >
+                  {restaurants.map((restaurant, index) => (
+                    <motion.div
+                      key={restaurant.id}
+                      variants={{
+                        initial: { opacity: 0, y: 20 },
+                        animate: { opacity: 1, y: 0 }
+                      }}
+                      whileHover={{ 
+                        y: -4,
+                        transition: { duration: 0.3, ease: "easeOut" }
+                      }}
+                    >
+                      <Card className="overflow-hidden hover:shadow-strong transition-all duration-300 cursor-pointer border-0 bg-card/50 backdrop-blur-sm">
+                        <div className="relative overflow-hidden">
+                          <img 
+                            src={restaurant.image_url} 
+                            alt={restaurant.name}
+                            className="w-full h-32 sm:h-40 object-cover transition-transform duration-500 hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-soft">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              <span className="text-xs font-medium">{restaurant.rating}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-lg mb-2 text-balance">{restaurant.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 text-pretty">
+                            {restaurant.description}
+                          </p>
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">{restaurant.delivery_time}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3 text-primary" />
+                              <span className="text-primary font-medium">Popular</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </motion.section>
+
+            {/* Featured Dishes */}
+            <motion.section
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-xl sm:text-2xl font-semibold font-heading">
+                  {searchQuery ? `Search Results for "${searchQuery}"` : "Featured Dishes"}
+                </h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+              </div>
+              
+              {dishesLoading || restaurantDishesLoading ? (
+                <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
+                      className="bg-muted/30 rounded-xl h-80"
+                    />
+                  ))}
+                </motion.div>
+              ) : (
+                <>
+                  <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    {filteredDishes.map((dish, index) => (
+                      <FoodCard
+                        key={dish.id}
+                        dish={dish}
+                        onViewDetail={handleViewDetail}
+                        index={index}
+                      />
+                    ))}
+                  </motion.div>
+                  
+                  {filteredDishes.length === 0 && searchQuery && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-12"
+                    >
+                      <div className="max-w-md mx-auto">
+                        <h3 className="text-lg font-semibold mb-2">No dishes found</h3>
+                        <p className="text-muted-foreground">
+                          Try adjusting your search terms or browse our featured dishes
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </>
+              )}
+            </motion.section>
+          </main>
+
+          <BottomNavigation />
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <button id="cart-trigger" className="hidden" />
+            </SheetTrigger>
+            <CartSheet 
+              isOpen={false}
+              onClose={() => {}}
+              items={cart}
+              setItems={setCart}
+              total={cartTotal}
+              onCheckout={() => setAppState("checkout")}
+            />
+          </Sheet>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
