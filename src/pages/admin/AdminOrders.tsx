@@ -68,12 +68,77 @@ export default function AdminOrders() {
 
   const updatePaymentStatus = async (orderId: string, newStatus: string) => {
     try {
+      // Get the current order to send notifications
+      const currentOrder = orders.find(o => o.id === orderId);
+      if (!currentOrder) {
+        throw new Error('Order not found');
+      }
+      
+      const oldStatus = currentOrder.payment_status;
+      
+      // Update the order status in database
       const { error } = await supabase
         .from('orders')
         .update({ payment_status: newStatus })
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Send admin notification for status change
+      try {
+        const { error: notificationError } = await supabase.functions.invoke('send-status-notification', {
+          body: {
+            orderData: {
+              orderNumber: currentOrder.order_number,
+              customerName: currentOrder.customer_name,
+              customerPhone: currentOrder.customer_phone,
+              deliveryAddress: currentOrder.delivery_address,
+              items: currentOrder.items,
+              subtotal: currentOrder.subtotal,
+              deliveryFee: currentOrder.delivery_fee,
+              total: currentOrder.total,
+              paymentReference: currentOrder.payment_reference,
+              createdAt: currentOrder.created_at,
+              notes: currentOrder.notes,
+            },
+            oldStatus,
+            newStatus,
+            notificationType: newStatus === 'completed' ? 'success' : newStatus === 'failed' ? 'failed' : 'status_update'
+          }
+        });
+
+        if (notificationError) {
+          console.error('Failed to send admin notification:', notificationError);
+        }
+      } catch (notificationError) {
+        console.error('Error sending admin notification:', notificationError);
+      }
+
+      // Send user push notification (if PWA subscription exists)
+      try {
+        // Get user's push subscription from localStorage (will be implemented in PWA setup)
+        const pushSubscription = localStorage.getItem('pushSubscription');
+        
+        if (pushSubscription) {
+          const { error: pushError } = await supabase.functions.invoke('send-user-notification', {
+            body: {
+              orderData: {
+                orderNumber: currentOrder.order_number,
+                customerName: currentOrder.customer_name,
+                total: currentOrder.total,
+              },
+              newStatus,
+              subscription: JSON.parse(pushSubscription)
+            }
+          });
+
+          if (pushError) {
+            console.error('Failed to send push notification:', pushError);
+          }
+        }
+      } catch (pushError) {
+        console.error('Error sending push notification:', pushError);
+      }
       
       toast({
         title: "Success",
