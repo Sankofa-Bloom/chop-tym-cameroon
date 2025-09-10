@@ -39,8 +39,8 @@ serve(async (req) => {
 
     // Send email to admin
     const { data, error } = await resend.emails.send({
-      from: 'ChopTym Orders <orders@choptym.com>',
-      to: ['admin@choptym.com'], // Replace with actual admin email
+      from: 'ChopTym Orders <onboarding@resend.dev>',
+      to: ['choptym237@gmail.com'],
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
       html,
     });
