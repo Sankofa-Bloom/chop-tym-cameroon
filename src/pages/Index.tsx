@@ -56,6 +56,8 @@ export default function Index() {
   const [appState, setAppState] = useState<AppState>("browsing");
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [orderData, setOrderData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("home");
+  const [showSearch, setShowSearch] = useState(false);
 
   // Fetch data from database
   const { restaurants, loading: restaurantsLoading } = useRestaurants();
@@ -147,6 +149,31 @@ export default function Index() {
     setAppState("browsing");
     setSelectedDish(null);
     setOrderData(null);
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "search") {
+      setShowSearch(true);
+      // Focus search input after a short delay
+      setTimeout(() => {
+        document.getElementById('main-search-input')?.focus();
+      }, 100);
+    } else if (tab === "home") {
+      setShowSearch(false);
+      setSearchQuery("");
+    }
+  };
+
+  const handleCartClick = () => {
+    document.getElementById('cart-trigger')?.click();
+  };
+
+  const handleSearchClick = () => {
+    setShowSearch(true);
+    setTimeout(() => {
+      document.getElementById('main-search-input')?.focus();
+    }, 100);
   };
 
   // Filter dishes based on search query
@@ -269,51 +296,112 @@ export default function Index() {
                 <TownSelector selectedTown={selectedTown} onTownChange={setSelectedTown} />
               </motion.div>
               
-              <motion.div 
-                className="relative mt-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search for dishes or cuisine..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:bg-background transition-all duration-300"
-                />
-              </motion.div>
+              {/* Conditional Search Bar */}
+              <AnimatePresence>
+                {showSearch && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4"
+                  >
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        id="main-search-input"
+                        placeholder="Search for dishes, restaurants, or cuisines..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 h-12 text-base border-2 focus:border-primary/50 rounded-xl bg-background/95 backdrop-blur-sm"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.header>
 
           {/* Main Content */}
           <main className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
-            {/* Welcome Section */}
+            {/* Hero Section - Welcome CTA */}
             <motion.section 
               className="mb-8 sm:mb-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
             >
-              <Card className="overflow-hidden border-0 shadow-strong card-premium">
-                <CardContent className="p-6 sm:p-8 gradient-prestigious text-primary-foreground relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-50" />
+              <Card className="relative overflow-hidden border-0 shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute inset-0 bg-repeat opacity-30" style={{
+                    backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="#ffffff" fill-opacity="0.1"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>')}")`
+                  }} />
+                </div>
+                
+                <CardContent className="relative z-10 p-6 sm:p-8 lg:p-12">
                   <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="relative z-10"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-center max-w-2xl mx-auto"
                   >
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-heading mb-3 text-balance">
-                      Welcome to {selectedTown}! 🍽️
-                    </h2>
-                    <p className="text-primary-foreground/90 mb-4 text-lg text-pretty">
-                      Your favorite meals, delivered with prestige
-                    </p>
-                    <div className="flex items-center gap-2 text-sm sm:text-base">
-                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span>Premium delivery in {selectedTown}</span>
-                    </div>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                      className="w-16 h-16 mx-auto mb-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
+                    >
+                      <MapPin className="w-8 h-8 text-white" />
+                    </motion.div>
+                    
+                    <motion.h2 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                      className="text-3xl sm:text-4xl lg:text-5xl font-bold font-heading mb-4 text-white text-balance"
+                    >
+                      Welcome to <span className="text-yellow-300">{selectedTown}</span>
+                    </motion.h2>
+                    
+                    <motion.p 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8 }}
+                      className="text-white/90 mb-8 text-lg sm:text-xl text-pretty leading-relaxed"
+                    >
+                      Experience culinary excellence delivered to your doorstep. 
+                      Premium quality meals from the finest restaurants in {selectedTown}.
+                    </motion.p>
+                    
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.9 }}
+                      className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
+                    >
+                      <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
+                        <Clock className="w-5 h-5 text-yellow-300" />
+                        <span className="text-white font-medium">Fast Delivery</span>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
+                        <Star className="w-5 h-5 fill-yellow-300 text-yellow-300" />
+                        <span className="text-white font-medium">Premium Quality</span>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.0 }}
+                    >
+                      <Button 
+                        size="lg" 
+                        className="bg-white text-primary hover:bg-white/90 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-4 text-lg rounded-full border-2 border-white/20"
+                        onClick={() => handleSearchClick()}
+                      >
+                        Start Ordering Now
+                      </Button>
+                    </motion.div>
                   </motion.div>
                 </CardContent>
               </Card>
@@ -463,7 +551,13 @@ export default function Index() {
             </motion.section>
           </main>
 
-          <BottomNavigation />
+          <BottomNavigation 
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            onCartClick={handleCartClick}
+            cartItemCount={cartItemCount}
+            onSearchClick={handleSearchClick}
+          />
           
           <Sheet>
             <SheetTrigger asChild>

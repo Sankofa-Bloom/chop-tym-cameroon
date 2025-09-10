@@ -4,14 +4,49 @@ import { cn } from "@/lib/utils";
 interface BottomNavigationProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onCartClick?: () => void;
+  cartItemCount?: number;
+  onSearchClick?: () => void;
 }
 
-export const BottomNavigation = ({ activeTab = "home", onTabChange }: BottomNavigationProps) => {
+export const BottomNavigation = ({ 
+  activeTab = "home", 
+  onTabChange, 
+  onCartClick,
+  cartItemCount = 0,
+  onSearchClick
+}: BottomNavigationProps) => {
   const tabs = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "search", label: "Search", icon: Search },
-    { id: "cart", label: "Cart", icon: ShoppingCart },
-    { id: "profile", label: "Profile", icon: User },
+    { 
+      id: "home", 
+      label: "Home", 
+      icon: Home,
+      onClick: () => onTabChange?.("home")
+    },
+    { 
+      id: "search", 
+      label: "Search", 
+      icon: Search,
+      onClick: () => {
+        onTabChange?.("search");
+        onSearchClick?.();
+      }
+    },
+    { 
+      id: "cart", 
+      label: "Cart", 
+      icon: ShoppingCart,
+      onClick: () => {
+        onTabChange?.("cart");
+        onCartClick?.();
+      }
+    },
+    { 
+      id: "profile", 
+      label: "Profile", 
+      icon: User,
+      onClick: () => onTabChange?.("profile")
+    },
   ];
 
   return (
@@ -24,15 +59,22 @@ export const BottomNavigation = ({ activeTab = "home", onTabChange }: BottomNavi
           return (
             <button
               key={tab.id}
-              onClick={() => onTabChange?.(tab.id)}
+              onClick={tab.onClick}
               className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200",
+                "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 relative",
                 isActive 
                   ? "text-primary bg-primary/10" 
                   : "text-muted-foreground hover:text-primary hover:bg-primary/5"
               )}
             >
-              <Icon className={cn("w-5 h-5", isActive && "text-primary")} />
+              <div className="relative">
+                <Icon className={cn("w-5 h-5", isActive && "text-primary")} />
+                {tab.id === "cart" && cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                    {cartItemCount > 9 ? "9+" : cartItemCount}
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-medium">{tab.label}</span>
             </button>
           );
