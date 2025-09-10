@@ -216,64 +216,72 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
                     </motion.div>
                   ))}
                 </AnimatePresence>
+
+                {/* Order Summary and Action Buttons - positioned after items */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 space-y-4"
+                >
+                  <div className="bg-card/50 rounded-xl p-4 border border-border/50 shadow-soft">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span className="font-medium">{formatPrice(total)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Delivery fee</span>
+                        <span className="font-medium">{formatPrice(deliveryFee)}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-lg">Total</span>
+                        <motion.span 
+                          key={finalTotal}
+                          initial={{ scale: 1.1 }}
+                          animate={{ scale: 1 }}
+                          className="font-bold text-xl text-primary font-heading"
+                        >
+                          {formatPrice(finalTotal)}
+                        </motion.span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-1 gap-3">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button 
+                        variant="outline"
+                        onClick={onClose}
+                        className="w-full h-12 text-base font-semibold border-2 hover:bg-muted/50 transition-all duration-300"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Continue Shopping
+                      </Button>
+                    </motion.div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button 
+                        onClick={onCheckout}
+                        className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-primary-foreground shadow-medium hover:shadow-strong transition-all duration-300"
+                      >
+                        <ArrowRight className="mr-2 h-4 w-4" />
+                        Proceed to Checkout
+                      </Button>
+                    </motion.div>
+                  </div>
+                </motion.div>
               </div>
             )}
           </div>
 
-          {/* Footer */}
-          {items.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="border-t border-border/50 p-4 sm:p-6 bg-background/50 backdrop-blur-sm"
-            >
-              <div className="space-y-3 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
-                  <span className="font-medium">{formatPrice(total)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Delivery fee</span>
-                  <span className="font-medium">{formatPrice(deliveryFee)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-lg">Total</span>
-                  <motion.span 
-                    key={finalTotal}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    className="font-bold text-xl text-primary font-heading"
-                  >
-                    {formatPrice(finalTotal)}
-                  </motion.span>
-                </div>
-              </div>
-              
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="space-y-3"
-              >
-                <Button 
-                  variant="outline"
-                  onClick={onClose}
-                  className="w-full h-12 text-base font-semibold border-2 hover:bg-muted/50 transition-all duration-300"
-                >
-                  Continue Shopping
-                  <Plus className="ml-2 h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  onClick={onCheckout}
-                  className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-primary-foreground shadow-medium hover:shadow-strong transition-all duration-300"
-                >
-                  Proceed to Checkout
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </motion.div>
-            </motion.div>
-          )}
         </motion.div>
       </SheetContent>
     </Sheet>
