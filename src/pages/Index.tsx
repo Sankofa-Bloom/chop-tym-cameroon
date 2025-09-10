@@ -50,7 +50,7 @@ const staggerContainer = {
 };
 
 export default function Index() {
-  const [selectedTown, setSelectedTown] = useState("Douala");
+  const [selectedTown, setSelectedTown] = useState("Limbe");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [appState, setAppState] = useState<AppState>("browsing");

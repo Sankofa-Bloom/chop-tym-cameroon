@@ -20,6 +20,7 @@ import {
   ChefHat, 
   Menu, 
   ShoppingBag,
+  MapPin,
   Settings
 } from "lucide-react";
 import { AdminAuth } from "./AdminAuth";
@@ -30,6 +31,7 @@ const sidebarItems = [
   { title: "Dishes", url: "/admin/dishes", icon: ChefHat },
   { title: "Menu Management", url: "/admin/menu", icon: Menu },
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
+  { title: "Towns", url: "/admin/towns", icon: MapPin },
 ];
 
 interface AdminLayoutProps {
