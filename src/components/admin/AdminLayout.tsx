@@ -19,6 +19,7 @@ import {
   Menu, 
   ShoppingBag,
   MapPin,
+  Zap,
   Settings
 } from "lucide-react";
 import { AdminAuth } from "./AdminAuth";
@@ -33,6 +34,7 @@ const sidebarItems = [
   { title: "Menu Management", url: "/admin/menu", icon: Menu },
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
   { title: "Towns", url: "/admin/towns", icon: MapPin },
+  { title: "Delivery Zones", url: "/admin/zones", icon: Zap },
 ];
 
 interface AdminLayoutProps {

@@ -12,6 +12,7 @@ import AdminDishes from "./pages/admin/AdminDishes";
 import AdminMenu from "./pages/admin/AdminMenu";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminTowns from "./pages/AdminTowns";
+import AdminZones from "./pages/admin/AdminZones";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/admin/menu" element={<AdminLayout><AdminMenu /></AdminLayout>} />
           <Route path="/admin/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
           <Route path="/admin/towns" element={<AdminLayout><AdminTowns /></AdminLayout>} />
+          <Route path="/admin/zones" element={<AdminLayout><AdminZones /></AdminLayout>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, CreditCard, MapPin, Phone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTowns } from "@/hooks/useTowns";
+import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 
 interface CheckoutItem {
   id: string;
@@ -28,11 +31,25 @@ export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFor
     fullName: "",
     phone: "",
     address: "",
-    notes: ""
+    notes: "",
+    town: "",
+    deliveryZone: ""
   });
 
-  const deliveryFee = 500;
+  const { towns } = useTowns();
+  const { zones } = useDeliveryZones(formData.town);
+  const [selectedZone, setSelectedZone] = useState<any>(null);
+  
+  const deliveryFee = selectedZone?.delivery_fee || 500;
   const finalTotal = total + deliveryFee;
+
+  // Update selected zone when zone changes
+  useEffect(() => {
+    if (formData.deliveryZone && zones.length > 0) {
+      const zone = zones.find(z => z.id === formData.deliveryZone);
+      setSelectedZone(zone);
+    }
+  }, [formData.deliveryZone, zones]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
@@ -53,8 +70,8 @@ export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFor
     e.preventDefault();
     
     // Basic validation
-    if (!formData.fullName || !formData.phone || !formData.address) {
-      alert("Please fill in all required fields");
+    if (!formData.fullName || !formData.phone || !formData.address || !formData.town || !formData.deliveryZone) {
+      alert("Please fill in all required fields including delivery zone");
       return;
     }
 
@@ -64,7 +81,10 @@ export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFor
     const orderData = {
       orderNumber,
       items,
-      customerInfo: formData,
+      customerInfo: {
+        ...formData,
+        selectedZone: selectedZone?.zone_name
+      },
       total: finalTotal,
       deliveryFee,  
       subtotal: total,
@@ -133,6 +153,58 @@ export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFor
             </h2>
             
             <div className="space-y-4">
+              <div>
+                <Label htmlFor="town">Select Town *</Label>
+                <Select value={formData.town} onValueChange={(value) => {
+                  handleInputChange("town", value);
+                  handleInputChange("deliveryZone", ""); // Reset zone when town changes
+                  setSelectedZone(null);
+                }}>
+                  <SelectTrigger className="chop-input mt-1">
+                    <SelectValue placeholder="Choose your town" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {towns.filter(town => town.is_active).map((town) => (
+                      <SelectItem key={town.id} value={town.name}>
+                        {town.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.town && (
+                <div>
+                  <Label htmlFor="deliveryZone">Delivery Zone *</Label>
+                  <Select value={formData.deliveryZone} onValueChange={(value) => handleInputChange("deliveryZone", value)}>
+                    <SelectTrigger className="chop-input mt-1">
+                      <SelectValue placeholder="Choose your delivery zone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {zones.map((zone) => (
+                        <SelectItem key={zone.id} value={zone.id}>
+                          <div className="flex justify-between items-center w-full">
+                            <span>{zone.zone_name}</span>
+                            <span className="text-sm text-muted-foreground ml-2">
+                              {new Intl.NumberFormat('fr-CM', {
+                                style: 'currency',
+                                currency: 'XAF',
+                                minimumFractionDigits: 0,
+                              }).format(zone.delivery_fee)}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedZone && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Delivery fee: {formatPrice(selectedZone.delivery_fee)}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div>
                 <Label htmlFor="fullName">Full Name *</Label>
                 <Input
