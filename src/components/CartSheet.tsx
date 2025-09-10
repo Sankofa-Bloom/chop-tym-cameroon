@@ -63,7 +63,11 @@ const itemVariants = {
 
 export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout }: CartSheetProps) => {
   const formatPrice = (price: number) => {
-    return `${price.toLocaleString()} F`;
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      minimumFractionDigits: 0,
+    }).format(price);
   };
 
   const updateQuantity = (id: string, restaurantId: string, newQuantity: number) => {

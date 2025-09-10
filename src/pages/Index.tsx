@@ -58,6 +58,7 @@ export default function Index() {
   const [orderData, setOrderData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("home");
   const [showSearch, setShowSearch] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Fetch data from database
   const { restaurants, loading: restaurantsLoading } = useRestaurants();
@@ -166,7 +167,8 @@ export default function Index() {
   };
 
   const handleCartClick = () => {
-    document.getElementById('cart-trigger')?.click();
+    setIsCartOpen(true);
+    setActiveTab("cart");
   };
 
   const handleSearchClick = () => {
@@ -269,7 +271,7 @@ export default function Index() {
                     variant="outline"
                     size="sm"
                     className="relative hover:bg-primary/5 hover:border-primary/30"
-                    onClick={() => document.getElementById('cart-trigger')?.click()}
+                    onClick={handleCartClick}
                   >
                     <ShoppingCart className="w-4 h-4" />
                     <AnimatePresence>
@@ -559,19 +561,17 @@ export default function Index() {
             onSearchClick={handleSearchClick}
           />
           
-          <Sheet>
-            <SheetTrigger asChild>
-              <button id="cart-trigger" className="hidden" />
-            </SheetTrigger>
-            <CartSheet 
-              isOpen={false}
-              onClose={() => {}}
-              items={cart}
-              setItems={setCart}
-              total={cartTotal}
-              onCheckout={() => setAppState("checkout")}
-            />
-          </Sheet>
+          <CartSheet 
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            items={cart}
+            setItems={setCart}
+            total={cartTotal}
+            onCheckout={() => {
+              setAppState("checkout");
+              setIsCartOpen(false);
+            }}
+          />
         </motion.div>
       )}
     </AnimatePresence>
