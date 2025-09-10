@@ -409,21 +409,6 @@ export default function Index() {
               </Card>
             </motion.section>
 
-            {/* Admin Panel Link */}
-            <motion.section 
-              className="mb-8 sm:mb-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/admin">Admin Panel</Link>
-                </Button>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border" />
-              </div>
-            </motion.section>
 
             {/* Featured Dishes */}
             <motion.section
