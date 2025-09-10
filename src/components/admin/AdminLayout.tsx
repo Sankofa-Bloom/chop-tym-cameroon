@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { User, Session } from "@supabase/supabase-js";
 import {
   SidebarProvider,
   SidebarInset,
@@ -24,6 +22,9 @@ import {
   Settings
 } from "lucide-react";
 import { AdminAuth } from "./AdminAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const sidebarItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -39,17 +40,35 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const { user, isAdmin, loading } = useAdminAuth();
   const location = useLocation();
 
-  const handleAuthStateChange = (user: User | null, session: Session | null) => {
-    setUser(user);
-    setSession(session);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
-    return <AdminAuth onAuthStateChange={handleAuthStateChange} />;
+    return <AdminAuth onAuthStateChange={() => {}} />;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Alert className="max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Access denied. You need admin privileges to access this area.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -65,7 +84,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
           </header>
 
-          <AdminAuth onAuthStateChange={handleAuthStateChange} />
+          <AdminAuth onAuthStateChange={() => {}} />
           
           <main className="flex-1 overflow-auto p-6">
             {children}
