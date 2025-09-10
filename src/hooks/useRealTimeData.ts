@@ -15,6 +15,8 @@ export interface Restaurant {
   closes_at: string;
   is_open_now: boolean;
   operating_days: number[];
+  is_popular: boolean;
+  popular_order: number | null;
   created_at: string;
   updated_at: string;
 }

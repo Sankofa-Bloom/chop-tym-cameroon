@@ -409,7 +409,7 @@ export default function Index() {
               </Card>
             </motion.section>
 
-            {/* Popular Restaurants */}
+            {/* Admin Panel Link */}
             <motion.section 
               className="mb-8 sm:mb-12"
               initial={{ opacity: 0, y: 30 }}
@@ -417,79 +417,12 @@ export default function Index() {
               transition={{ delay: 0.5 }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-xl sm:text-2xl font-semibold font-heading">Popular Restaurants</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/admin">Admin Panel</Link>
                 </Button>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border" />
               </div>
-              
-              {restaurantsLoading ? (
-                <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
-                    <motion.div
-                      key={i}
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                      className="bg-muted/30 rounded-xl h-32"
-                    />
-                  ))}
-                </motion.div>
-              ) : (
-                <motion.div 
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-                  variants={staggerContainer}
-                  initial="initial"
-                  animate="animate"
-                >
-                  {restaurants.map((restaurant, index) => (
-                    <motion.div
-                      key={restaurant.id}
-                      variants={{
-                        initial: { opacity: 0, y: 20 },
-                        animate: { opacity: 1, y: 0 }
-                      }}
-                      whileHover={{ 
-                        y: -4,
-                        transition: { duration: 0.3, ease: "easeOut" }
-                      }}
-                    >
-                      <Card className="overflow-hidden hover:shadow-strong transition-all duration-300 cursor-pointer border-0 card-interactive">
-                        <div className="relative overflow-hidden">
-                          <img 
-                            src={restaurant.image_url} 
-                            alt={restaurant.name}
-                            className="w-full h-32 sm:h-40 object-cover transition-transform duration-500 hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-soft">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs font-medium">{restaurant.rating}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-2 text-balance">{restaurant.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 text-pretty">
-                            {restaurant.description}
-                          </p>
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-muted-foreground">{restaurant.delivery_time}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-3 w-3 text-primary" />
-                              <span className="text-primary font-medium">Popular</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
             </motion.section>
 
             {/* Featured Dishes */}

@@ -168,10 +168,12 @@ export type Database = {
           id: string
           image_url: string | null
           is_open_now: boolean | null
+          is_popular: boolean | null
           name: string
           opens_at: string | null
           operating_days: number[] | null
           phone: string | null
+          popular_order: number | null
           rating: number | null
           town: string
           updated_at: string
@@ -185,10 +187,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_open_now?: boolean | null
+          is_popular?: boolean | null
           name: string
           opens_at?: string | null
           operating_days?: number[] | null
           phone?: string | null
+          popular_order?: number | null
           rating?: number | null
           town?: string
           updated_at?: string
@@ -202,10 +206,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_open_now?: boolean | null
+          is_popular?: boolean | null
           name?: string
           opens_at?: string | null
           operating_days?: number[] | null
           phone?: string | null
+          popular_order?: number | null
           rating?: number | null
           town?: string
           updated_at?: string
