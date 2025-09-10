@@ -18,7 +18,11 @@ interface FoodCardProps {
 
 export const FoodCard = ({ dish, onViewDetail, index = 0 }: FoodCardProps) => {
   const formatPrice = (price: number) => {
-    return `${price.toLocaleString()} F`;
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      minimumFractionDigits: 0,
+    }).format(price);
   };
 
   const formatPriceRange = (min: number, max: number) => {

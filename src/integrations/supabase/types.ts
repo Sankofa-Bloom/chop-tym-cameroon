@@ -60,6 +60,7 @@ export type Database = {
           payment_status: string
           subtotal: number
           total: number
+          town: string
           updated_at: string
         }
         Insert: {
@@ -77,6 +78,7 @@ export type Database = {
           payment_status?: string
           subtotal: number
           total: number
+          town?: string
           updated_at?: string
         }
         Update: {
@@ -94,13 +96,18 @@ export type Database = {
           payment_status?: string
           subtotal?: number
           total?: number
+          town?: string
           updated_at?: string
         }
         Relationships: []
       }
       restaurant_dishes: {
         Row: {
+          available_days: number[] | null
+          available_from: string | null
+          available_until: string | null
           created_at: string
+          currency: string
           dish_id: string
           id: string
           is_available: boolean | null
@@ -109,7 +116,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available_days?: number[] | null
+          available_from?: string | null
+          available_until?: string | null
           created_at?: string
+          currency?: string
           dish_id: string
           id?: string
           is_available?: boolean | null
@@ -118,7 +129,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available_days?: number[] | null
+          available_from?: string | null
+          available_until?: string | null
           created_at?: string
+          currency?: string
           dish_id?: string
           id?: string
           is_available?: boolean | null
@@ -145,33 +160,54 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          closes_at: string | null
           created_at: string
           delivery_time: string | null
           description: string | null
+          exact_location: string | null
           id: string
           image_url: string | null
+          is_open_now: boolean | null
           name: string
+          opens_at: string | null
+          operating_days: number[] | null
+          phone: string | null
           rating: number | null
+          town: string
           updated_at: string
         }
         Insert: {
+          closes_at?: string | null
           created_at?: string
           delivery_time?: string | null
           description?: string | null
+          exact_location?: string | null
           id?: string
           image_url?: string | null
+          is_open_now?: boolean | null
           name: string
+          opens_at?: string | null
+          operating_days?: number[] | null
+          phone?: string | null
           rating?: number | null
+          town?: string
           updated_at?: string
         }
         Update: {
+          closes_at?: string | null
           created_at?: string
           delivery_time?: string | null
           description?: string | null
+          exact_location?: string | null
           id?: string
           image_url?: string | null
+          is_open_now?: boolean | null
           name?: string
+          opens_at?: string | null
+          operating_days?: number[] | null
+          phone?: string | null
           rating?: number | null
+          town?: string
           updated_at?: string
         }
         Relationships: []
@@ -184,6 +220,16 @@ export type Database = {
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_town_order_number: {
+        Args: { order_town: string }
+        Returns: string
+      }
+      is_restaurant_open: {
+        Args: {
+          restaurant_row: Database["public"]["Tables"]["restaurants"]["Row"]
+        }
+        Returns: boolean
       }
     }
     Enums: {

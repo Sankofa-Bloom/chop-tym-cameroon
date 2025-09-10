@@ -4,18 +4,29 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Restaurant {
   id: string;
   name: string;
-  description: string;
-  image_url: string;
-  rating: number;
-  delivery_time: string;
+  description: string | null;
+  image_url: string | null;
+  rating: number | null;
+  delivery_time: string | null;
+  town: string;
+  exact_location: string | null;
+  phone: string | null;
+  opens_at: string;
+  closes_at: string;
+  is_open_now: boolean;
+  operating_days: number[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Dish {
   id: string;
   name: string;
-  description: string;
-  image_url: string;
+  description: string | null;
+  image_url: string | null;
   category: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RestaurantDish {
@@ -24,8 +35,14 @@ export interface RestaurantDish {
   dish_id: string;
   price: number;
   is_available: boolean;
+  currency: string;
+  available_from: string;
+  available_until: string;
+  available_days: number[];
   restaurant: Restaurant;
   dish: Dish;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useRestaurants = () => {

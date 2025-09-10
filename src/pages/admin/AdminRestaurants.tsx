@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Star } from "lucide-react";
@@ -22,6 +23,13 @@ export default function AdminRestaurants() {
     image_url: "",
     rating: 4.5,
     delivery_time: "30-45 min",
+    town: "",
+    exact_location: "",
+    phone: "",
+    opens_at: "08:00",
+    closes_at: "22:00",
+    is_open_now: true,
+    operating_days: [1, 2, 3, 4, 5, 6, 7],
   });
   const { toast } = useToast();
 
@@ -84,6 +92,13 @@ export default function AdminRestaurants() {
         image_url: "",
         rating: 4.5,
         delivery_time: "30-45 min",
+        town: "",
+        exact_location: "",
+        phone: "",
+        opens_at: "08:00",
+        closes_at: "22:00",
+        is_open_now: true,
+        operating_days: [1, 2, 3, 4, 5, 6, 7],
       });
       fetchRestaurants();
     } catch (error) {
@@ -104,6 +119,13 @@ export default function AdminRestaurants() {
       image_url: restaurant.image_url || "",
       rating: restaurant.rating || 4.5,
       delivery_time: restaurant.delivery_time || "30-45 min",
+      town: restaurant.town,
+      exact_location: restaurant.exact_location || "",
+      phone: restaurant.phone || "",
+      opens_at: restaurant.opens_at,
+      closes_at: restaurant.closes_at,
+      is_open_now: restaurant.is_open_now,
+      operating_days: restaurant.operating_days,
     });
     setIsDialogOpen(true);
   };
@@ -141,6 +163,13 @@ export default function AdminRestaurants() {
       image_url: "",
       rating: 4.5,
       delivery_time: "30-45 min",
+      town: "",
+      exact_location: "",
+      phone: "",
+      opens_at: "08:00",
+      closes_at: "22:00",
+      is_open_now: true,
+      operating_days: [1, 2, 3, 4, 5, 6, 7],
     });
   };
 
@@ -220,26 +249,57 @@ export default function AdminRestaurants() {
                 />
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="town">Town *</Label>
+                <Input
+                  id="town"
+                  value={formData.town}
+                  onChange={(e) => setFormData({ ...formData, town: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="exact_location">Exact Location</Label>
+                <Textarea
+                  id="exact_location"
+                  value={formData.exact_location}
+                  onChange={(e) => setFormData({ ...formData, exact_location: e.target.value })}
+                  placeholder="Detailed address..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+237 6XX XXX XXX"
+                />
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="rating">Rating</Label>
+                  <Label htmlFor="opens_at">Opens At</Label>
                   <Input
-                    id="rating"
-                    type="number"
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    value={formData.rating}
-                    onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) })}
+                    id="opens_at"
+                    type="time"
+                    value={formData.opens_at}
+                    onChange={(e) => setFormData({ ...formData, opens_at: e.target.value })}
+                    required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="delivery_time">Delivery Time</Label>
+                  <Label htmlFor="closes_at">Closes At</Label>  
                   <Input
-                    id="delivery_time"
-                    value={formData.delivery_time}
-                    onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
+                    id="closes_at"
+                    type="time"
+                    value={formData.closes_at}
+                    onChange={(e) => setFormData({ ...formData, closes_at: e.target.value })}
+                    required
                   />
                 </div>
               </div>
@@ -267,9 +327,10 @@ export default function AdminRestaurants() {
               <TableRow>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Delivery Time</TableHead>
+                <TableHead>Town</TableHead>
+                <TableHead>Phone</TableHead> 
+                <TableHead>Hours</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -290,16 +351,18 @@ export default function AdminRestaurants() {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{restaurant.name}</TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {restaurant.description}
-                  </TableCell>
+                  <TableCell>{restaurant.town}</TableCell>
+                  <TableCell>{restaurant.phone || 'N/A'}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      {restaurant.rating}
+                    <div className="text-sm">
+                      {restaurant.opens_at} - {restaurant.closes_at}
                     </div>
                   </TableCell>
-                  <TableCell>{restaurant.delivery_time}</TableCell>
+                  <TableCell>
+                    <Badge variant={restaurant.is_open_now ? "default" : "secondary"}>
+                      {restaurant.is_open_now ? "Open" : "Closed"}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
