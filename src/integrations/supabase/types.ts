@@ -218,57 +218,6 @@ export type Database = {
         }
         Relationships: []
       }
-      town_waitlist: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          name: string
-          phone: string
-          town: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          phone: string
-          town: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          phone?: string
-          town?: string
-        }
-        Relationships: []
-      }
-      towns: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never

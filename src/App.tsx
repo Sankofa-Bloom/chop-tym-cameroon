@@ -5,7 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import AdminTowns from "./pages/AdminTowns";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminRestaurants from "./pages/admin/AdminRestaurants";
+import AdminDishes from "./pages/admin/AdminDishes";
+import AdminMenu from "./pages/admin/AdminMenu";
+import AdminOrders from "./pages/admin/AdminOrders";
 
 const queryClient = new QueryClient();
 
@@ -17,7 +22,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/admin/towns" element={<AdminTowns />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+          <Route path="/admin/restaurants" element={<AdminLayout><AdminRestaurants /></AdminLayout>} />
+          <Route path="/admin/dishes" element={<AdminLayout><AdminDishes /></AdminLayout>} />
+          <Route path="/admin/menu" element={<AdminLayout><AdminMenu /></AdminLayout>} />
+          <Route path="/admin/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
