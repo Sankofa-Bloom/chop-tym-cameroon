@@ -206,14 +206,14 @@ export default function Index() {
           exit="out"
           variants={pageVariants}
           transition={pageTransition}
-          className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background pb-20"
+          className="min-h-screen bg-transparent pb-20 relative"
         >
           {/* Header */}
           <motion.header 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border/50 shadow-soft"
+            className="sticky top-0 z-40 header-prestigious"
           >
             <div className="container mx-auto px-4 py-4 max-w-7xl">
               <div className="flex items-center justify-between mb-6">
@@ -293,22 +293,24 @@ export default function Index() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Card className="overflow-hidden border-0 shadow-medium bg-gradient-to-r from-primary via-primary-light to-primary-dark">
-                <CardContent className="p-6 sm:p-8 text-primary-foreground">
+              <Card className="overflow-hidden border-0 shadow-strong card-premium">
+                <CardContent className="p-6 sm:p-8 gradient-prestigious text-primary-foreground relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-50" />
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 }}
+                    className="relative z-10"
                   >
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-heading mb-3 text-balance">
                       Welcome to {selectedTown}! 🍽️
                     </h2>
                     <p className="text-primary-foreground/90 mb-4 text-lg text-pretty">
-                      Your favorite meals, delivered right on time
+                      Your favorite meals, delivered with prestige
                     </p>
                     <div className="flex items-center gap-2 text-sm sm:text-base">
                       <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span>Delivering in {selectedTown}</span>
+                      <span>Premium delivery in {selectedTown}</span>
                     </div>
                   </motion.div>
                 </CardContent>
@@ -357,7 +359,7 @@ export default function Index() {
                         transition: { duration: 0.3, ease: "easeOut" }
                       }}
                     >
-                      <Card className="overflow-hidden hover:shadow-strong transition-all duration-300 cursor-pointer border-0 bg-card/50 backdrop-blur-sm">
+                      <Card className="overflow-hidden hover:shadow-strong transition-all duration-300 cursor-pointer border-0 card-interactive">
                         <div className="relative overflow-hidden">
                           <img 
                             src={restaurant.image_url} 
