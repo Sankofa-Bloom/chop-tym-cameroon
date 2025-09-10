@@ -9,3 +9,6 @@ max_rows = 1000
 
 [functions.process-payment]
 verify_jwt = false
+
+[functions.send-admin-notification]
+verify_jwt = false

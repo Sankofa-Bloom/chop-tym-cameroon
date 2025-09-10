@@ -113,12 +113,35 @@ serve(async (req) => {
         .eq('id', order.id);
     }
 
+    // Send admin notification email in background
+    const paymentUrl = paymentResponse.data?.payment_url || paymentResponse.payment_url;
+    const adminNotificationData = {
+      orderNumber: orderData.orderNumber,
+      customerInfo: orderData.customerInfo,
+      items: orderData.items,
+      subtotal: orderData.subtotal,
+      deliveryFee: orderData.deliveryFee,
+      total: orderData.total,
+      paymentUrl
+    };
+
+    // Trigger admin notification (don't await to avoid blocking response)
+    fetch(`https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/send-admin-notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderData: adminNotificationData })
+    }).catch(error => {
+      console.error('Failed to send admin notification:', error);
+    });
+
     return new Response(JSON.stringify({
       success: true,
       orderId: order.id,
       orderNumber: order.order_number,
       paymentUrl: paymentResponse.data?.payment_url || paymentResponse.payment_url,
-      message: 'Order created and payment link generated successfully'
+      message: 'Order created, payment link generated, and admin notified'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
