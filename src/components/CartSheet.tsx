@@ -253,7 +253,17 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                className="space-y-3"
               >
+                <Button 
+                  variant="outline"
+                  onClick={onClose}
+                  className="w-full h-12 text-base font-semibold border-2 hover:bg-muted/50 transition-all duration-300"
+                >
+                  Continue Shopping
+                  <Plus className="ml-2 h-4 w-4" />
+                </Button>
+                
                 <Button 
                   onClick={onCheckout}
                   className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-dark text-primary-foreground shadow-medium hover:shadow-strong transition-all duration-300"

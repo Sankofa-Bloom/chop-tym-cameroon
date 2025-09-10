@@ -106,6 +106,10 @@ export default function Index() {
       };
       setCart([...cart, newItem]);
     }
+    
+    // Automatically open cart sidebar when item is added
+    setIsCartOpen(true);
+    setActiveTab("cart");
   };
 
   const handleViewDetail = (dish: Dish) => {
