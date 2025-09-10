@@ -126,10 +126,38 @@ const Index = () => {
     setAppState("checkout");
   };
 
-  const handlePlaceOrder = (data: any) => {
-    setOrderData(data);
-    setAppState("confirmation");
-    setCartItems([]); // Clear cart after successful order
+  const handlePlaceOrder = async (data: any) => {
+    try {
+      const response = await fetch(`https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/process-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderData: data })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // If payment URL is provided, redirect to payment
+        if (result.paymentUrl) {
+          window.open(result.paymentUrl, '_blank');
+        }
+        
+        setOrderData({
+          ...data,
+          orderId: result.orderId,
+          orderNumber: result.orderNumber
+        });
+        setCartItems([]);
+        setAppState("confirmation");
+      } else {
+        alert(`Error processing order: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('Failed to place order. Please try again.');
+    }
   };
 
   const handleGoHome = () => {

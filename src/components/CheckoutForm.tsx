@@ -47,7 +47,7 @@ export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFor
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
@@ -56,11 +56,15 @@ export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFor
       return;
     }
 
+    // Generate order number
+    const orderNumber = `CT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
     const orderData = {
+      orderNumber,
       items,
       customerInfo: formData,
       total: finalTotal,
-      deliveryFee,
+      deliveryFee,  
       subtotal: total,
       timestamp: new Date().toISOString()
     };
