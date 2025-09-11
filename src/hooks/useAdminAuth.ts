@@ -26,33 +26,43 @@ export const useAdminAuth = () => {
       console.error("Error checking admin status:", err);
       setError("Failed to verify admin permissions");
       setIsAdmin(false);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkAdminStatus(session.user.id);
+          // Use setTimeout to prevent deadlock
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
+          }, 0);
         } else {
           setIsAdmin(false);
+          setLoading(false);
         }
         
-        setLoading(false);
+        if (!session?.user) {
+          setLoading(false);
+        }
       }
     );
 
     // Check current session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await checkAdminStatus(session.user.id);
+        setTimeout(() => {
+          checkAdminStatus(session.user.id);
+        }, 0);
+      } else {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
