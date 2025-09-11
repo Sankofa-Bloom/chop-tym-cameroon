@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Mail, Lock, LogOut, History, Settings, Heart } from 'lucide-react';
+import { ArrowLeft, User, Mail, Lock, LogOut, History, Settings, Heart, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, type Profile as UserProfile } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 interface ProfileProps {
@@ -15,11 +15,27 @@ interface ProfileProps {
 }
 
 export const Profile = ({ onBack }: ProfileProps) => {
-  const { user, signIn, signUp, signOut, isAuthenticated, loading } = useAuth();
+  const { user, profile, signIn, signUp, signOut, updateProfile, isAuthenticated, loading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    phone: ''
+  });
+
+  // Initialize edit form when profile is loaded
+  useState(() => {
+    if (profile) {
+      setEditForm({
+        full_name: profile.full_name || '',
+        phone: profile.phone || ''
+      });
+    }
+  });
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +43,7 @@ export const Profile = ({ onBack }: ProfileProps) => {
 
     try {
       const { error } = isSignUp 
-        ? await signUp(email, password)
+        ? await signUp(email, password, fullName)
         : await signIn(email, password);
 
       if (error) {
@@ -36,6 +52,7 @@ export const Profile = ({ onBack }: ProfileProps) => {
         toast.success(isSignUp ? 'Account created successfully!' : 'Signed in successfully!');
         setEmail('');
         setPassword('');
+        setFullName('');
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
@@ -50,6 +67,29 @@ export const Profile = ({ onBack }: ProfileProps) => {
       toast.error(error.message);
     } else {
       toast.success('Signed out successfully!');
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile) return;
+
+    const { error } = await updateProfile(editForm);
+    if (error) {
+      toast.error('Failed to update profile');
+    } else {
+      toast.success('Profile updated successfully!');
+      setIsEditing(false);
+    }
+  };
+
+  const startEditing = () => {
+    if (profile) {
+      setEditForm({
+        full_name: profile.full_name || '',
+        phone: profile.phone || ''
+      });
+      setIsEditing(true);
     }
   };
 
@@ -122,6 +162,18 @@ export const Profile = ({ onBack }: ProfileProps) => {
                       required
                     />
                   </div>
+                  {isSignUp && (
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name (optional)</Label>
+                      <Input
+                        id="fullName"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <Input
@@ -187,7 +239,12 @@ export const Profile = ({ onBack }: ProfileProps) => {
                   <User className="w-8 h-8 text-primary" />
                 </div>
                 <CardTitle>Welcome back!</CardTitle>
-                <CardDescription>{user.email}</CardDescription>
+                <CardDescription>
+                  {profile?.full_name || user.email}
+                  {profile?.full_name && (
+                    <div className="text-xs text-muted-foreground mt-1">{user.email}</div>
+                  )}
+                </CardDescription>
               </CardHeader>
             </Card>
 
@@ -199,38 +256,101 @@ export const Profile = ({ onBack }: ProfileProps) => {
               </TabsList>
 
               <TabsContent value="account" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Settings className="w-5 h-5" />
-                      Account Settings
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">Email</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                {isEditing ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Edit className="w-5 h-5" />
+                        Edit Profile
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleUpdateProfile} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-full-name">Full Name</Label>
+                          <Input
+                            id="edit-full-name"
+                            value={editForm.full_name}
+                            onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                            placeholder="Enter your full name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-phone">Phone</Label>
+                          <Input
+                            id="edit-phone"
+                            value={editForm.phone}
+                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                            placeholder="Enter your phone number"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button type="submit" className="flex-1">
+                            Save Changes
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsEditing(false)}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Settings className="w-5 h-5" />
+                          Profile Information
+                        </div>
+                        <Button variant="outline" size="sm" onClick={startEditing}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Full Name</p>
+                            <p className="text-sm text-muted-foreground">
+                              {profile?.full_name || 'Not set'}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Lock className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">Password</p>
-                          <p className="text-sm text-muted-foreground">••••••••</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Email</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Change
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Phone</p>
+                            <p className="text-sm text-muted-foreground">
+                              {profile?.phone || 'Not set'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Button 
                   variant="outline" 
