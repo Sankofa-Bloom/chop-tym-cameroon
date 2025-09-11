@@ -22,17 +22,18 @@ interface CheckoutItem {
 interface CheckoutFormProps {
   items: CheckoutItem[];
   total: number;
+  selectedTown: string;
   onBack: () => void;
   onPlaceOrder: (orderData: any) => void;
 }
 
-export const CheckoutForm = ({ items, total, onBack, onPlaceOrder }: CheckoutFormProps) => {
+export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder }: CheckoutFormProps) => {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
     address: "",
     notes: "",
-    town: "",
+    town: selectedTown,
     deliveryZone: ""
   });
 

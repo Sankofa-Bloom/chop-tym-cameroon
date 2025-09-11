@@ -47,7 +47,7 @@ export interface RestaurantDish {
   updated_at: string;
 }
 
-export const useRestaurants = () => {
+export const useRestaurants = (town?: string) => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,9 +55,15 @@ export const useRestaurants = () => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('restaurants')
-          .select('*')
+          .select('*');
+        
+        if (town) {
+          query = query.eq('town', town);
+        }
+        
+        const { data, error } = await query
           .order('rating', { ascending: false });
 
         if (error) throw error;
@@ -90,7 +96,7 @@ export const useRestaurants = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [town]);
 
   return { restaurants, loading, error };
 };
@@ -143,7 +149,7 @@ export const useDishes = () => {
   return { dishes, loading, error };
 };
 
-export const useRestaurantDishes = () => {
+export const useRestaurantDishes = (town?: string) => {
   const [restaurantDishes, setRestaurantDishes] = useState<RestaurantDish[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,7 +168,13 @@ export const useRestaurantDishes = () => {
           .order('price');
 
         if (error) throw error;
-        setRestaurantDishes(data || []);
+        
+        // Filter by town on the client side since nested filtering might not work perfectly
+        const filteredData = town 
+          ? (data || []).filter((rd: any) => rd.restaurant?.town === town)
+          : (data || []);
+          
+        setRestaurantDishes(filteredData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -191,7 +203,7 @@ export const useRestaurantDishes = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [town]);
 
   return { restaurantDishes, loading, error };
 };

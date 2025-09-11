@@ -61,9 +61,9 @@ export default function Index() {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Fetch data from database
-  const { restaurants, loading: restaurantsLoading } = useRestaurants();
+  const { restaurants, loading: restaurantsLoading } = useRestaurants(selectedTown);
   const { dishes, loading: dishesLoading } = useDishes();
-  const { restaurantDishes, loading: restaurantDishesLoading } = useRestaurantDishes();
+  const { restaurantDishes, loading: restaurantDishesLoading } = useRestaurantDishes(selectedTown);
 
   // Transform data for display
   const dishesWithPricing = useMemo(() => {
@@ -215,6 +215,7 @@ export default function Index() {
           <CheckoutForm
             items={cart}
             total={cartTotal}
+            selectedTown={selectedTown}
             onBack={() => setAppState("browsing")}
             onPlaceOrder={handlePlaceOrder}
           />
