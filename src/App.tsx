@@ -13,7 +13,7 @@ import AdminRestaurants from "./pages/admin/AdminRestaurants";
 import AdminDishes from "./pages/admin/AdminDishes";
 import AdminMenu from "./pages/admin/AdminMenu";
 import AdminOrders from "./pages/admin/AdminOrders";
-import AdminTowns from "./pages/AdminTowns";
+import AdminTowns from "./pages/admin/AdminTowns";
 import AdminZones from "./pages/admin/AdminZones";
 
 const queryClient = new QueryClient();
