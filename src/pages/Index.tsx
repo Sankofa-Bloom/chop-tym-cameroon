@@ -14,9 +14,10 @@ import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
 import { TownSelector } from "@/components/TownSelector";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { Profile } from "@/components/Profile";
 import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
 
-type AppState = "browsing" | "detail" | "checkout" | "confirmation";
+type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile";
 
 interface CartItem {
   id: string;
@@ -154,6 +155,7 @@ export default function Index() {
     setAppState("browsing");
     setSelectedDish(null);
     setOrderData(null);
+    setActiveTab("home");
   };
 
   const handleTabChange = (tab: string) => {
@@ -167,6 +169,8 @@ export default function Index() {
     } else if (tab === "home") {
       setShowSearch(false);
       setSearchQuery("");
+    } else if (tab === "profile") {
+      setAppState("profile");
     }
   };
 
@@ -234,6 +238,14 @@ export default function Index() {
             onGoHome={handleGoHome}
           />
         </motion.div>
+      ) : appState === "profile" ? (
+        <Profile
+          key="profile"
+          onBack={() => {
+            setAppState("browsing");
+            setActiveTab("home");
+          }}
+        />
       ) : (
         <motion.div
           key="browsing"
