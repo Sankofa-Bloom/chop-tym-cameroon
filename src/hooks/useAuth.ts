@@ -74,7 +74,7 @@ export const useAuth = () => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = 'https://choptym.com/';
     
     const { error } = await supabase.auth.signUp({
       email,
