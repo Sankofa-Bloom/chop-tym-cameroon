@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { config } from '@/lib/config';
 
 export interface Profile {
   id: string;
@@ -74,13 +75,11 @@ export const useAuth = () => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = 'https://choptym.com/';
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: config.app.redirectUrl,
         data: {
           full_name: fullName || email.split('@')[0]
         }
