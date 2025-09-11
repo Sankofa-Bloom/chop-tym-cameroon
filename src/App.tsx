@@ -8,13 +8,10 @@ import NotFound from "./pages/NotFound";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ProtectedAdminRoute } from "@/components/admin/ProtectedAdminRoute";
 import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminRestaurants from "./pages/admin/AdminRestaurants";
-import AdminDishes from "./pages/admin/AdminDishes";
-import AdminMenu from "./pages/admin/AdminMenu";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminTowns from "./pages/admin/AdminTowns";
-import AdminZones from "./pages/admin/AdminZones";
+import { DashboardOverview } from "@/components/admin/DashboardOverview";
+import { RestaurantManagement } from "@/components/admin/RestaurantManagement";
+import { DeliveryManagement } from "@/components/admin/DeliveryManagement";
+import { OrdersManagement } from "@/components/admin/OrdersManagement";
 
 const queryClient = new QueryClient();
 
@@ -31,37 +28,22 @@ const App = () => (
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={
             <ProtectedAdminRoute>
-              <AdminLayout><AdminDashboard /></AdminLayout>
+              <AdminLayout><DashboardOverview /></AdminLayout>
             </ProtectedAdminRoute>
           } />
           <Route path="/admin/restaurants" element={
             <ProtectedAdminRoute>
-              <AdminLayout><AdminRestaurants /></AdminLayout>
+              <AdminLayout><RestaurantManagement /></AdminLayout>
             </ProtectedAdminRoute>
           } />
-          <Route path="/admin/dishes" element={
+          <Route path="/admin/delivery" element={
             <ProtectedAdminRoute>
-              <AdminLayout><AdminDishes /></AdminLayout>
-            </ProtectedAdminRoute>
-          } />
-          <Route path="/admin/menu" element={
-            <ProtectedAdminRoute>
-              <AdminLayout><AdminMenu /></AdminLayout>
+              <AdminLayout><DeliveryManagement /></AdminLayout>
             </ProtectedAdminRoute>
           } />
           <Route path="/admin/orders" element={
             <ProtectedAdminRoute>
-              <AdminLayout><AdminOrders /></AdminLayout>
-            </ProtectedAdminRoute>
-          } />
-          <Route path="/admin/towns" element={
-            <ProtectedAdminRoute>
-              <AdminLayout><AdminTowns /></AdminLayout>
-            </ProtectedAdminRoute>
-          } />
-          <Route path="/admin/zones" element={
-            <ProtectedAdminRoute>
-              <AdminLayout><AdminZones /></AdminLayout>
+              <AdminLayout><OrdersManagement /></AdminLayout>
             </ProtectedAdminRoute>
           } />
           

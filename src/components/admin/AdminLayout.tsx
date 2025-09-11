@@ -30,11 +30,8 @@ import { AlertTriangle } from "lucide-react";
 const sidebarItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Restaurants", url: "/admin/restaurants", icon: Store },
-  { title: "Dishes", url: "/admin/dishes", icon: ChefHat },
-  { title: "Menu Management", url: "/admin/menu", icon: Menu },
+  { title: "Delivery", url: "/admin/delivery", icon: MapPin },
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
-  { title: "Towns", url: "/admin/towns", icon: MapPin },
-  { title: "Delivery Zones", url: "/admin/zones", icon: Zap },
 ];
 
 interface AdminLayoutProps {
