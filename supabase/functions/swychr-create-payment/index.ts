@@ -29,7 +29,8 @@ serve(async (req) => {
     console.log('Creating payment for:', { transaction_id, amount, name });
 
     // First get authentication token
-    const authResponse = await fetch(`${req.headers.get('origin')}/functions/v1/swychr-auth`, {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const authResponse = await fetch(`${supabaseUrl}/functions/v1/swychr-auth`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
