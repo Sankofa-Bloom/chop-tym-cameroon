@@ -8,9 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useTowns } from "@/hooks/useTowns";
 import { useDeliveryZones } from "@/hooks/useDeliveryZones";
+import { useStreets } from "@/hooks/useStreets";
 import { 
   MapPin, 
   Plus, 
@@ -26,6 +28,7 @@ interface Town {
   id: string;
   name: string;
   is_active: boolean;
+  free_delivery: boolean;
   created_at: string;
 }
 
@@ -47,6 +50,14 @@ interface WaitlistEntry {
   created_at: string;
 }
 
+interface Street {
+  id: string;
+  name: string;
+  delivery_zone_id: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export function DeliveryManagement() {
   const [activeTab, setActiveTab] = useState("zones");
   
@@ -61,15 +72,23 @@ export function DeliveryManagement() {
   const [zoneDialogOpen, setZoneDialogOpen] = useState(false);
   const [editingZone, setEditingZone] = useState<DeliveryZone | null>(null);
   
+  // Streets state
+  const { streets, loading: streetsLoading, refetch: refetchStreets, fetchAllStreets } = useStreets();
+  const [streetDialogOpen, setStreetDialogOpen] = useState(false);
+  const [editingStreet, setEditingStreet] = useState<Street | null>(null);
+  
   // Waitlist state
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [waitlistLoading, setWaitlistLoading] = useState(false);
 
+  // Initialize streets with delivery zone data for admin
   useEffect(() => {
     if (activeTab === "waitlist") {
       fetchWaitlist();
+    } else if (activeTab === "streets") {
+      fetchAllStreets();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchAllStreets]);
 
   const fetchWaitlist = async () => {
     try {
@@ -210,6 +229,82 @@ export function DeliveryManagement() {
     }
   };
 
+  const updateTownFreeDelivery = async (id: string, free_delivery: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("towns")
+        .update({ free_delivery })
+        .eq("id", id);
+      
+      if (error) throw error;
+      toast.success(`Free delivery ${free_delivery ? 'enabled' : 'disabled'} successfully`);
+      refetchTowns();
+    } catch (error) {
+      console.error("Error updating town free delivery:", error);
+      toast.error("Failed to update free delivery setting");
+    }
+  };
+
+  const handleStreetSubmit = async (formData: any) => {
+    try {
+      if (editingStreet) {
+        const { error } = await supabase
+          .from("streets")
+          .update(formData)
+          .eq("id", editingStreet.id);
+        if (error) throw error;
+        toast.success("Street updated successfully");
+      } else {
+        const { error } = await supabase
+          .from("streets")
+          .insert([formData]);
+        if (error) throw error;
+        toast.success("Street created successfully");
+      }
+      
+      setStreetDialogOpen(false);
+      setEditingStreet(null);
+      refetchStreets();
+    } catch (error) {
+      console.error("Error saving street:", error);
+      toast.error("Failed to save street");
+    }
+  };
+
+  const updateStreetStatus = async (id: string, is_active: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("streets")
+        .update({ is_active })
+        .eq("id", id);
+      
+      if (error) throw error;
+      toast.success(`Street ${is_active ? 'activated' : 'deactivated'} successfully`);
+      refetchStreets();
+    } catch (error) {
+      console.error("Error updating street status:", error);
+      toast.error("Failed to update street status");
+    }
+  };
+
+  const deleteStreet = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this street?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("streets")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      toast.success("Street deleted successfully");
+      refetchStreets();
+    } catch (error) {
+      console.error("Error deleting street:", error);
+      toast.error("Failed to delete street");
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
@@ -277,10 +372,14 @@ export function DeliveryManagement() {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="zones" className="flex items-center gap-2">
             <Truck className="w-4 h-4" />
             Delivery Zones
+          </TabsTrigger>
+          <TabsTrigger value="streets" className="flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            Streets
           </TabsTrigger>
           <TabsTrigger value="towns" className="flex items-center gap-2">
             <MapPin className="w-4 h-4" />
@@ -291,6 +390,102 @@ export function DeliveryManagement() {
             Waitlist
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="streets" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Streets ({streets.length})</h2>
+            <Dialog open={streetDialogOpen} onOpenChange={setStreetDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Street
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingStreet ? "Edit Street" : "Add New Street"}
+                  </DialogTitle>
+                </DialogHeader>
+                <StreetForm
+                  street={editingStreet}
+                  zones={zones}
+                  onSubmit={handleStreetSubmit}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              {streetsLoading ? (
+                <div className="p-6 text-center">Loading streets...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Street Name</TableHead>
+                      <TableHead>Delivery Zone</TableHead>
+                      <TableHead>Town</TableHead>
+                      <TableHead>Delivery Fee</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {streets.map((street: any) => (
+                      <TableRow key={street.id}>
+                        <TableCell className="font-medium">{street.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{street.delivery_zone?.zone_name}</Badge>
+                        </TableCell>
+                        <TableCell>{street.delivery_zone?.town}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            {formatPrice(street.delivery_zone?.delivery_fee || 0)} XAF
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={street.is_active}
+                              onCheckedChange={(checked) => updateStreetStatus(street.id, checked)}
+                            />
+                            <Badge variant={street.is_active ? "default" : "secondary"}>
+                              {street.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingStreet(street);
+                                setStreetDialogOpen(true);
+                              }}
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteStreet(street.id)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Delivery Zones Tab */}
         <TabsContent value="zones" className="space-y-4">
@@ -425,6 +620,7 @@ export function DeliveryManagement() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
+                      <TableHead>Free Delivery</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Actions</TableHead>
@@ -434,6 +630,17 @@ export function DeliveryManagement() {
                     {towns.map((town) => (
                       <TableRow key={town.id}>
                         <TableCell className="font-medium">{town.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={town.free_delivery}
+                              onCheckedChange={(checked) => updateTownFreeDelivery(town.id, checked)}
+                            />
+                            <Badge variant={town.free_delivery ? "default" : "secondary"}>
+                              {town.free_delivery ? "Free" : "Paid"}
+                            </Badge>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Switch
@@ -553,6 +760,63 @@ function TownForm({ town, onSubmit }: any) {
 
       <Button type="submit" className="w-full">
         {town ? "Update Town" : "Create Town"}
+      </Button>
+    </form>
+  );
+}
+
+function StreetForm({ street, zones, onSubmit }: any) {
+  const [formData, setFormData] = useState({
+    name: street?.name || "",
+    delivery_zone_id: street?.delivery_zone_id || "",
+    is_active: street?.is_active ?? true
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Street Name</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          placeholder="Enter street name"
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="delivery_zone_id">Delivery Zone</Label>
+        <Select value={formData.delivery_zone_id} onValueChange={(value) => setFormData({...formData, delivery_zone_id: value})}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select delivery zone" />
+          </SelectTrigger>
+          <SelectContent>
+            {zones.map((zone: any) => (
+              <SelectItem key={zone.id} value={zone.id}>
+                {zone.zone_name} - {zone.town}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Switch
+          id="is_active"
+          checked={formData.is_active}
+          onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
+        />
+        <Label htmlFor="is_active">Active</Label>
+      </div>
+
+      <Button type="submit" className="w-full">
+        {street ? "Update Street" : "Create Street"}
       </Button>
     </form>
   );

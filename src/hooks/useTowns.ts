@@ -5,6 +5,7 @@ export interface Town {
   id: string;
   name: string;
   is_active: boolean;
+  free_delivery: boolean;
   created_at: string;
   updated_at: string;
 }

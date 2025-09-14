@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTowns } from "@/hooks/useTowns";
 import { useDeliveryZones } from "@/hooks/useDeliveryZones";
+import { useStreets } from "@/hooks/useStreets";
 
 interface CheckoutItem {
   id: string;
@@ -34,14 +35,18 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
     address: "",
     notes: "",
     town: selectedTown,
-    deliveryZone: ""
+    deliveryZone: "",
+    street: ""
   });
 
   const { towns } = useTowns();
   const { zones } = useDeliveryZones(formData.town);
+  const { streets } = useStreets(formData.deliveryZone);
   const [selectedZone, setSelectedZone] = useState<any>(null);
+  const [selectedTownData, setSelectedTownData] = useState<any>(null);
   
-  const deliveryFee = selectedZone?.delivery_fee || 500;
+  // Calculate delivery fee based on town's free delivery setting
+  const deliveryFee = selectedTownData?.free_delivery ? 0 : (selectedZone?.delivery_fee || 500);
   const finalTotal = total + deliveryFee;
 
   // Update selected zone when zone changes
@@ -51,6 +56,14 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
       setSelectedZone(zone);
     }
   }, [formData.deliveryZone, zones]);
+
+  // Update selected town data when town changes
+  useEffect(() => {
+    if (formData.town && towns.length > 0) {
+      const town = towns.find(t => t.name === formData.town);
+      setSelectedTownData(town);
+    }
+  }, [formData.town, towns]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
@@ -71,8 +84,8 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
     e.preventDefault();
     
     // Basic validation
-    if (!formData.fullName || !formData.phone || !formData.address || !formData.town || !formData.deliveryZone) {
-      alert("Please fill in all required fields including delivery zone");
+    if (!formData.fullName || !formData.phone || !formData.address || !formData.town || !formData.deliveryZone || !formData.street) {
+      alert("Please fill in all required fields including delivery zone and street");
       return;
     }
 
@@ -135,7 +148,9 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
             </div>
             <div className="flex justify-between">
               <span>Delivery Fee</span>
-              <span>{formatPrice(deliveryFee)}</span>
+              <span className={selectedTownData?.free_delivery ? "text-green-600 font-medium" : ""}>
+                {selectedTownData?.free_delivery ? "Free" : formatPrice(deliveryFee)}
+              </span>
             </div>
             <Separator />
             <div className="flex justify-between text-lg font-semibold">
@@ -159,6 +174,7 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
                 <Select value={formData.town} onValueChange={(value) => {
                   handleInputChange("town", value);
                   handleInputChange("deliveryZone", ""); // Reset zone when town changes
+                  handleInputChange("street", ""); // Reset street when town changes
                   setSelectedZone(null);
                 }}>
                   <SelectTrigger className="chop-input mt-1">
@@ -177,7 +193,10 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
               {formData.town && (
                 <div>
                   <Label htmlFor="deliveryZone">Delivery Zone *</Label>
-                  <Select value={formData.deliveryZone} onValueChange={(value) => handleInputChange("deliveryZone", value)}>
+                  <Select value={formData.deliveryZone} onValueChange={(value) => {
+                    handleInputChange("deliveryZone", value);
+                    handleInputChange("street", ""); // Reset street when zone changes
+                  }}>
                     <SelectTrigger className="chop-input mt-1">
                       <SelectValue placeholder="Choose your delivery zone" />
                     </SelectTrigger>
@@ -200,9 +219,30 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
                   </Select>
                   {selectedZone && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      Delivery fee: {formatPrice(selectedZone.delivery_fee)}
+                      Delivery fee: {selectedTownData?.free_delivery ? "Free" : formatPrice(selectedZone.delivery_fee)}
+                      {selectedTownData?.free_delivery && (
+                        <span className="text-green-600 font-medium ml-2">✓ Free delivery in this town</span>
+                      )}
                     </p>
                   )}
+                </div>
+              )}
+
+              {formData.deliveryZone && (
+                <div>
+                  <Label htmlFor="street">Street *</Label>
+                  <Select value={formData.street} onValueChange={(value) => handleInputChange("street", value)}>
+                    <SelectTrigger className="chop-input mt-1">
+                      <SelectValue placeholder="Choose your street" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {streets.map((street) => (
+                        <SelectItem key={street.id} value={street.id}>
+                          {street.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 

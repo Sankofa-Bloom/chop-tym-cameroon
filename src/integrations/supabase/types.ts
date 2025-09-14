@@ -281,6 +281,41 @@ export type Database = {
         }
         Relationships: []
       }
+      streets: {
+        Row: {
+          created_at: string
+          delivery_zone_id: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_zone_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_zone_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streets_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       town_waitlist: {
         Row: {
           created_at: string
@@ -311,6 +346,7 @@ export type Database = {
       towns: {
         Row: {
           created_at: string
+          free_delivery: boolean
           id: string
           is_active: boolean
           name: string
@@ -318,6 +354,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          free_delivery?: boolean
           id?: string
           is_active?: boolean
           name: string
@@ -325,6 +362,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          free_delivery?: boolean
           id?: string
           is_active?: boolean
           name?: string
