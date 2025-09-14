@@ -81,6 +81,7 @@ serve(async (req) => {
         customer_name: orderData.customerInfo.fullName,
         customer_phone: orderData.customerInfo.phone,
         delivery_address: orderData.customerInfo.address,
+        town: orderData.customerInfo.town,
         notes: orderData.customerInfo.notes,
         items: orderData.items,
         subtotal: orderData.subtotal,
