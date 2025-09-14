@@ -2,11 +2,12 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CustomOrderForm } from "@/components/CustomOrderForm";
+import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package } from "lucide-react";
+import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package, Phone, Mail } from "lucide-react";
 import { FoodCard } from "@/components/FoodCard";
 import { FoodDetail } from "@/components/FoodDetail";
 import { CartSheet } from "@/components/CartSheet";
@@ -280,7 +281,7 @@ export default function Index() {
             className="sticky top-0 z-40 header-prestigious"
           >
             <div className="container mx-auto px-4 py-4 max-w-7xl">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <motion.div 
                   className="flex items-center gap-3"
                   whileHover={{ scale: 1.02 }}
@@ -322,6 +323,28 @@ export default function Index() {
                   </Button>
                 </motion.div>
               </div>
+
+              {/* Contact Information */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 text-sm text-muted-foreground"
+              >
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-primary" />
+                  <a href="tel:+237670416449" className="hover:text-primary transition-colors">
+                    +237 6 70 41 64 49
+                  </a>
+                </div>
+                <div className="hidden sm:block w-px h-4 bg-border"></div>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" />
+                  <a href="mailto:support@choptym.com" className="hover:text-primary transition-colors">
+                    support@choptym.com
+                  </a>
+                </div>
+              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -550,6 +573,9 @@ export default function Index() {
           />
         </motion.div>
       )}
+      
+      {/* WhatsApp Float Button */}
+      <WhatsAppFloat />
     </AnimatePresence>
   );
 }
