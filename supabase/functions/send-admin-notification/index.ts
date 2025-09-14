@@ -3,7 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import React from 'npm:react@18.3.1';
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { OrderNotificationEmail } from './_templates/order-notification.tsx';
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { Resend } from 'npm:resend@4.0.0';
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,7 +19,7 @@ serve(async (req) => {
 
   try {
     const { orderData } = await req.json();
-    console.log('Sending admin notification for order:', orderData.orderNumber);
+    console.log('Sending admin notification (Resend) for order:', orderData.orderNumber);
 
     // Render the React email template
     const html = await renderAsync(
@@ -35,50 +37,28 @@ serve(async (req) => {
       })
     );
 
-    // Configure ZOHO SMTP client
-    const client = new SmtpClient();
-    
-    const smtpConfig = {
-      hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',
-      port: parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587'),
-      username: Deno.env.get('ZOHO_SMTP_USERNAME'),
-      password: Deno.env.get('ZOHO_SMTP_PASSWORD'),
-    };
-
-    console.log('Connecting to ZOHO SMTP with config:', {
-      hostname: smtpConfig.hostname,
-      port: smtpConfig.port,
-      username: smtpConfig.username,
-      password: '***' // Hide password in logs
-    });
-
-    await client.connect(smtpConfig);
-
-    // Send email to admin using ZOHO SMTP
-    await client.send({
-      from: smtpConfig.username || 'noreply@choptym.com',
-      to: 'choptym237@gmail.com',
+    // Send email to admin using Resend
+    const emailResponse = await resend.emails.send({
+      from: 'ChopTym <onboarding@resend.dev>',
+      to: ['choptym237@gmail.com'],
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
-      content: html,
-      html: html,
+      html,
     });
 
-    await client.close();
-
-    console.log('Admin notification sent successfully via ZOHO SMTP');
+    console.log('Admin notification sent via Resend:', (emailResponse as any)?.id || 'no-id');
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Admin notification sent successfully via ZOHO SMTP'
+      message: 'Admin notification sent via Resend'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('Error in send-admin-notification function:', error);
+    console.error('Error in send-admin-notification (Resend):', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: (error as any)?.message || 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
