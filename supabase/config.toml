@@ -22,6 +22,9 @@ verify_jwt = false
 [functions.check-pending-orders]
 verify_jwt = false
 
+[functions.check-payment-status]
+verify_jwt = false
+
 [functions.swychr-auth]
 verify_jwt = false
 

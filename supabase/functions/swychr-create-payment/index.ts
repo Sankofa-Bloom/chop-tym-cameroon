@@ -140,9 +140,70 @@ serve(async (req) => {
       });
     } else {
       console.error('Payment creation failed:', paymentData);
+      
+      // Send admin failure notification with detailed error logging
+      if (orderId && orderData) {
+        try {
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+          const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+          const supabase = createClient(supabaseUrl, supabaseKey);
+
+          // Update order status to failed
+          await supabase
+            .from('orders')
+            .update({ payment_status: 'failed' })
+            .eq('id', orderId);
+
+          // Send detailed failure notification to admin
+          await supabase.functions.invoke('send-status-notification', {
+            body: {
+              orderData: {
+                orderNumber: transaction_id,
+                customerName: name,
+                customerPhone: mobile,
+                deliveryAddress: orderData.customerInfo?.address || '',
+                items: orderData.items || [],
+                subtotal: orderData.subtotal || amount,
+                deliveryFee: orderData.deliveryFee || 0,
+                total: amount,
+                paymentReference: null,
+                createdAt: new Date().toISOString(),
+                notes: orderData.customerInfo?.notes || '',
+              },
+              oldStatus: 'pending',
+              newStatus: 'failed',
+              notificationType: 'failed',
+              errorDetails: {
+                stage: 'payment_creation',
+                paymentResponse: paymentData,
+                errorMessage: 'Failed to create payment link',
+                transactionId: transaction_id,
+                timestamp: new Date().toISOString(),
+                requestData: {
+                  country_code,
+                  name,
+                  email,
+                  mobile,
+                  amount,
+                  transaction_id,
+                  description,
+                  pass_digital_charge
+                }
+              }
+            }
+          });
+
+          console.log('Admin failure notification sent for failed payment creation');
+        } catch (notificationError) {
+          console.error('Failed to send admin notification for payment creation failure:', notificationError);
+        }
+      }
+
       return new Response(JSON.stringify({
         error: 'Payment creation failed',
-        details: paymentData
+        details: paymentData,
+        errorCode: 'PAYMENT_CREATION_FAILED',
+        timestamp: new Date().toISOString()
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
