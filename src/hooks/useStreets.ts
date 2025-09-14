@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Street {
@@ -15,7 +15,7 @@ export const useStreets = (town?: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStreets = async () => {
+  const fetchStreets = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -45,9 +45,9 @@ export const useStreets = (town?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [town]);
 
-  const fetchAllStreets = async () => {
+  const fetchAllStreets = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -71,7 +71,7 @@ export const useStreets = (town?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStreets();
