@@ -14,7 +14,45 @@ interface CustomOrderFormProps {
   selectedTown: string;
 }
 
+const getLocalExamples = (town: string) => {
+  const examples = {
+    'Douala': [
+      'Buy 2kg rice from Santa Lucia supermarket',
+      'Pick up documents from MTN office at Bonanjo',
+      'Order shawarma from any good restaurant in Akwa'
+    ],
+    'Yaoundé': [
+      'Buy groceries from Mahima supermarket at Bastos',
+      'Pick up documents from Orange office at Centre Ville',
+      'Order pizza from any restaurant in Essos'
+    ],
+    'Limbe': [
+      'Buy fresh fish from Down Beach market',
+      'Pick up package from Post Office at Mile 1',
+      'Order grilled chicken from any restaurant in town'
+    ],
+    'Bafoussam': [
+      'Buy coffee beans from local market',
+      'Pick up documents from bank at Commercial Avenue',
+      'Order local dishes from any restaurant in town'
+    ],
+    'Bamenda': [
+      'Buy vegetables from Nkwen market',
+      'Pick up documents from government office',
+      'Order achu from any restaurant in Commercial Avenue'
+    ]
+  };
+  
+  return examples[town] || [
+    'Buy groceries from local supermarket',
+    'Pick up documents from office',
+    'Order food from any restaurant in town'
+  ];
+};
+
 export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) => {
+  const localExamples = getLocalExamples(selectedTown);
+  
   const [formData, setFormData] = useState({
     customerName: "",
     customerPhone: "",
@@ -240,8 +278,8 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
                   rows={4}
                 />
                 <p className="text-sm text-muted-foreground mt-2">
-                  Examples: "Buy 2kg rice from Mahima supermarket", "Pick up documents from MTN office at Bonanjo", 
-                  "Order shawarma from any good restaurant in Akwa"
+                  Examples: "{localExamples[0]}", "{localExamples[1]}", 
+                  "{localExamples[2]}"
                 </p>
               </div>
 
