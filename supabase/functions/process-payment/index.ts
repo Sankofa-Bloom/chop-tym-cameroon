@@ -34,7 +34,7 @@ async function getSwychrAuthToken() {
   return data.data?.token || data.token;
 }
 
-async function createPaymentLink(authToken: string, orderData: any) {
+async function createPaymentLink(authToken: string, orderData: any, transactionId: string) {
   const response = await fetch('https://api.accountpe.com/api/payin/create_payment_links', {
     method: 'POST',
     headers: {
@@ -47,8 +47,8 @@ async function createPaymentLink(authToken: string, orderData: any) {
       email: orderData.customerInfo.email || `${orderData.customerInfo.phone}@choptym.com`,
       mobile: orderData.customerInfo.phone,
       amount: orderData.total,
-      transaction_id: orderData.orderNumber,
-      description: `ChopTym Order - ${orderData.orderNumber}`,
+      transaction_id: transactionId,
+      description: `ChopTym Order - ${transactionId}`,
       pass_digital_charge: true
     })
   });
@@ -77,7 +77,7 @@ serve(async (req) => {
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
-        order_number: orderData.orderNumber,
+        
         customer_name: orderData.customerInfo.fullName,
         customer_phone: orderData.customerInfo.phone,
         delivery_address: orderData.customerInfo.address,
@@ -101,7 +101,7 @@ serve(async (req) => {
     console.log('Order saved to database:', order.id);
 
     // Create payment link with Swychr
-    const paymentResponse = await createPaymentLink(authToken, orderData);
+    const paymentResponse = await createPaymentLink(authToken, orderData, order.order_number);
     console.log('Payment link created:', paymentResponse);
 
     // Update order with payment reference
@@ -117,7 +117,7 @@ serve(async (req) => {
     // Send admin notification email in background
     const paymentUrl = paymentResponse.data?.payment_url || paymentResponse.payment_url;
     const adminNotificationData = {
-      orderNumber: orderData.orderNumber,
+      orderNumber: order.order_number,
       customerInfo: orderData.customerInfo,
       items: orderData.items,
       subtotal: orderData.subtotal,

@@ -53,6 +53,7 @@ serve(async (req) => {
 
     // Save order to database first if orderData is provided
     let orderId = null;
+    let orderRecord: any = null;
     if (orderData) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -61,7 +62,7 @@ serve(async (req) => {
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
-          order_number: transaction_id,
+          
           customer_name: name,
           customer_phone: mobile,
           delivery_address: orderData.customerInfo?.address || '',
@@ -83,6 +84,7 @@ serve(async (req) => {
       }
 
       orderId = order.id;
+      orderRecord = order;
       console.log('Order saved to database:', orderId);
     }
 
@@ -99,7 +101,7 @@ serve(async (req) => {
         email,
         mobile,
         amount,
-        transaction_id,
+        transaction_id: orderRecord?.order_number || transaction_id,
         description,
         pass_digital_charge,
       }),
@@ -158,7 +160,7 @@ serve(async (req) => {
           await supabase.functions.invoke('send-status-notification', {
             body: {
               orderData: {
-                orderNumber: transaction_id,
+                orderNumber: orderRecord?.order_number || transaction_id,
                 customerName: name,
                 customerPhone: mobile,
                 deliveryAddress: orderData.customerInfo?.address || '',
@@ -177,7 +179,7 @@ serve(async (req) => {
                 stage: 'payment_creation',
                 paymentResponse: paymentData,
                 errorMessage: 'Failed to create payment link',
-                transactionId: transaction_id,
+                transactionId: orderRecord?.order_number || transaction_id,
                 timestamp: new Date().toISOString(),
                 requestData: {
                   country_code,
