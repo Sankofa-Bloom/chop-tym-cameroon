@@ -2,12 +2,11 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CustomOrderForm } from "@/components/CustomOrderForm";
-import { CustomOrderCTA } from "@/components/CustomOrderCTA";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Search, ShoppingCart, Star, Users, MapPin, Clock } from "lucide-react";
+import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package } from "lucide-react";
 import { FoodCard } from "@/components/FoodCard";
 import { FoodDetail } from "@/components/FoodDetail";
 import { CartSheet } from "@/components/CartSheet";
@@ -359,7 +358,7 @@ export default function Index() {
 
           {/* Main Content */}
           <main className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
-            {/* Hero Section - Welcome CTA */}
+            {/* Hero Section - Welcome & Custom Order */}
             <motion.section 
               className="mb-8 sm:mb-12"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -367,7 +366,7 @@ export default function Index() {
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <Card className="relative overflow-hidden border-0 shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-orange-600" />
                 <div className="absolute inset-0 opacity-10">
                   <div className="absolute inset-0 bg-repeat opacity-30" style={{
                     backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="#ffffff" fill-opacity="0.1"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>')}")`
@@ -379,7 +378,7 @@ export default function Index() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="text-center max-w-2xl mx-auto"
+                    className="text-center max-w-4xl mx-auto"
                   >
                     <motion.div
                       initial={{ scale: 0 }}
@@ -405,15 +404,14 @@ export default function Index() {
                       transition={{ delay: 0.8 }}
                       className="text-white/90 mb-8 text-lg sm:text-xl text-pretty leading-relaxed"
                     >
-                      Experience culinary excellence delivered to your doorstep. 
-                      Premium quality meals from the finest restaurants in {selectedTown}.
+                      Premium meals from top restaurants or anything you need delivered to your doorstep.
                     </motion.p>
                     
                     <motion.div 
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.9 }}
-                      className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
+                      className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
                     >
                       <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
                         <Clock className="w-5 h-5 text-yellow-300" />
@@ -423,28 +421,51 @@ export default function Index() {
                         <Star className="w-5 h-5 fill-yellow-300 text-yellow-300" />
                         <span className="text-white font-medium">Premium Quality</span>
                       </div>
+                      <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
+                        <Package className="w-5 h-5 text-yellow-300" />
+                        <span className="text-white font-medium">Custom Orders</span>
+                      </div>
                     </motion.div>
                     
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 1.0 }}
+                      className="flex flex-col sm:flex-row gap-4 justify-center"
                     >
                       <Button 
                         size="lg" 
                         className="bg-white text-primary hover:bg-white/90 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-4 text-lg rounded-full border-2 border-white/20"
                         onClick={() => handleSearchClick()}
                       >
-                        Start Ordering Now
+                        Browse Menu
                       </Button>
+                      <Button 
+                        size="lg" 
+                        variant="outline"
+                        className="bg-white/10 text-white border-white/30 hover:bg-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-4 text-lg rounded-full backdrop-blur-sm"
+                        onClick={handleCustomOrderClick}
+                      >
+                        <Package className="w-5 h-5 mr-2" />
+                        Order Anything
+                      </Button>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.1 }}
+                      className="mt-6 pt-6 border-t border-white/20"
+                    >
+                      <p className="text-white/70 text-sm">
+                        <strong className="text-white">Can't find what you want?</strong> We deliver groceries, documents, 
+                        pharmacy items, gifts, and more from anywhere in {selectedTown}!
+                      </p>
                     </motion.div>
                   </motion.div>
                 </CardContent>
               </Card>
             </motion.section>
-
-            {/* Custom Order CTA */}
-            <CustomOrderCTA onCustomOrderClick={handleCustomOrderClick} />
 
             {/* Featured Dishes */}
             <motion.section
