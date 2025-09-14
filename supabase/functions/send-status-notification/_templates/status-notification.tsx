@@ -97,152 +97,131 @@ export const StatusNotificationEmail = ({
     }
   };
 
-  return (
-    <Html>
-      <Head />
-      <Preview>{getNotificationTitle()}</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Section style={header}>
-            <Text style={logo}>🍽️ ChopTym</Text>
-          </Section>
+  return React.createElement(Html, null,
+    React.createElement(Head),
+    React.createElement(Preview, null, getNotificationTitle()),
+    React.createElement(Body, { style: main },
+      React.createElement(Container, { style: container },
+        React.createElement(Section, { style: header },
+          React.createElement(Text, { style: logo }, "🍽️ ChopTym")
+        ),
 
-          <Section style={statusSection}>
-            <Heading style={h1}>{getNotificationTitle()}</Heading>
-          
-          <Text style={notificationText}>
-            {getNotificationMessage()}
-          </Text>
+        React.createElement(Section, { style: statusSection },
+          React.createElement(Heading, { style: h1 }, getNotificationTitle()),
+          React.createElement(Text, { style: notificationText }, getNotificationMessage()),
 
-          <Section style={orderInfoSection}>
-            <Heading style={sectionHeading}>Order Information</Heading>
-            <Row style={infoRow}>
-              <Column style={infoColumn}>
-                <Text style={infoLabel}>Order Number:</Text>
-                <Text style={infoValue}>{orderNumber}</Text>
-              </Column>
-              <Column style={infoColumn}>
-                <Text style={infoLabel}>Status:</Text>
-                <Text style={{...infoValue, color: getStatusColor(newStatus)}}>
-                  {newStatus.toUpperCase()}
-                </Text>
-              </Column>
-            </Row>
+          React.createElement(Section, { style: orderInfoSection },
+            React.createElement(Heading, { style: sectionHeading }, "Order Information"),
+            React.createElement(Row, { style: infoRow },
+              React.createElement(Column, { style: infoColumn },
+                React.createElement(Text, { style: infoLabel }, "Order Number:"),
+                React.createElement(Text, { style: infoValue }, orderNumber)
+              ),
+              React.createElement(Column, { style: infoColumn },
+                React.createElement(Text, { style: infoLabel }, "Status:"),
+                React.createElement(Text, { style: {...infoValue, color: getStatusColor(newStatus)} }, newStatus.toUpperCase())
+              )
+            ),
             
-            {oldStatus && notificationType === 'status_update' && (
-              <Row style={infoRow}>
-                <Column>
-                  <Text style={infoLabel}>Previous Status:</Text>
-                  <Text style={{...infoValue, color: getStatusColor(oldStatus)}}>
-                    {oldStatus.toUpperCase()}
-                  </Text>
-                </Column>
-              </Row>
-            )}
+            oldStatus && notificationType === 'status_update' ? React.createElement(Row, { style: infoRow },
+              React.createElement(Column, null,
+                React.createElement(Text, { style: infoLabel }, "Previous Status:"),
+                React.createElement(Text, { style: {...infoValue, color: getStatusColor(oldStatus)} }, oldStatus.toUpperCase())
+              )
+            ) : null,
 
-            <Row style={infoRow}>
-              <Column style={infoColumn}>
-                <Text style={infoLabel}>Order Date:</Text>
-                <Text style={infoValue}>
-                  {new Date(createdAt).toLocaleDateString('fr-CM', {
+            React.createElement(Row, { style: infoRow },
+              React.createElement(Column, { style: infoColumn },
+                React.createElement(Text, { style: infoLabel }, "Order Date:"),
+                React.createElement(Text, { style: infoValue }, 
+                  new Date(createdAt).toLocaleDateString('fr-CM', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
-                  })}
-                </Text>
-              </Column>
-              {paymentReference && (
-                <Column style={infoColumn}>
-                  <Text style={infoLabel}>Payment Reference:</Text>
-                  <Text style={infoValue}>{paymentReference}</Text>
-                </Column>
-              )}
-            </Row>
-          </Section>
+                  })
+                )
+              ),
+              paymentReference ? React.createElement(Column, { style: infoColumn },
+                React.createElement(Text, { style: infoLabel }, "Payment Reference:"),
+                React.createElement(Text, { style: infoValue }, paymentReference)
+              ) : null
+            )
+          ),
 
-          <Hr style={hr} />
+          React.createElement(Hr, { style: hr }),
 
-          <Section style={customerSection}>
-            <Heading style={sectionHeading}>Customer Information</Heading>
-            <Text style={customerInfo}>
-              <strong>Name:</strong> {customerName}<br />
-              <strong>Phone:</strong> {customerPhone}<br />
-              <strong>Address:</strong> {deliveryAddress}
-            </Text>
-          </Section>
+          React.createElement(Section, { style: customerSection },
+            React.createElement(Heading, { style: sectionHeading }, "Customer Information"),
+            React.createElement(Text, { style: customerInfo }, `Name: ${customerName}\nPhone: ${customerPhone}\nAddress: ${deliveryAddress}`)
+          ),
 
-          <Hr style={hr} />
+          React.createElement(Hr, { style: hr }),
 
-          <Section style={itemsSection}>
-            <Heading style={sectionHeading}>Order Items</Heading>
-            {items && items.map((item: any, index: number) => (
-              <Row key={index} style={itemRow}>
-                <Column style={{width: '60%'}}>
-                  <Text style={itemName}>{item.name}</Text>
-                  <Text style={itemRestaurant}>{item.restaurant}</Text>
-                </Column>
-                <Column style={{width: '20%', textAlign: 'center'}}>
-                  <Text style={itemQuantity}>×{item.quantity}</Text>
-                </Column>
-                <Column style={{width: '20%', textAlign: 'right'}}>
-                  <Text style={itemPrice}>{formatPrice(item.price * item.quantity)}</Text>
-                </Column>
-              </Row>
-            ))}
-          </Section>
+          React.createElement(Section, { style: itemsSection },
+            React.createElement(Heading, { style: sectionHeading }, "Order Items"),
+            ...(items ? items.map((item: any, index: number) => 
+              React.createElement(Row, { key: index, style: itemRow },
+                React.createElement(Column, { style: {width: '60%'} },
+                  React.createElement(Text, { style: itemName }, item.name),
+                  React.createElement(Text, { style: itemRestaurant }, item.restaurant)
+                ),
+                React.createElement(Column, { style: {width: '20%', textAlign: 'center'} },
+                  React.createElement(Text, { style: itemQuantity }, `×${item.quantity}`)
+                ),
+                React.createElement(Column, { style: {width: '20%', textAlign: 'right'} },
+                  React.createElement(Text, { style: itemPrice }, formatPrice(item.price * item.quantity))
+                )
+              )
+            ) : [])
+          ),
 
-          <Hr style={hr} />
+          React.createElement(Hr, { style: hr }),
 
-          <Section style={totalSection}>
-            <Row style={totalRow}>
-              <Column style={{width: '70%'}}>
-                <Text style={totalLabel}>Subtotal:</Text>
-              </Column>
-              <Column style={{width: '30%', textAlign: 'right'}}>
-                <Text style={totalValue}>{formatPrice(subtotal)}</Text>
-              </Column>
-            </Row>
+          React.createElement(Section, { style: totalSection },
+            React.createElement(Row, { style: totalRow },
+              React.createElement(Column, { style: {width: '70%'} },
+                React.createElement(Text, { style: totalLabel }, "Subtotal:")
+              ),
+              React.createElement(Column, { style: {width: '30%', textAlign: 'right'} },
+                React.createElement(Text, { style: totalValue }, formatPrice(subtotal))
+              )
+            ),
             
-            <Row style={totalRow}>
-              <Column style={{width: '70%'}}>
-                <Text style={totalLabel}>Delivery Fee:</Text>
-              </Column>
-              <Column style={{width: '30%', textAlign: 'right'}}>
-                <Text style={totalValue}>{formatPrice(deliveryFee)}</Text>
-              </Column>
-            </Row>
+            React.createElement(Row, { style: totalRow },
+              React.createElement(Column, { style: {width: '70%'} },
+                React.createElement(Text, { style: totalLabel }, "Delivery Fee:")
+              ),
+              React.createElement(Column, { style: {width: '30%', textAlign: 'right'} },
+                React.createElement(Text, { style: totalValue }, formatPrice(deliveryFee))
+              )
+            ),
             
-            <Row style={finalTotalRow}>
-              <Column style={{width: '70%'}}>
-                <Text style={finalTotalLabel}>Total:</Text>
-              </Column>
-              <Column style={{width: '30%', textAlign: 'right'}}>
-                <Text style={finalTotalValue}>{formatPrice(total)}</Text>
-              </Column>
-            </Row>
-          </Section>
+            React.createElement(Row, { style: finalTotalRow },
+              React.createElement(Column, { style: {width: '70%'} },
+                React.createElement(Text, { style: finalTotalLabel }, "Total:")
+              ),
+              React.createElement(Column, { style: {width: '30%', textAlign: 'right'} },
+                React.createElement(Text, { style: finalTotalValue }, formatPrice(total))
+              )
+            )
+          ),
 
-          {notes && (
-            <>
-              <Hr style={hr} />
-              <Section style={notesSection}>
-                <Heading style={sectionHeading}>Notes</Heading>
-                <Text style={notesText}>{notes}</Text>
-              </Section>
-            </>
-          )}
+          notes ? React.createElement(Hr, { style: hr }) : null,
+          notes ? React.createElement(Section, { style: notesSection },
+            React.createElement(Heading, { style: sectionHeading }, "Notes"),
+            React.createElement(Text, { style: notesText }, notes)
+          ) : null,
 
-          <Hr style={hr} />
+          React.createElement(Hr, { style: hr }),
           
-          <Text style={footer}>
-            ChopTym Cameroon - Food Delivery Service<br />
-            This is an automated notification from the ChopTym admin system.
-          </Text>
-        </Container>
-      </Body>
-    </Html>
+          React.createElement(Text, { style: footer }, 
+            "ChopTym Cameroon - Food Delivery Service\nThis is an automated notification from the ChopTym admin system."
+          )
+        )
+      )
+    )
   );
 };
 
@@ -346,6 +325,7 @@ const customerInfo = {
   lineHeight: '24px',
   color: '#525252',
   margin: '0',
+  whiteSpace: 'pre-line' as const,
 };
 
 const itemsSection = {
@@ -448,4 +428,5 @@ const footer = {
   textAlign: 'center' as const,
   padding: '30px 20px',
   backgroundColor: '#f8f9fa',
+  whiteSpace: 'pre-line' as const,
 };
