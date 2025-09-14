@@ -14,7 +14,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import * as React from 'npm:react@18.3.1'
 
-interface OrderNotificationEmailProps {
+interface OrderConfirmationEmailProps {
   orderNumber: string
   customerName: string
   customerPhone: string
@@ -29,10 +29,10 @@ interface OrderNotificationEmailProps {
   deliveryFee: number
   total: number
   notes?: string
-  paymentUrl?: string
+  estimatedDelivery: string
 }
 
-export const OrderNotificationEmail = ({
+export const OrderConfirmationEmail = ({
   orderNumber,
   customerName,
   customerPhone,
@@ -42,8 +42,8 @@ export const OrderNotificationEmail = ({
   deliveryFee,
   total,
   notes,
-  paymentUrl,
-}: OrderNotificationEmailProps) => {
+  estimatedDelivery,
+}: OrderConfirmationEmailProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
       style: 'currency',
@@ -55,42 +55,55 @@ export const OrderNotificationEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>New ChopTym Order: {orderNumber}</Preview>
+      <Preview>Order Confirmed #{orderNumber} - ChopTym</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
             <Text style={logo}>🍽️ ChopTym</Text>
-            <Text style={tagline}>Admin Order Notification</Text>
           </Section>
-          
-          <Section style={alertSection}>
-            <Text style={alertIcon}>🔔</Text>
-            <Heading style={h1}>New Order Received!</Heading></Section>
-          
-          <Section style={orderHeader}>
+
+          <Section style={successSection}>
+            <Text style={successIcon}>✅</Text>
+            <Heading style={h1}>Order Confirmed!</Heading>
             <Text style={orderNumberText}>Order #{orderNumber}</Text>
-            <Text style={timestampText}>{new Date().toLocaleString('en-US', { 
-              timeZone: 'Africa/Douala',
-              dateStyle: 'medium',
-              timeStyle: 'short'
-            })}</Text>
+            <Text style={confirmationText}>
+              Thank you {customerName}! Your delicious meal is being prepared and will be delivered soon.
+            </Text>
           </Section>
 
           <Hr style={separator} />
 
-          <Section style={customerSection}>
-            <Heading style={h2}>Customer Information</Heading>
-            <Text style={customerInfo}>
-              <strong>Name:</strong> {customerName}<br />
-              <strong>Phone:</strong> {customerPhone}<br />
-              <strong>Delivery Address:</strong> {deliveryAddress}
+          <Section style={estimatedSection}>
+            <Row>
+              <Column style={iconColumn}>
+                <Text style={timeIcon}>⏰</Text>
+              </Column>
+              <Column>
+                <Text style={estimatedTitle}>Estimated Delivery Time</Text>
+                <Text style={estimatedTime}>{estimatedDelivery}</Text>
+              </Column>
+            </Row>
+          </Section>
+
+          <Hr style={separator} />
+
+          <Section style={detailsSection}>
+            <Heading style={h2}>Delivery Details</Heading>
+            <Text style={detailText}>
+              <strong>Name:</strong> {customerName}
+            </Text>
+            <Text style={detailText}>
+              <strong>Phone:</strong> {customerPhone}
+            </Text>
+            <Text style={detailText}>
+              <strong>Address:</strong> {deliveryAddress}
             </Text>
           </Section>
 
           <Hr style={separator} />
 
           <Section style={itemsSection}>
-            <Heading style={h2}>Order Items</Heading>
+            <Heading style={h2}>Your Order</Heading>
             {items.map((item, index) => (
               <Row key={index} style={itemRow}>
                 <Column style={itemDetails}>
@@ -98,7 +111,7 @@ export const OrderNotificationEmail = ({
                   <Text style={restaurantName}>from {item.restaurant}</Text>
                 </Column>
                 <Column style={itemQuantity}>
-                  <Text style={quantityText}>x{item.quantity}</Text>
+                  <Text style={quantityText}>×{item.quantity}</Text>
                 </Column>
                 <Column style={itemPrice}>
                   <Text style={priceText}>{formatPrice(item.price * item.quantity)}</Text>
@@ -106,8 +119,6 @@ export const OrderNotificationEmail = ({
               </Row>
             ))}
           </Section>
-
-          <Hr style={separator} />
 
           <Section style={totalSection}>
             <Row style={totalRow}>
@@ -126,6 +137,7 @@ export const OrderNotificationEmail = ({
                 <Text style={totalText}>{formatPrice(deliveryFee)}</Text>
               </Column>
             </Row>
+            <Hr style={totalSeparator} />
             <Row style={totalRow}>
               <Column>
                 <Text style={grandTotalLabel}>Total:</Text>
@@ -146,25 +158,24 @@ export const OrderNotificationEmail = ({
             </>
           )}
 
-          {paymentUrl && (
-            <>
-              <Hr style={separator} />
-              <Section style={paymentSection}>
-                <Text style={paymentText}>
-                  <strong>Payment Status:</strong> Pending
-                </Text>
-                <Link href={paymentUrl} style={paymentLink}>
-                  View Payment Link
-                </Link>
-              </Section>
-            </>
-          )}
-
           <Hr style={separator} />
+
+          <Section style={trackingSection}>
+            <Heading style={h2}>Track Your Order</Heading>
+            <Text style={trackingText}>
+              We'll send you updates as your order progresses. You can also contact us if you have any questions.
+            </Text>
+            <Text style={contactInfo}>
+              📞 Contact: +237 XXX XXX XXX
+            </Text>
+          </Section>
 
           <Section style={footer}>
             <Text style={footerText}>
-              This notification was sent from ChopTym order management system.
+              Thank you for choosing ChopTym! We're excited to serve you delicious local cuisine.
+            </Text>
+            <Text style={footerText}>
+              ChopTym - Bringing you closer to home through food 🏡
             </Text>
           </Section>
         </Container>
@@ -173,10 +184,11 @@ export const OrderNotificationEmail = ({
   )
 }
 
-export default OrderNotificationEmail
+export default OrderConfirmationEmail
 
 // ChopTym Brand Colors
 const chopTymOrange = 'hsl(25, 95%, 53%)'
+const chopTymOrangeLight = 'hsl(25, 95%, 65%)'
 const chopTymDark = 'hsl(20, 14.3%, 4.1%)'
 
 const main = {
@@ -204,81 +216,98 @@ const logo = {
   fontSize: '28px',
   fontWeight: 'bold',
   color: '#ffffff',
-  margin: '0 0 5px',
-}
-
-const tagline = {
-  fontSize: '14px',
-  color: '#ffffff',
   margin: '0',
-  opacity: '0.9',
 }
 
-const alertSection = {
-  padding: '30px 20px',
+const successSection = {
+  padding: '40px 20px',
   textAlign: 'center' as const,
 }
 
-const alertIcon = {
-  fontSize: '32px',
-  margin: '0 0 15px',
+const successIcon = {
+  fontSize: '48px',
+  margin: '0 0 20px',
 }
 
 const h1 = {
   color: chopTymDark,
-  fontSize: '24px',
+  fontSize: '32px',
   fontWeight: 'bold',
-  margin: '0 0 20px',
-  padding: '0',
-}
-
-const h2 = {
-  color: chopTymDark,
-  fontSize: '18px',
-  fontWeight: 'bold',
-  margin: '20px 0 10px',
-}
-
-const orderHeader = {
-  textAlign: 'center' as const,
-  margin: '20px 0',
+  margin: '0 0 10px',
 }
 
 const orderNumberText = {
   fontSize: '20px',
   fontWeight: 'bold',
   color: chopTymOrange,
-  margin: '0 0 5px',
+  margin: '0 0 20px',
 }
 
-const timestampText = {
-  fontSize: '14px',
+const confirmationText = {
+  fontSize: '16px',
+  lineHeight: '24px',
   color: '#666',
   margin: '0',
 }
 
-const separator = {
-  borderColor: '#e6ebf1',
-  margin: '20px 0',
+const estimatedSection = {
+  padding: '20px',
+  backgroundColor: '#fef7f0',
 }
 
-const customerSection = {
-  padding: '0 20px',
+const iconColumn = {
+  width: '50px',
 }
 
-const customerInfo = {
+const timeIcon = {
+  fontSize: '24px',
+  margin: '0',
+}
+
+const estimatedTitle = {
   fontSize: '14px',
-  lineHeight: '24px',
+  color: '#666',
+  margin: '0 0 5px',
+  fontWeight: '500',
+}
+
+const estimatedTime = {
+  fontSize: '18px',
+  fontWeight: 'bold',
+  color: chopTymOrange,
+  margin: '0',
+}
+
+const separator = {
+  borderColor: '#f0f0f0',
+  margin: '0',
+}
+
+const detailsSection = {
+  padding: '30px 20px',
+}
+
+const h2 = {
+  color: chopTymDark,
+  fontSize: '20px',
+  fontWeight: 'bold',
+  margin: '0 0 15px',
+}
+
+const detailText = {
+  fontSize: '14px',
+  lineHeight: '20px',
   color: '#333',
+  margin: '8px 0',
 }
 
 const itemsSection = {
-  padding: '0 20px',
+  padding: '30px 20px',
 }
 
 const itemRow = {
   borderBottom: '1px solid #f0f0f0',
-  padding: '10px 0',
+  padding: '15px 0',
 }
 
 const itemDetails = {
@@ -286,16 +315,17 @@ const itemDetails = {
 }
 
 const itemName = {
-  fontSize: '14px',
+  fontSize: '16px',
   fontWeight: 'bold',
-  color: '#333',
+  color: chopTymDark,
   margin: '0 0 4px',
 }
 
 const restaurantName = {
-  fontSize: '12px',
+  fontSize: '14px',
   color: '#666',
   margin: '0',
+  fontStyle: 'italic',
 }
 
 const itemQuantity = {
@@ -305,7 +335,7 @@ const itemQuantity = {
 
 const quantityText = {
   fontSize: '14px',
-  color: '#333',
+  color: '#666',
 }
 
 const itemPrice = {
@@ -314,20 +344,18 @@ const itemPrice = {
 }
 
 const priceText = {
-  fontSize: '14px',
+  fontSize: '16px',
   fontWeight: 'bold',
-  color: '#333',
+  color: chopTymDark,
 }
 
 const totalSection = {
-  padding: '0 20px',
-  backgroundColor: '#f8f9fa',
-  margin: '20px 0',
-  padding: '15px 20px',
+  padding: '20px',
+  backgroundColor: '#fef7f0',
 }
 
 const totalRow = {
-  margin: '5px 0',
+  margin: '8px 0',
 }
 
 const totalLabel = {
@@ -344,20 +372,25 @@ const totalValue = {
   textAlign: 'right' as const,
 }
 
+const totalSeparator = {
+  borderColor: chopTymOrange,
+  margin: '10px 0',
+}
+
 const grandTotalLabel = {
-  fontSize: '16px',
+  fontSize: '18px',
   fontWeight: 'bold',
-  color: '#333',
+  color: chopTymDark,
 }
 
 const grandTotalText = {
-  fontSize: '16px',
+  fontSize: '18px',
   fontWeight: 'bold',
-  color: '#2563eb',
+  color: chopTymOrange,
 }
 
 const notesSection = {
-  padding: '0 20px',
+  padding: '30px 20px',
 }
 
 const notesText = {
@@ -365,33 +398,40 @@ const notesText = {
   color: '#333',
   backgroundColor: '#f8f9fa',
   padding: '15px',
-  borderRadius: '6px',
+  borderRadius: '8px',
+  borderLeft: `4px solid ${chopTymOrange}`,
   fontStyle: 'italic',
+  margin: '0',
 }
 
-const paymentSection = {
-  padding: '0 20px',
+const trackingSection = {
+  padding: '30px 20px',
   textAlign: 'center' as const,
 }
 
-const paymentText = {
+const trackingText = {
   fontSize: '14px',
-  color: '#333',
-  margin: '10px 0',
+  color: '#666',
+  margin: '0 0 15px',
+  lineHeight: '20px',
 }
 
-const paymentLink = {
-  color: '#2563eb',
-  textDecoration: 'underline',
-  fontSize: '14px',
+const contactInfo = {
+  fontSize: '16px',
+  fontWeight: 'bold',
+  color: chopTymOrange,
+  margin: '0',
 }
 
 const footer = {
-  padding: '0 20px',
+  padding: '30px 20px',
   textAlign: 'center' as const,
+  backgroundColor: '#f8f9fa',
 }
 
 const footerText = {
-  fontSize: '12px',
-  color: '#8898aa',
+  fontSize: '14px',
+  color: '#666',
+  margin: '8px 0',
+  lineHeight: '20px',
 }

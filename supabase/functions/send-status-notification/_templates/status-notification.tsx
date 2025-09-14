@@ -103,7 +103,12 @@ export const StatusNotificationEmail = ({
       <Preview>{getNotificationTitle()}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={heading}>{getNotificationTitle()}</Heading>
+          <Section style={header}>
+            <Text style={logo}>🍽️ ChopTym</Text>
+          </Section>
+
+          <Section style={statusSection}>
+            <Heading style={h1}>{getNotificationTitle()}</Heading>
           
           <Text style={notificationText}>
             {getNotificationMessage()}
@@ -241,26 +246,50 @@ export const StatusNotificationEmail = ({
   );
 };
 
+// ChopTym Brand Colors
+const chopTymOrange = 'hsl(25, 95%, 53%)'
+const chopTymDark = 'hsl(20, 14.3%, 4.1%)'
+
 // Styles
 const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  backgroundColor: '#fef7f0',
+  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
 };
 
 const container = {
   backgroundColor: '#ffffff',
   margin: '0 auto',
-  padding: '20px 0 48px',
+  padding: '0',
   marginBottom: '64px',
+  borderRadius: '12px',
+  overflow: 'hidden',
+  boxShadow: '0 10px 30px -10px rgba(234, 88, 12, 0.1)',
 };
 
-const heading = {
-  fontSize: '32px',
-  lineHeight: '1.3',
-  fontWeight: '700',
-  color: '#484848',
-  padding: '17px 0 0',
+const header = {
+  backgroundColor: chopTymOrange,
+  padding: '30px 20px',
   textAlign: 'center' as const,
+};
+
+const logo = {
+  fontSize: '28px',
+  fontWeight: 'bold',
+  color: '#ffffff',
+  margin: '0',
+};
+
+const statusSection = {
+  padding: '30px 20px',
+  textAlign: 'center' as const,
+};
+
+const h1 = {
+  color: chopTymDark,
+  fontSize: '24px',
+  fontWeight: 'bold',
+  margin: '0 0 20px',
+  padding: '0',
 };
 
 const notificationText = {
@@ -276,14 +305,14 @@ const notificationText = {
 const sectionHeading = {
   fontSize: '20px',
   lineHeight: '28px',
-  fontWeight: '700',
-  color: '#374151',
-  margin: '30px 0 15px',
-  padding: '0 40px',
+  fontWeight: 'bold',
+  color: chopTymDark,
+  margin: '20px 0 15px',
+  padding: '0 20px',
 };
 
 const orderInfoSection = {
-  padding: '0 40px',
+  padding: '0 20px',
 };
 
 const infoRow = {
@@ -309,7 +338,7 @@ const infoValue = {
 };
 
 const customerSection = {
-  padding: '0 40px',
+  padding: '0 20px',
 };
 
 const customerInfo = {
@@ -320,7 +349,7 @@ const customerInfo = {
 };
 
 const itemsSection = {
-  padding: '0 40px',
+  padding: '0 20px',
 };
 
 const itemRow = {
@@ -356,7 +385,7 @@ const itemPrice = {
 };
 
 const totalSection = {
-  padding: '0 40px',
+  padding: '0 20px',
 };
 
 const totalRow = {
@@ -396,7 +425,7 @@ const finalTotalValue = {
 };
 
 const notesSection = {
-  padding: '0 40px',
+  padding: '0 20px',
 };
 
 const notesText = {
@@ -408,14 +437,15 @@ const notesText = {
 };
 
 const hr = {
-  borderColor: '#e5e7eb',
-  margin: '20px 0',
+  borderColor: '#f0f0f0',
+  margin: '0',
 };
 
 const footer = {
-  color: '#8898aa',
+  color: '#666',
   fontSize: '12px',
   lineHeight: '16px',
   textAlign: 'center' as const,
-  padding: '0 40px',
+  padding: '30px 20px',
+  backgroundColor: '#f8f9fa',
 };
