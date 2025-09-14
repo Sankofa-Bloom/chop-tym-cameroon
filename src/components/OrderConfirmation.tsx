@@ -210,7 +210,7 @@ export const OrderConfirmation = ({ orderData, onGoHome }: OrderConfirmationProp
           </Button>
           
           <p className="text-center text-sm text-muted-foreground">
-            We'll send you updates via SMS to {orderData.customerInfo.phone}
+            We'll send you updates via WhatsApp to {orderData.customerInfo.phone}
           </p>
         </div>
       </div>

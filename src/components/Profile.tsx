@@ -276,12 +276,12 @@ export const Profile = ({ onBack }: ProfileProps) => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="edit-phone">Phone</Label>
+                          <Label htmlFor="edit-phone">WhatsApp Number</Label>
                           <Input
                             id="edit-phone"
                             value={editForm.phone}
                             onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                            placeholder="Enter your phone number"
+                            placeholder="WhatsApp Number: +237 6XX XXX XXX"
                           />
                         </div>
                         <div className="flex gap-2">

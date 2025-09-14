@@ -259,13 +259,13 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
               </div>
 
               <div>
-                <Label htmlFor="phone">Phone Number *</Label>
+                <Label htmlFor="phone">WhatsApp Number *</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="+237 6XX XXX XXX"
+                  placeholder="WhatsApp Number: +237 6XX XXX XXX"
                   className="chop-input mt-1"
                   required
                 />

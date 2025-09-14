@@ -368,13 +368,13 @@ export default function AdminRestaurants() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">WhatsApp Number</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+237 6XX XXX XXX"
+                  placeholder="WhatsApp Number: +237 6XX XXX XXX"
                 />
               </div>
               

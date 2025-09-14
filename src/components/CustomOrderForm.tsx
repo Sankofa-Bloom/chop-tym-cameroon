@@ -220,12 +220,12 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
                 />
               </div>
               <div>
-                <Label htmlFor="customerPhone">Phone Number *</Label>
+                <Label htmlFor="customerPhone">WhatsApp Number *</Label>
                 <Input
                   id="customerPhone"
                   value={formData.customerPhone}
                   onChange={(e) => handleInputChange("customerPhone", e.target.value)}
-                  placeholder="e.g., +237 6XX XXX XXX"
+                  placeholder="WhatsApp Number: +237 6XX XXX XXX"
                   required
                 />
               </div>
