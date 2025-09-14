@@ -1,5 +1,4 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.203.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
@@ -24,7 +23,7 @@ serve(async (req) => {
       orderData
     } = await req.json();
 
-    console.log('Creating Fapshi payment for:', { orderId, amount, userId });
+    console.log('Incoming request body:', { orderId, amount, userId, orderData: !!orderData });
 
     // Save order to database first if orderData is provided
     let orderRecord: any = null;
@@ -60,7 +59,7 @@ serve(async (req) => {
       console.log('Order saved to database:', order.id);
     }
 
-    // Get Fapshi credentials
+    // Get Fapshi sandbox key
     const fapshiSandboxKey = Deno.env.get('FAPSHI_SANDBOX_KEY');
     if (!fapshiSandboxKey) {
       throw new Error('FAPSHI_SANDBOX_KEY not configured');
@@ -76,18 +75,26 @@ serve(async (req) => {
       phoneNumber = '237' + phoneNumber;
     }
 
-    // Detect network based on phone number prefix (simplified logic)
+    // Detect network based on phone number prefix
     const network = phoneNumber.startsWith('2376') ? 'MTN' : 'ORANGE';
 
     // Validate required fields
-    const requiredFields = { amount, currency, phone_number: phoneNumber, network, transaction_id: orderRecord?.order_number || orderId };
-    for (const [field, value] of Object.entries(requiredFields)) {
-      if (!value) {
+    const requiredFields = ['amount', 'currency', 'phone_number', 'network', 'transaction_id'];
+    const fieldValues = {
+      amount,
+      currency,
+      phone_number: phoneNumber,
+      network,
+      transaction_id: orderRecord?.order_number || orderId
+    };
+
+    for (const field of requiredFields) {
+      if (!fieldValues[field]) {
         throw new Error(`Missing required field: ${field}`);
       }
     }
 
-    // Construct payload for Fapshi sandbox
+    // Build Fapshi payload
     const fapshiPayload = {
       amount: amount,
       currency: currency,
@@ -102,26 +109,18 @@ serve(async (req) => {
 
     console.log('Outgoing payload to Fapshi:', fapshiPayload);
 
-    // Create payment with Fapshi MoMo API (sandbox)
+    // Call Fapshi sandbox API
     const fapshiResponse = await fetch('https://sandbox.fapshi.com/merchantpay/momo/', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(fapshiPayload),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fapshiPayload)
     });
 
-    let fapshiData: any;
-    const responseText = await fapshiResponse.text();
-    try {
-      fapshiData = JSON.parse(responseText);
-    } catch (_) {
-      console.error('Non-JSON Fapshi response:', responseText);
-      throw new Error('Invalid response from Fapshi API');
-    }
+    const fapshiData = await fapshiResponse.json();
+    console.log('Fapshi response:', fapshiData);
 
-    if (fapshiResponse.ok && fapshiData.link) {
-      console.log('Fapshi payment created successfully:', fapshiData.link);
+    if (fapshiResponse.ok) {
+      console.log('Fapshi payment created successfully:', fapshiData);
       
       // Update order with payment reference if we have an order
       if (orderRecord && orderData) {
@@ -132,9 +131,8 @@ serve(async (req) => {
         await supabase
           .from('orders')
           .update({ 
-            payment_reference: fapshiData.link,
-            // Store Fapshi transaction ID for status checking
-            notes: orderRecord.notes + ` | Fapshi TransId: ${fapshiData.transId}`
+            payment_reference: fapshiData.payment_link || fapshiData.link || JSON.stringify(fapshiData),
+            notes: orderRecord.notes + ` | Fapshi Response: ${JSON.stringify(fapshiData)}`
           })
           .eq('id', orderRecord.id);
       }
@@ -142,8 +140,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         data: {
-          paymentLink: fapshiData.link,
-          sessionId: fapshiData.transId,
+          ...fapshiData,
           orderId: orderRecord?.order_number || orderId
         }
       }), {
@@ -165,52 +162,19 @@ serve(async (req) => {
             .update({ payment_status: 'failed' })
             .eq('id', orderRecord.id);
 
-          // Send detailed failure notification to admin
-          await supabase.functions.invoke('send-status-notification', {
-            body: {
-              orderData: {
-                orderNumber: orderRecord.order_number,
-                customerName: orderRecord.customer_name,
-                customerPhone: orderRecord.customer_phone,
-                deliveryAddress: orderRecord.delivery_address,
-                items: orderRecord.items,
-                subtotal: orderRecord.subtotal,
-                deliveryFee: orderRecord.delivery_fee,
-                total: orderRecord.total,
-                paymentReference: null,
-                createdAt: orderRecord.created_at,
-                notes: orderRecord.notes,
-              },
-              oldStatus: 'pending',
-              newStatus: 'failed',
-              notificationType: 'failed',
-              errorDetails: {
-                stage: 'payment_creation',
-                paymentResponse: fapshiData,
-                errorMessage: 'Failed to create Fapshi payment',
-                timestamp: new Date().toISOString(),
-                requestData: {
-                  amount,
-                  currency,
-                  reference: orderRecord.order_number,
-                }
-              }
-            }
-          });
-
-          console.log('Admin failure notification sent for failed Fapshi payment creation');
+          console.log('Order marked as failed due to Fapshi payment creation failure');
         } catch (notificationError) {
-          console.error('Failed to send admin notification for Fapshi payment creation failure:', notificationError);
+          console.error('Failed to update order status:', notificationError);
         }
       }
 
       return new Response(JSON.stringify({
         error: 'Fapshi payment creation failed',
         details: fapshiData,
-        errorCode: 'PAYMENT_CREATION_FAILED',
+        status: fapshiResponse.status,
         timestamp: new Date().toISOString()
       }), {
-        status: 400,
+        status: fapshiResponse.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
