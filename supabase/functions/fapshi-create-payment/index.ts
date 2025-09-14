@@ -77,11 +77,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         amount: amount,
-        email: orderData?.customerInfo?.email || 'test@example.com',
-        redirectUrl: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`,
-        userId: userId || orderRecord?.customer_phone || 'anonymous',
-        externalId: orderRecord?.order_number || orderId,
-        message: `Order ${orderRecord?.order_number || orderId} - ChopTym`
+        currency: currency,
+        customer_name: orderData?.customerInfo?.fullName || 'Guest',
+        customer_email: orderData?.customerInfo?.email || 'test@example.com',
+        callback_url: callbackUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-payment-webhook'
       }),
     });
 
