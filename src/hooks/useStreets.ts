@@ -10,8 +10,8 @@ export interface Street {
   updated_at: string;
 }
 
-export const useStreets = (deliveryZoneId?: string) => {
-  const [streets, setStreets] = useState<Street[]>([]);
+export const useStreets = (town?: string) => {
+  const [streets, setStreets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,11 +20,19 @@ export const useStreets = (deliveryZoneId?: string) => {
       setLoading(true);
       let query = supabase
         .from("streets")
-        .select("*")
+        .select(`
+          *,
+          delivery_zone:delivery_zones(
+            id,
+            zone_name,
+            town,
+            delivery_fee
+          )
+        `)
         .eq("is_active", true);
       
-      if (deliveryZoneId) {
-        query = query.eq("delivery_zone_id", deliveryZoneId);
+      if (town) {
+        query = query.eq("delivery_zone.town", town);
       }
       
       const { data, error } = await query.order("name");
@@ -67,7 +75,7 @@ export const useStreets = (deliveryZoneId?: string) => {
 
   useEffect(() => {
     fetchStreets();
-  }, [deliveryZoneId]);
+  }, [town]);
 
   return { 
     streets, 

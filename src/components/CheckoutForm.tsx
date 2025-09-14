@@ -35,27 +35,25 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
     address: "",
     notes: "",
     town: selectedTown,
-    deliveryZone: "",
     street: ""
   });
 
   const { towns } = useTowns();
-  const { zones } = useDeliveryZones(formData.town);
-  const { streets } = useStreets(formData.deliveryZone);
-  const [selectedZone, setSelectedZone] = useState<any>(null);
+  const { streets } = useStreets(formData.town);
+  const [selectedStreet, setSelectedStreet] = useState<any>(null);
   const [selectedTownData, setSelectedTownData] = useState<any>(null);
   
-  // Calculate delivery fee based on town's free delivery setting
-  const deliveryFee = selectedTownData?.free_delivery ? 0 : (selectedZone?.delivery_fee || 500);
+  // Calculate delivery fee based on town's free delivery setting and selected street's zone
+  const deliveryFee = selectedTownData?.free_delivery ? 0 : (selectedStreet?.delivery_zone?.delivery_fee || 500);
   const finalTotal = total + deliveryFee;
 
-  // Update selected zone when zone changes
+  // Update selected street when street changes
   useEffect(() => {
-    if (formData.deliveryZone && zones.length > 0) {
-      const zone = zones.find(z => z.id === formData.deliveryZone);
-      setSelectedZone(zone);
+    if (formData.street && streets.length > 0) {
+      const street = streets.find(s => s.id === formData.street);
+      setSelectedStreet(street);
     }
-  }, [formData.deliveryZone, zones]);
+  }, [formData.street, streets]);
 
   // Update selected town data when town changes
   useEffect(() => {
@@ -84,8 +82,8 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
     e.preventDefault();
     
     // Basic validation
-    if (!formData.fullName || !formData.phone || !formData.address || !formData.town || !formData.deliveryZone || !formData.street) {
-      alert("Please fill in all required fields including delivery zone and street");
+    if (!formData.fullName || !formData.phone || !formData.address || !formData.town || !formData.street) {
+      alert("Please fill in all required fields including street");
       return;
     }
 
@@ -97,7 +95,8 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
       items,
       customerInfo: {
         ...formData,
-        selectedZone: selectedZone?.zone_name
+        selectedZone: selectedStreet?.delivery_zone?.zone_name,
+        selectedStreet: selectedStreet?.name
       },
       total: finalTotal,
       deliveryFee,  
@@ -173,9 +172,8 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
                 <Label htmlFor="town">Select Town *</Label>
                 <Select value={formData.town} onValueChange={(value) => {
                   handleInputChange("town", value);
-                  handleInputChange("deliveryZone", ""); // Reset zone when town changes
                   handleInputChange("street", ""); // Reset street when town changes
-                  setSelectedZone(null);
+                  setSelectedStreet(null);
                 }}>
                   <SelectTrigger className="chop-input mt-1">
                     <SelectValue placeholder="Choose your town" />
@@ -192,44 +190,6 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
 
               {formData.town && (
                 <div>
-                  <Label htmlFor="deliveryZone">Delivery Zone *</Label>
-                  <Select value={formData.deliveryZone} onValueChange={(value) => {
-                    handleInputChange("deliveryZone", value);
-                    handleInputChange("street", ""); // Reset street when zone changes
-                  }}>
-                    <SelectTrigger className="chop-input mt-1">
-                      <SelectValue placeholder="Choose your delivery zone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {zones.map((zone) => (
-                        <SelectItem key={zone.id} value={zone.id}>
-                          <div className="flex justify-between items-center w-full">
-                            <span>{zone.zone_name}</span>
-                            <span className="text-sm text-muted-foreground ml-2">
-                              {new Intl.NumberFormat('fr-CM', {
-                                style: 'currency',
-                                currency: 'XAF',
-                                minimumFractionDigits: 0,
-                              }).format(zone.delivery_fee)}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedZone && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Delivery fee: {selectedTownData?.free_delivery ? "Free" : formatPrice(selectedZone.delivery_fee)}
-                      {selectedTownData?.free_delivery && (
-                        <span className="text-green-600 font-medium ml-2">✓ Free delivery in this town</span>
-                      )}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {formData.deliveryZone && (
-                <div>
                   <Label htmlFor="street">Street *</Label>
                   <Select value={formData.street} onValueChange={(value) => handleInputChange("street", value)}>
                     <SelectTrigger className="chop-input mt-1">
@@ -243,6 +203,14 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedStreet && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Delivery fee: {selectedTownData?.free_delivery ? "Free" : formatPrice(selectedStreet.delivery_zone.delivery_fee)}
+                      {selectedTownData?.free_delivery && (
+                        <span className="text-green-600 font-medium ml-2">✓ Free delivery in this town</span>
+                      )}
+                    </p>
+                  )}
                 </div>
               )}
 
