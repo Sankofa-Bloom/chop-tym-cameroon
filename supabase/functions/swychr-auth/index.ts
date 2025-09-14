@@ -26,7 +26,7 @@ serve(async (req) => {
 
     console.log('Authenticating with Swychr API...');
 
-    const response = await fetch('https://api.swychrconnect.com/auth/login', {
+    const response = await fetch('https://api.accountpe.com/api/payin/admin/auth', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

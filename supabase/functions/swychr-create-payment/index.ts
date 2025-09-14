@@ -87,7 +87,7 @@ serve(async (req) => {
     }
 
     // Create payment link
-    const paymentResponse = await fetch('https://api.swychrconnect.com/payment/create', {
+    const paymentResponse = await fetch('https://api.accountpe.com/api/payin/create_payment_links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,10 +105,19 @@ serve(async (req) => {
       }),
     });
 
-    const paymentData = await paymentResponse.json();
+    let paymentData: any;
+    const text = await paymentResponse.text();
+    try {
+      paymentData = JSON.parse(text);
+    } catch (_) {
+      console.error('Non-JSON payment response:', text);
+      throw new Error('Invalid response from payment provider');
+    }
 
-    if (paymentResponse.ok && paymentData.data?.payment_link) {
-      console.log('Payment link created successfully:', paymentData.data.payment_link);
+    const paymentUrl = paymentData.data?.payment_url || paymentData.data?.payment_link || paymentData.payment_url || paymentData.payment_link;
+
+    if (paymentResponse.ok && paymentUrl) {
+      console.log('Payment link created successfully:', paymentUrl);
       
       // Update order with payment reference if we have an order
       if (orderId && orderData) {
@@ -118,13 +127,13 @@ serve(async (req) => {
 
         await supabase
           .from('orders')
-          .update({ payment_reference: paymentData.data.payment_link })
+          .update({ payment_reference: paymentUrl })
           .eq('id', orderId);
       }
 
       return new Response(JSON.stringify({
         success: true,
-        data: paymentData.data,
+        data: { payment_link: paymentUrl },
         orderId
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
