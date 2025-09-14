@@ -66,8 +66,8 @@ serve(async (req) => {
       throw new Error('FAPSHI_SECRET_KEY not configured');
     }
 
-    // Create payment with Fapshi API
-    const fapshiResponse = await fetch('https://api.fapshi.com/v1/payments', {
+    // Create payment with Fapshi API (using sandbox)
+    const fapshiResponse = await fetch('https://sandbox.fapshi.com/api/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${fapshiSecretKey}`,

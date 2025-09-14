@@ -26,10 +26,10 @@ serve(async (req) => {
       throw new Error('FAPSHI_SECRET_KEY not configured');
     }
 
-    // Check payment status with Fapshi API
+    // Check payment status with Fapshi API (using sandbox)
     const statusUrl = sessionId 
-      ? `https://api.fapshi.com/v1/payments/${sessionId}`
-      : `https://api.fapshi.com/v1/payments?reference=${reference}`;
+      ? `https://sandbox.fapshi.com/api/v1/payments/${sessionId}`
+      : `https://sandbox.fapshi.com/api/v1/payments?reference=${reference}`;
     
     const response = await fetch(statusUrl, {
       method: 'GET',
