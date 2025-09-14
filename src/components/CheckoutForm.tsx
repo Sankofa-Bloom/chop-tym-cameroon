@@ -112,7 +112,37 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
       timestamp: new Date().toISOString()
     };
 
-    onPlaceOrder(orderData);
+    try {
+      // Create payment using Swychr
+      const response = await fetch('/functions/v1/swychr-create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country_code: 'CM',
+          name: formData.fullName,
+          email: `${formData.phone.replace(/[^0-9]/g, '')}@choptym.com`,
+          mobile: formData.phone,
+          amount: finalTotal,
+          transaction_id: orderNumber,
+          description: `ChopTym Order #${orderNumber}`,
+          pass_digital_charge: true,
+          orderData
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data?.payment_link) {
+        // Redirect to payment link
+        window.location.href = data.data.payment_link;
+      } else {
+        alert('Failed to create payment link. Please try again.');
+        console.error('Payment creation failed:', data);
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      alert('An error occurred while processing your order. Please try again.');
+    }
   };
 
   return (
