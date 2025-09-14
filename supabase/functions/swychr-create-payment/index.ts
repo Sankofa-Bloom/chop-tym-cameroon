@@ -30,6 +30,8 @@ serve(async (req) => {
 
     // First get authentication token
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    console.log('Calling swychr-auth function at:', `${supabaseUrl}/functions/v1/swychr-auth`);
+    
     const authResponse = await fetch(`${supabaseUrl}/functions/v1/swychr-auth`, {
       method: 'POST',
       headers: {
@@ -37,11 +39,16 @@ serve(async (req) => {
       },
     });
 
+    console.log('Auth response status:', authResponse.status);
+    
     if (!authResponse.ok) {
-      throw new Error('Failed to authenticate with Swychr');
+      const authError = await authResponse.text();
+      console.error('Auth failed:', authError);
+      throw new Error(`Failed to authenticate with Swychr: ${authError}`);
     }
 
     const authData = await authResponse.json();
+    console.log('Auth successful, got token');
     const token = authData.token;
 
     // Save order to database first if orderData is provided

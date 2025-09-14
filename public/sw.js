@@ -1,8 +1,6 @@
 const CACHE_NAME = 'choptym-v1';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json',
   '/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png'
 ];
