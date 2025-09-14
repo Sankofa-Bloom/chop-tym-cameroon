@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTowns } from "@/hooks/useTowns";
 import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 import { useStreets } from "@/hooks/useStreets";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CheckoutItem {
   id: string;
@@ -114,10 +115,8 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
 
     try {
       // Create payment using Swychr
-      const response = await fetch('/functions/v1/swychr-create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('swychr-create-payment', {
+        body: {
           country_code: 'CM',
           name: formData.fullName,
           email: `${formData.phone.replace(/[^0-9]/g, '')}@choptym.com`,
@@ -127,12 +126,14 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
           description: `ChopTym Order #${orderNumber}`,
           pass_digital_charge: true,
           orderData
-        })
+        }
       });
 
-      const data = await response.json();
+      if (error) {
+        throw new Error(error.message);
+      }
 
-      if (data.success && data.data?.payment_link) {
+      if (data?.success && data?.data?.payment_link) {
         // Redirect to payment link
         window.location.href = data.data.payment_link;
       } else {
