@@ -50,6 +50,13 @@ serve(async (req) => {
       password: Deno.env.get('ZOHO_SMTP_PASSWORD'),
     };
 
+    console.log('Connecting to ZOHO SMTP with config:', {
+      hostname: smtpConfig.hostname,
+      port: smtpConfig.port,
+      username: smtpConfig.username,
+      password: '***' // Hide password in logs
+    });
+
     await client.connect(smtpConfig);
 
     // Determine email subject based on notification type

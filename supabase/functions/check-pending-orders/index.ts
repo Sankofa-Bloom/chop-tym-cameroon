@@ -25,21 +25,21 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find orders that have been pending for more than 30 minutes
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    // Find orders that have been pending for more than 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
     const { data: longPendingOrders, error } = await supabase
       .from('orders')
       .select('*')
       .eq('payment_status', 'pending')
-      .lt('created_at', thirtyMinutesAgo);
+      .lt('created_at', twentyFourHoursAgo);
 
     if (error) {
       console.error('Error fetching long-pending orders:', error);
       throw error;
     }
 
-    console.log(`Found ${longPendingOrders?.length || 0} orders pending for more than 30 minutes`);
+    console.log(`Found ${longPendingOrders?.length || 0} orders pending for more than 24 hours`);
 
     if (!longPendingOrders || longPendingOrders.length === 0) {
       return new Response(JSON.stringify({
