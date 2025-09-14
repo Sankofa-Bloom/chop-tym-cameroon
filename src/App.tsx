@@ -12,6 +12,7 @@ import { DashboardOverview } from "@/components/admin/DashboardOverview";
 import { RestaurantManagement } from "@/components/admin/RestaurantManagement";
 import { DeliveryManagement } from "@/components/admin/DeliveryManagement";
 import { OrdersManagement } from "@/components/admin/OrdersManagement";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <PWAInstallPrompt />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
