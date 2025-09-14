@@ -61,26 +61,40 @@ serve(async (req) => {
     }
 
     // Get Fapshi credentials
-    const fapshiApiKey = Deno.env.get('FAPSHI_API_KEY');
-    const fapshiApiUser = Deno.env.get('FAPSHI_API_USER');
-    if (!fapshiApiKey || !fapshiApiUser) {
-      throw new Error('FAPSHI_API_KEY and FAPSHI_API_USER not configured');
+    const fapshiMerchantKey = Deno.env.get('FAPSHI_MERCHANT_KEY');
+    if (!fapshiMerchantKey) {
+      throw new Error('FAPSHI_MERCHANT_KEY not configured');
     }
 
-    // Create payment with Fapshi API (using sandbox)
+    // Format phone number for Fapshi (ensure 237 prefix)
+    let phoneNumber = orderData?.customerInfo?.phone || '';
+    if (phoneNumber.startsWith('0')) {
+      phoneNumber = '237' + phoneNumber.substring(1);
+    } else if (phoneNumber.startsWith('+237')) {
+      phoneNumber = phoneNumber.substring(1);
+    } else if (!phoneNumber.startsWith('237')) {
+      phoneNumber = '237' + phoneNumber;
+    }
+
+    // Detect network based on phone number prefix (simplified logic)
+    const network = phoneNumber.startsWith('2376') ? 'MTN' : 'ORANGE';
+
+    // Create payment with Fapshi MoMo API (sandbox)
     const fapshiResponse = await fetch('https://sandbox.fapshi.com/initiate-pay', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': fapshiApiKey,
-        'apiuser': fapshiApiUser,
       },
       body: JSON.stringify({
         amount: amount,
         currency: currency,
-        customer_name: orderData?.customerInfo?.fullName || 'Guest',
-        customer_email: orderData?.customerInfo?.email || 'test@example.com',
-        callback_url: callbackUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-payment-webhook'
+        phone_number: phoneNumber,
+        network: network,
+        merchant_key: fapshiMerchantKey,
+        transaction_id: orderRecord?.order_number || orderId,
+        description: `ChopTym order #${orderRecord?.order_number || orderId}`,
+        callback_url: callbackUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-webhook',
+        return_url: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`
       }),
     });
 
