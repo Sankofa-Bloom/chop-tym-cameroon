@@ -87,8 +87,7 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
     setItems(items.filter(item => !(item.id === id && item.restaurantId === restaurantId)));
   };
 
-  const deliveryFee = 500;
-  const finalTotal = total + deliveryFee;
+  const finalTotal = total;
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -229,11 +228,6 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
                         <span>Subtotal</span>
                         <span className="font-medium">{formatPrice(total)}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Delivery fee</span>
-                        <span className="font-medium">{formatPrice(deliveryFee)}</span>
-                      </div>
-                      <Separator />
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-lg">Total</span>
                         <motion.span 

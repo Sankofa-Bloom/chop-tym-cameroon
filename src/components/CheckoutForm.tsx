@@ -72,6 +72,14 @@ export const CheckoutForm = ({ items, total, selectedTown, onBack, onPlaceOrder 
   };
 
   const handleInputChange = (field: string, value: string) => {
+    if (field === 'phone') {
+      // Auto-append +237 if not present and user starts typing
+      if (value && !value.startsWith('+237')) {
+        // Remove any existing +237 if user tries to add it manually
+        const cleanValue = value.replace(/^\+?237\s?/, '');
+        value = '+237' + cleanValue;
+      }
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value

@@ -280,7 +280,15 @@ export const Profile = ({ onBack }: ProfileProps) => {
                           <Input
                             id="edit-phone"
                             value={editForm.phone}
-                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value && !value.startsWith('+237')) {
+                                const cleanValue = value.replace(/^\+?237\s?/, '');
+                                setEditForm({ ...editForm, phone: '+237' + cleanValue });
+                              } else {
+                                setEditForm({ ...editForm, phone: value });
+                              }
+                            }}
                             placeholder="WhatsApp Number: +237 6XX XXX XXX"
                           />
                         </div>

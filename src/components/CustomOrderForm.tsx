@@ -65,6 +65,14 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
+    if (field === 'customerPhone') {
+      // Auto-append +237 if not present and user starts typing
+      if (value && !value.startsWith('+237')) {
+        // Remove any existing +237 if user tries to add it manually
+        const cleanValue = value.replace(/^\+?237\s?/, '');
+        value = '+237' + cleanValue;
+      }
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -86,8 +94,8 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
           quantity: 1,
         }],
         subtotal: parseInt(formData.estimatedValue) || 1000,
-        deliveryFee: 1000, // Standard delivery fee
-        total: (parseInt(formData.estimatedValue) || 1000) + 1000,
+        deliveryFee: 0, // No delivery fee shown in cart
+        total: parseInt(formData.estimatedValue) || 1000,
         notes: `CUSTOM ORDER REQUEST:\n\nDescription: ${formData.orderDescription}\n\nUrgency: ${formData.urgency}\n\nEstimated Value: ${formData.estimatedValue || "Not specified"} XAF`,
         paymentMethod: "fapshi",
       };
