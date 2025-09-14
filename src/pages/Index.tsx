@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { CustomOrderCard } from "@/components/CustomOrderCard";
+import { CustomOrderForm } from "@/components/CustomOrderForm";
+import { CustomOrderCTA } from "@/components/CustomOrderCTA";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Profile } from "@/components/Profile";
 import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
 
-type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile";
+type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile" | "custom";
 
 interface CartItem {
   id: string;
@@ -171,6 +172,8 @@ export default function Index() {
       setSearchQuery("");
     } else if (tab === "profile") {
       setAppState("profile");
+    } else if (tab === "custom") {
+      setAppState("custom");
     }
   };
 
@@ -184,6 +187,11 @@ export default function Index() {
     setTimeout(() => {
       document.getElementById('main-search-input')?.focus();
     }, 100);
+  };
+
+  const handleCustomOrderClick = () => {
+    setAppState("custom");
+    setActiveTab("custom");
   };
 
   // Filter dishes based on search query
@@ -241,6 +249,15 @@ export default function Index() {
       ) : appState === "profile" ? (
         <Profile
           key="profile"
+          onBack={() => {
+            setAppState("browsing");
+            setActiveTab("home");
+          }}
+        />
+      ) : appState === "custom" ? (
+        <CustomOrderForm
+          key="custom"
+          selectedTown={selectedTown}
           onBack={() => {
             setAppState("browsing");
             setActiveTab("home");
@@ -426,6 +443,8 @@ export default function Index() {
               </Card>
             </motion.section>
 
+            {/* Custom Order CTA */}
+            <CustomOrderCTA onCustomOrderClick={handleCustomOrderClick} />
 
             {/* Featured Dishes */}
             <motion.section
@@ -494,6 +513,7 @@ export default function Index() {
             onCartClick={handleCartClick}
             cartItemCount={cartItemCount}
             onSearchClick={handleSearchClick}
+            onCustomOrderClick={handleCustomOrderClick}
           />
           
           <CartSheet 
