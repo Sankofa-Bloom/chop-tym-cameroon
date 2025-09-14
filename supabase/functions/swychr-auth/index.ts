@@ -37,13 +37,28 @@ serve(async (req) => {
       }),
     });
 
-    const data = await response.json();
+    let data: any;
+    try {
+      data = await response.json();
+    } catch (_) {
+      const text = await response.text();
+      console.error('Non-JSON auth response:', text);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid auth response',
+        details: text 
+      }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    if (response.ok && data.data?.token) {
+    const token = data?.data?.token ?? data?.token;
+
+    if (response.ok && token) {
       console.log('Swychr authentication successful');
       return new Response(JSON.stringify({ 
         success: true,
-        token: data.data.token 
+        token
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
