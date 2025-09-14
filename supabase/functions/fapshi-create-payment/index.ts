@@ -116,8 +116,15 @@ serve(async (req) => {
       body: JSON.stringify(fapshiPayload)
     });
 
-    const fapshiData = await fapshiResponse.json();
-    console.log('Fapshi response:', fapshiData);
+    const fapshiRaw = await fapshiResponse.text();
+    let fapshiData: any;
+    try {
+      fapshiData = fapshiRaw ? JSON.parse(fapshiRaw) : { message: 'Empty response body' };
+    } catch (e) {
+      fapshiData = { raw: fapshiRaw };
+    }
+    console.log('Fapshi response (raw):', fapshiRaw);
+    console.log('Fapshi response (parsed):', fapshiData);
 
     if (fapshiResponse.ok) {
       console.log('Fapshi payment created successfully:', fapshiData);
