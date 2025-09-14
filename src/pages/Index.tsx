@@ -16,6 +16,7 @@ import { OrderConfirmation } from "@/components/OrderConfirmation";
 import { TownSelector } from "@/components/TownSelector";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Profile } from "@/components/Profile";
+import { Toaster } from "@/components/ui/sonner";
 import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
 
 type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile" | "custom";
@@ -119,37 +120,9 @@ export default function Index() {
     setAppState("detail");
   };
 
-  const handlePlaceOrder = async (data: any) => {
-    try {
-      const response = await fetch(`https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/process-payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orderData: data })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        if (result.paymentUrl) {
-          window.open(result.paymentUrl, '_blank');
-        }
-        
-        setOrderData({
-          ...data,
-          orderId: result.orderId,
-          orderNumber: result.orderNumber
-        });
-        setCart([]);
-        setAppState("confirmation");
-      } else {
-        alert(`Error processing order: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Error placing order:', error);
-      alert('Failed to place order. Please try again.');
-    }
+  const handleCheckout = () => {
+    setAppState("checkout");
+    setIsCartOpen(false);
   };
 
   const handleGoHome = () => {
@@ -229,7 +202,11 @@ export default function Index() {
             total={cartTotal}
             selectedTown={selectedTown}
             onBack={() => setAppState("browsing")}
-            onPlaceOrder={handlePlaceOrder}
+            onPlaceOrder={(orderData) => {
+              setOrderData(orderData);
+              setCart([]);
+              setAppState("confirmation");
+            }}
           />
         </motion.div>
       ) : appState === "confirmation" && orderData ? (
@@ -576,6 +553,9 @@ export default function Index() {
       
       {/* WhatsApp Float Button */}
       <WhatsAppFloat />
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </AnimatePresence>
   );
 }
