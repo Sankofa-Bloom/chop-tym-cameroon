@@ -15,44 +15,18 @@ serve(async (req) => {
 
   try {
     const {
-      country_code,
-      name,
-      email,
-      mobile,
       amount,
-      transaction_id,
-      description,
-      pass_digital_charge = true,
+      currency = 'XAF',
+      orderId,
+      userId,
+      callbackUrl,
+      returnUrl,
       orderData
     } = await req.json();
 
-    console.log('Creating payment for:', { transaction_id, amount, name });
-
-    // First get authentication token
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    console.log('Calling swychr-auth function at:', `${supabaseUrl}/functions/v1/swychr-auth`);
-    
-    const authResponse = await fetch(`${supabaseUrl}/functions/v1/swychr-auth`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log('Auth response status:', authResponse.status);
-    
-    if (!authResponse.ok) {
-      const authError = await authResponse.text();
-      console.error('Auth failed:', authError);
-      throw new Error(`Failed to authenticate with Swychr: ${authError}`);
-    }
-
-    const authData = await authResponse.json();
-    console.log('Auth successful, got token');
-    const token = authData.token;
+    console.log('Creating Fapshi payment for:', { orderId, amount, userId });
 
     // Save order to database first if orderData is provided
-    let orderId = null;
     let orderRecord: any = null;
     if (orderData) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -62,16 +36,15 @@ serve(async (req) => {
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
-          
-          customer_name: name,
-          customer_phone: mobile,
+          customer_name: orderData.customerInfo?.fullName || '',
+          customer_phone: orderData.customerInfo?.phone || '',
           delivery_address: orderData.customerInfo?.address || '',
           town: orderData.customerInfo?.town || 'Douala',
           items: orderData.items || [],
           subtotal: orderData.subtotal || amount,
           delivery_fee: orderData.deliveryFee || 0,
           total: amount,
-          payment_method: 'swychr',
+          payment_method: 'fapshi',
           payment_status: 'pending',
           notes: orderData.customerInfo?.notes || ''
         })
@@ -83,68 +56,78 @@ serve(async (req) => {
         throw new Error('Failed to save order');
       }
 
-      orderId = order.id;
       orderRecord = order;
-      console.log('Order saved to database:', orderId);
+      console.log('Order saved to database:', order.id);
     }
 
-    // Create payment link
-    const paymentResponse = await fetch('https://api.accountpe.com/api/payin/create_payment_links', {
+    // Get Fapshi secret key
+    const fapshiSecretKey = Deno.env.get('FAPSHI_SECRET_KEY');
+    if (!fapshiSecretKey) {
+      throw new Error('FAPSHI_SECRET_KEY not configured');
+    }
+
+    // Create payment with Fapshi API
+    const fapshiResponse = await fetch('https://api.fapshi.com/v1/payments', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${fapshiSecretKey}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
-        country_code,
-        name,
-        email,
-        mobile,
-        amount,
-        transaction_id: orderRecord?.order_number || transaction_id,
-        description,
-        pass_digital_charge,
+        amount: amount.toString(),
+        currency,
+        reference: orderRecord?.order_number || orderId,
+        callback_url: callbackUrl || `${Deno.env.get('SUPABASE_URL')}/functions/v1/fapshi-webhook`,
+        return_url: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`,
+        customer: {
+          id: userId || orderRecord?.customer_phone || 'anonymous'
+        }
       }),
     });
 
-    let paymentData: any;
-    const text = await paymentResponse.text();
+    let fapshiData: any;
+    const responseText = await fapshiResponse.text();
     try {
-      paymentData = JSON.parse(text);
+      fapshiData = JSON.parse(responseText);
     } catch (_) {
-      console.error('Non-JSON payment response:', text);
-      throw new Error('Invalid response from payment provider');
+      console.error('Non-JSON Fapshi response:', responseText);
+      throw new Error('Invalid response from Fapshi API');
     }
 
-    const paymentUrl = paymentData.data?.payment_url || paymentData.data?.payment_link || paymentData.payment_url || paymentData.payment_link;
-
-    if (paymentResponse.ok && paymentUrl) {
-      console.log('Payment link created successfully:', paymentUrl);
+    if (fapshiResponse.ok && fapshiData.success && fapshiData.data?.checkout_url) {
+      console.log('Fapshi payment created successfully:', fapshiData.data.checkout_url);
       
       // Update order with payment reference if we have an order
-      if (orderId && orderData) {
+      if (orderRecord && orderData) {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         await supabase
           .from('orders')
-          .update({ payment_reference: paymentUrl })
-          .eq('id', orderId);
+          .update({ 
+            payment_reference: fapshiData.data.checkout_url,
+            // Store Fapshi session ID for status checking
+            notes: orderRecord.notes + ` | Fapshi Session: ${fapshiData.data.session_id || fapshiData.data.id}`
+          })
+          .eq('id', orderRecord.id);
       }
 
       return new Response(JSON.stringify({
         success: true,
-        data: { payment_link: paymentUrl },
-        orderId
+        data: {
+          paymentLink: fapshiData.data.checkout_url,
+          sessionId: fapshiData.data.session_id || fapshiData.data.id,
+          orderId: orderRecord?.order_number || orderId
+        }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } else {
-      console.error('Payment creation failed:', paymentData);
+      console.error('Fapshi payment creation failed:', fapshiData);
       
       // Send admin failure notification with detailed error logging
-      if (orderId && orderData) {
+      if (orderRecord && orderData) {
         try {
           const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
           const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -154,56 +137,50 @@ serve(async (req) => {
           await supabase
             .from('orders')
             .update({ payment_status: 'failed' })
-            .eq('id', orderId);
+            .eq('id', orderRecord.id);
 
           // Send detailed failure notification to admin
           await supabase.functions.invoke('send-status-notification', {
             body: {
               orderData: {
-                orderNumber: orderRecord?.order_number || transaction_id,
-                customerName: name,
-                customerPhone: mobile,
-                deliveryAddress: orderData.customerInfo?.address || '',
-                items: orderData.items || [],
-                subtotal: orderData.subtotal || amount,
-                deliveryFee: orderData.deliveryFee || 0,
-                total: amount,
+                orderNumber: orderRecord.order_number,
+                customerName: orderRecord.customer_name,
+                customerPhone: orderRecord.customer_phone,
+                deliveryAddress: orderRecord.delivery_address,
+                items: orderRecord.items,
+                subtotal: orderRecord.subtotal,
+                deliveryFee: orderRecord.delivery_fee,
+                total: orderRecord.total,
                 paymentReference: null,
-                createdAt: new Date().toISOString(),
-                notes: orderData.customerInfo?.notes || '',
+                createdAt: orderRecord.created_at,
+                notes: orderRecord.notes,
               },
               oldStatus: 'pending',
               newStatus: 'failed',
               notificationType: 'failed',
               errorDetails: {
                 stage: 'payment_creation',
-                paymentResponse: paymentData,
-                errorMessage: 'Failed to create payment link',
-                transactionId: orderRecord?.order_number || transaction_id,
+                paymentResponse: fapshiData,
+                errorMessage: 'Failed to create Fapshi payment',
                 timestamp: new Date().toISOString(),
                 requestData: {
-                  country_code,
-                  name,
-                  email,
-                  mobile,
                   amount,
-                  transaction_id,
-                  description,
-                  pass_digital_charge
+                  currency,
+                  reference: orderRecord.order_number,
                 }
               }
             }
           });
 
-          console.log('Admin failure notification sent for failed payment creation');
+          console.log('Admin failure notification sent for failed Fapshi payment creation');
         } catch (notificationError) {
-          console.error('Failed to send admin notification for payment creation failure:', notificationError);
+          console.error('Failed to send admin notification for Fapshi payment creation failure:', notificationError);
         }
       }
 
       return new Response(JSON.stringify({
-        error: 'Payment creation failed',
-        details: paymentData,
+        error: 'Fapshi payment creation failed',
+        details: fapshiData,
         errorCode: 'PAYMENT_CREATION_FAILED',
         timestamp: new Date().toISOString()
       }), {
@@ -212,8 +189,11 @@ serve(async (req) => {
       });
     }
   } catch (error) {
-    console.error('Error in swychr-create-payment function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error in fapshi-create-payment function:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -1,19 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const checkPaymentStatus = async (transactionId: string) => {
+export const checkPaymentStatus = async (sessionId: string, reference?: string) => {
   try {
-    const { data, error } = await supabase.functions.invoke('swychr-status', {
-      body: { transaction_id: transactionId }
+    const { data, error } = await supabase.functions.invoke('fapshi-status', {
+      body: { sessionId, reference }
     });
 
     if (error) {
-      console.error('Error checking payment status:', error);
+      console.error('Error checking Fapshi payment status:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true, data: data?.data };
   } catch (error) {
-    console.error('Payment status check failed:', error);
+    console.error('Fapshi payment status check failed:', error);
     return { success: false, error: 'Failed to check payment status' };
   }
 };

@@ -7,6 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to extract session ID from order notes
+function extractSessionIdFromNotes(notes: string): string | undefined {
+  if (!notes) return undefined;
+  const match = notes.match(/Fapshi Session: ([^\s|]+)/);
+  return match ? match[1] : undefined;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -55,9 +62,12 @@ serve(async (req) => {
       try {
         console.log(`Checking payment status for order: ${order.order_number}`);
         
-        // Call the swychr-status function to check payment status
-        const statusResponse = await supabase.functions.invoke('swychr-status', {
-          body: { transaction_id: order.order_number }
+        // Call the fapshi-status function to check payment status
+        const statusResponse = await supabase.functions.invoke('fapshi-status', {
+          body: { 
+            reference: order.order_number,
+            sessionId: extractSessionIdFromNotes(order.notes)
+          }
         });
 
         if (statusResponse.error) {
@@ -74,7 +84,7 @@ serve(async (req) => {
         console.log(`Payment status for ${order.order_number}:`, paymentData?.status);
 
         // Update order status based on payment result
-        if (paymentData?.status === 'success' || paymentData?.status === 'completed') {
+        if (paymentData?.status === 'success' || paymentData?.status === 'completed' || paymentData?.status === 'paid') {
           // Payment successful - update order and send success notification
           const { error: updateError } = await supabase
             .from('orders')
@@ -126,7 +136,7 @@ serve(async (req) => {
             message: 'Payment successful - notification sent'
           });
 
-        } else if (paymentData?.status === 'failed' || paymentData?.status === 'cancelled') {
+        } else if (paymentData?.status === 'failed' || paymentData?.status === 'cancelled' || paymentData?.status === 'expired') {
           // Payment failed - update order and send failure notification
           const { error: updateError } = await supabase
             .from('orders')

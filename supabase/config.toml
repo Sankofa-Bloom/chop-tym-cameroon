@@ -7,9 +7,6 @@ schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
-[functions.process-payment]
-verify_jwt = false
-
 [functions.send-admin-notification]
 verify_jwt = false
 
@@ -25,11 +22,11 @@ verify_jwt = false
 [functions.check-payment-status]
 verify_jwt = false
 
-[functions.swychr-auth]
+[functions.fapshi-create-payment]
 verify_jwt = false
 
-[functions.swychr-create-payment]
+[functions.fapshi-status]
 verify_jwt = false
 
-[functions.swychr-status]
+[functions.fapshi-webhook]
 verify_jwt = false

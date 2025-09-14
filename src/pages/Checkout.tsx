@@ -123,17 +123,15 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         timestamp: new Date().toISOString()
       };
 
-      // Call Swychr payment creation function
-      const { data, error } = await supabase.functions.invoke('swychr-create-payment', {
+      // Call Fapshi payment creation function
+      const { data, error } = await supabase.functions.invoke('fapshi-create-payment', {
         body: {
-          country_code: 'CM',
-          name: formData.fullName,
-          email: `${formData.phone.replace(/[^0-9]/g, '')}@choptym.com`,
-          mobile: formData.phone,
           amount: finalTotal,
-          transaction_id: orderId,
-          description: `ChopTym Order #${orderId}`,
-          pass_digital_charge: true,
+          currency: 'XAF',
+          orderId,
+          userId: formData.phone,
+          callbackUrl: `${window.location.origin}/payment-callback`,
+          returnUrl: `${window.location.origin}/order-confirmation`,
           orderData
         }
       });
@@ -146,19 +144,19 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         return;
       }
 
-      if (data?.success && data?.data?.payment_link) {
-        console.log('Payment link created successfully:', data.data.payment_link);
+      if (data?.success && data?.data?.paymentLink) {
+        console.log('Payment link created successfully:', data.data.paymentLink);
         toast.success("Redirecting to payment...");
         
         // Store order data for success callback
         const completeOrderData = {
           ...orderData,
-          orderNumber: orderId,
-          orderId: data.orderId
+          orderNumber: data.data.orderId || orderId,
+          orderId: data.data.orderId
         };
         
         // Redirect to payment link
-        window.location.href = data.data.payment_link;
+        window.location.href = data.data.paymentLink;
         
         // Call success callback (this might not execute due to redirect)
         onSuccess(completeOrderData);
@@ -356,9 +354,9 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
                   <CreditCard className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-medium">Mobile Money (Swychr)</h3>
+                  <h3 className="font-medium">Mobile Money (Fapshi)</h3>
                   <p className="text-sm text-muted-foreground">
-                    Pay securely with MTN Mobile Money or Orange Money
+                    Pay securely with MTN Mobile Money, Orange Money, or Express Union
                   </p>
                 </div>
               </div>
