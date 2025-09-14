@@ -20,22 +20,21 @@ serve(async (req) => {
 
     console.log('Checking Fapshi payment status for:', { sessionId, reference });
 
-    // Get Fapshi secret key
-    const fapshiSecretKey = Deno.env.get('FAPSHI_SECRET_KEY');
-    if (!fapshiSecretKey) {
-      throw new Error('FAPSHI_SECRET_KEY not configured');
+    // Get Fapshi credentials
+    const fapshiApiKey = Deno.env.get('FAPSHI_API_KEY');
+    const fapshiApiUser = Deno.env.get('FAPSHI_API_USER');
+    if (!fapshiApiKey || !fapshiApiUser) {
+      throw new Error('FAPSHI_API_KEY and FAPSHI_API_USER not configured');
     }
 
-    // Check payment status with Fapshi API (using sandbox)
-    const statusUrl = sessionId 
-      ? `https://sandbox.fapshi.com/api/v1/payments/${sessionId}`
-      : `https://sandbox.fapshi.com/api/v1/payments?reference=${reference}`;
+    // Check payment status with Fapshi API (using sandbox) - requires transId
+    const statusUrl = `https://sandbox.fapshi.com/payment-status/${sessionId || reference}`;
     
     const response = await fetch(statusUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${fapshiSecretKey}`,
-        'Content-Type': 'application/json',
+        'apikey': fapshiApiKey,
+        'apiuser': fapshiApiUser,
       },
     });
 
@@ -49,10 +48,10 @@ serve(async (req) => {
     }
 
     if (response.ok) {
-      console.log('Fapshi payment status retrieved successfully:', data.data?.status);
+      console.log('Fapshi payment status retrieved successfully:', data[0]?.status);
       return new Response(JSON.stringify({
         success: true,
-        data: data.data
+        data: data[0] // Fapshi returns array, we want first item
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });

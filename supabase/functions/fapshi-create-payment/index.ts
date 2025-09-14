@@ -60,28 +60,28 @@ serve(async (req) => {
       console.log('Order saved to database:', order.id);
     }
 
-    // Get Fapshi secret key
-    const fapshiSecretKey = Deno.env.get('FAPSHI_SECRET_KEY');
-    if (!fapshiSecretKey) {
-      throw new Error('FAPSHI_SECRET_KEY not configured');
+    // Get Fapshi credentials
+    const fapshiApiKey = Deno.env.get('FAPSHI_API_KEY');
+    const fapshiApiUser = Deno.env.get('FAPSHI_API_USER');
+    if (!fapshiApiKey || !fapshiApiUser) {
+      throw new Error('FAPSHI_API_KEY and FAPSHI_API_USER not configured');
     }
 
     // Create payment with Fapshi API (using sandbox)
-    const fapshiResponse = await fetch('https://sandbox.fapshi.com/api/v1/payments', {
+    const fapshiResponse = await fetch('https://sandbox.fapshi.com/initiate-pay', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${fapshiSecretKey}`,
         'Content-Type': 'application/json',
+        'apikey': fapshiApiKey,
+        'apiuser': fapshiApiUser,
       },
       body: JSON.stringify({
-        amount: amount.toString(),
-        currency,
-        reference: orderRecord?.order_number || orderId,
-        callback_url: callbackUrl || `${Deno.env.get('SUPABASE_URL')}/functions/v1/fapshi-webhook`,
-        return_url: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`,
-        customer: {
-          id: userId || orderRecord?.customer_phone || 'anonymous'
-        }
+        amount: amount,
+        email: orderData?.customerInfo?.email || 'test@example.com',
+        redirectUrl: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`,
+        userId: userId || orderRecord?.customer_phone || 'anonymous',
+        externalId: orderRecord?.order_number || orderId,
+        message: `Order ${orderRecord?.order_number || orderId} - ChopTym`
       }),
     });
 
@@ -94,8 +94,8 @@ serve(async (req) => {
       throw new Error('Invalid response from Fapshi API');
     }
 
-    if (fapshiResponse.ok && fapshiData.success && fapshiData.data?.checkout_url) {
-      console.log('Fapshi payment created successfully:', fapshiData.data.checkout_url);
+    if (fapshiResponse.ok && fapshiData.link) {
+      console.log('Fapshi payment created successfully:', fapshiData.link);
       
       // Update order with payment reference if we have an order
       if (orderRecord && orderData) {
@@ -106,9 +106,9 @@ serve(async (req) => {
         await supabase
           .from('orders')
           .update({ 
-            payment_reference: fapshiData.data.checkout_url,
-            // Store Fapshi session ID for status checking
-            notes: orderRecord.notes + ` | Fapshi Session: ${fapshiData.data.session_id || fapshiData.data.id}`
+            payment_reference: fapshiData.link,
+            // Store Fapshi transaction ID for status checking
+            notes: orderRecord.notes + ` | Fapshi TransId: ${fapshiData.transId}`
           })
           .eq('id', orderRecord.id);
       }
@@ -116,8 +116,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         data: {
-          paymentLink: fapshiData.data.checkout_url,
-          sessionId: fapshiData.data.session_id || fapshiData.data.id,
+          paymentLink: fapshiData.link,
+          sessionId: fapshiData.transId,
           orderId: orderRecord?.order_number || orderId
         }
       }), {
