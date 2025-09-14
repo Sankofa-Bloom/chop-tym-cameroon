@@ -61,9 +61,9 @@ serve(async (req) => {
     }
 
     // Get Fapshi credentials
-    const fapshiMerchantKey = Deno.env.get('FAPSHI_MERCHANT_KEY');
-    if (!fapshiMerchantKey) {
-      throw new Error('FAPSHI_MERCHANT_KEY not configured');
+    const fapshiSandboxKey = Deno.env.get('FAPSHI_SANDBOX_KEY');
+    if (!fapshiSandboxKey) {
+      throw new Error('FAPSHI_SANDBOX_KEY not configured');
     }
 
     // Format phone number for Fapshi (ensure 237 prefix)
@@ -79,23 +79,36 @@ serve(async (req) => {
     // Detect network based on phone number prefix (simplified logic)
     const network = phoneNumber.startsWith('2376') ? 'MTN' : 'ORANGE';
 
+    // Validate required fields
+    const requiredFields = { amount, currency, phone_number: phoneNumber, network, transaction_id: orderRecord?.order_number || orderId };
+    for (const [field, value] of Object.entries(requiredFields)) {
+      if (!value) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    // Construct payload for Fapshi sandbox
+    const fapshiPayload = {
+      amount: amount,
+      currency: currency,
+      phone_number: phoneNumber,
+      network: network,
+      merchant_key: fapshiSandboxKey,
+      transaction_id: orderRecord?.order_number || orderId,
+      description: `ChopTym order #${orderRecord?.order_number || orderId}`,
+      callback_url: callbackUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-webhook',
+      return_url: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`
+    };
+
+    console.log('Outgoing payload to Fapshi:', fapshiPayload);
+
     // Create payment with Fapshi MoMo API (sandbox)
-    const fapshiResponse = await fetch('https://sandbox.fapshi.com/initiate-pay', {
+    const fapshiResponse = await fetch('https://sandbox.fapshi.com/merchantpay/momo/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        amount: amount,
-        currency: currency,
-        phone_number: phoneNumber,
-        network: network,
-        merchant_key: fapshiMerchantKey,
-        transaction_id: orderRecord?.order_number || orderId,
-        description: `ChopTym order #${orderRecord?.order_number || orderId}`,
-        callback_url: callbackUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-webhook',
-        return_url: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`
-      }),
+      body: JSON.stringify(fapshiPayload),
     });
 
     let fapshiData: any;
