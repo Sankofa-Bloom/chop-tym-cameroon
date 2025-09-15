@@ -10,6 +10,7 @@ import { useTowns } from "@/hooks/useTowns";
 import { useStreets } from "@/hooks/useStreets";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CheckoutItem {
   id: string;
@@ -39,6 +40,8 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     town: selectedTown,
     street: ""
   });
+
+  const { createPaymentAndRedirect } = useAuth();
 
   const { towns } = useTowns();
   const { streets } = useStreets(formData.town);
@@ -107,9 +110,9 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       }
 
       const orderId = generateOrderId();
-      console.log('Creating payment for:', { transaction_id: orderId, amount: finalTotal, name: formData.fullName });
+      console.log('Creating payment for:', { orderNumber: orderId, amount: finalTotal, name: formData.fullName });
 
-      // Prepare order data for database storage
+      // Prepare order data for database storage (if needed later)
       const orderData = {
         items,
         customerInfo: {
@@ -123,58 +126,41 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         timestamp: new Date().toISOString()
       };
 
-      // Format phone number for Fapshi
+      // Format phone number for gateway metadata
       let phoneNumber = formData.phone.replace(/^\+?237\s?/, '');
       if (!phoneNumber.startsWith('237')) {
         phoneNumber = '237' + phoneNumber;
       }
-      
-      // Detect network based on phone number prefix
-      const network = phoneNumber.startsWith('2376') ? 'MTN' : 'ORANGE';
 
-      // Call Fapshi payment creation function
-      const { data, error } = await supabase.functions.invoke('fapshi-create-payment', {
-        body: {
-          amount: finalTotal,
-          currency: 'XAF',
-          phone_number: phoneNumber,
-          network: network,
-          transaction_id: orderId,
-          description: `ChopTym order #${orderId}`,
-          callback_url: `${window.location.origin}/payment-callback`,
-          return_url: `${window.location.origin}/order-confirmation`,
-          orderData
+      const { error } = await createPaymentAndRedirect({
+        orderNumber: orderId,
+        amount: finalTotal,
+        currency: 'XAF',
+        customerEmail: undefined,
+        customerName: formData.fullName,
+        customerPhone: phoneNumber,
+        description: `ChopTym order #${orderId}`,
+        metadata: {
+          town: formData.town,
+          street: formData.street,
+          selectedStreet: selectedStreet?.name,
+          selectedZone: selectedStreet?.delivery_zone?.zone_name,
+          items,
+          subtotal: total,
+          deliveryFee,
+          total: finalTotal,
         }
       });
 
       setLoading(false);
 
       if (error) {
-        console.error('Supabase function error:', error);
-        toast.error(`Payment creation failed: ${error.message}`);
+        toast.error(error.message);
         return;
       }
 
-      if (data?.success && data?.data?.paymentLink) {
-        console.log('Payment link created successfully:', data.data.paymentLink);
-        toast.success("Redirecting to payment...");
-        
-        // Store order data for success callback
-        const completeOrderData = {
-          ...orderData,
-          orderNumber: data.data.orderId || orderId,
-          orderId: data.data.orderId
-        };
-        
-        // Redirect to payment link
-        window.location.href = data.data.paymentLink;
-        
-        // Call success callback (this might not execute due to redirect)
-        onSuccess(completeOrderData);
-      } else {
-        console.error('Payment creation failed:', data);
-        toast.error('Failed to create payment link. Please try again.');
-      }
+      // onSuccess likely won't run due to redirect, but keep for safety
+      onSuccess({ ...orderData, orderNumber: orderId });
     } catch (error) {
       console.error('Error in checkout process:', error);
       toast.error('An error occurred. Please try again.');

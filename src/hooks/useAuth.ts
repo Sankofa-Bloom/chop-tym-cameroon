@@ -148,6 +148,27 @@ export const useAuth = () => {
     }
   };
 
+  const createPaymentAndRedirect = async (args: {
+    orderNumber: string;
+    amount: number;
+    currency?: string;
+    customerEmail?: string;
+    customerName?: string;
+    customerPhone?: string;
+    description?: string;
+    metadata?: Record<string, unknown>;
+  }) => {
+    const { res, data } = await fnFetch('/payments-create', {
+      method: 'POST',
+      body: JSON.stringify(args)
+    });
+    if (!res.ok || !data.success || !data.checkoutUrl) {
+      return { error: new Error(data?.error || 'Failed to create payment') };
+    }
+    window.location.href = data.checkoutUrl as string;
+    return { error: null };
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
@@ -177,10 +198,10 @@ export const useAuth = () => {
     session,
     profile,
     loading,
-    // new custom auth only
     customSignUp,
     customSignIn,
     sendOrderStatusEmail,
+    createPaymentAndRedirect,
     signOut,
     updateProfile,
     isAuthenticated: !!user,
