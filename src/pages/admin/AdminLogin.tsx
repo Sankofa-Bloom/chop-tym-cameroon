@@ -212,6 +212,13 @@ export default function AdminLogin() {
                 >
                   Create Default Admin (choptym237@gmail.com)
                 </Button>
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-800 dark:text-blue-200 text-center">
+                    <AlertCircle className="h-3 w-3 inline mr-1" />
+                    If you created an account but can't sign in, check your email for a confirmation link. 
+                    Or contact admin to disable email confirmation in Supabase settings.
+                  </p>
+                </div>
               </div>
             </>
           ) : (
