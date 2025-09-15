@@ -536,6 +536,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_admin_user_role: {
+        Args: { user_id: string }
+        Returns: undefined
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
