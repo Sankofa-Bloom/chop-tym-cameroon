@@ -16,6 +16,12 @@ verify_jwt = false
 [functions.send-user-notification]
 verify_jwt = false
 
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-signup-email]
+verify_jwt = false
+
 [functions.check-pending-orders]
 verify_jwt = false
 
