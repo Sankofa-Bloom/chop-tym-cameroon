@@ -123,15 +123,26 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         timestamp: new Date().toISOString()
       };
 
+      // Format phone number for Fapshi
+      let phoneNumber = formData.phone.replace(/^\+?237\s?/, '');
+      if (!phoneNumber.startsWith('237')) {
+        phoneNumber = '237' + phoneNumber;
+      }
+      
+      // Detect network based on phone number prefix
+      const network = phoneNumber.startsWith('2376') ? 'MTN' : 'ORANGE';
+
       // Call Fapshi payment creation function
       const { data, error } = await supabase.functions.invoke('fapshi-create-payment', {
         body: {
           amount: finalTotal,
           currency: 'XAF',
-          orderId,
-          userId: formData.phone,
-          callbackUrl: `${window.location.origin}/payment-callback`,
-          returnUrl: `${window.location.origin}/order-confirmation`,
+          phone_number: phoneNumber,
+          network: network,
+          transaction_id: orderId,
+          description: `ChopTym order #${orderId}`,
+          callback_url: `${window.location.origin}/payment-callback`,
+          return_url: `${window.location.origin}/order-confirmation`,
           orderData
         }
       });

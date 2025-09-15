@@ -13,17 +13,37 @@ serve(async (req) => {
   }
 
   try {
+    const payload = await req.json();
     const {
       amount,
       currency = 'XAF',
-      orderId,
-      userId,
-      callbackUrl,
-      returnUrl,
+      phone_number,
+      network,
+      transaction_id,
+      description,
+      callback_url,
+      return_url,
       orderData
-    } = await req.json();
+    } = payload;
 
-    console.log('Incoming request body:', { orderId, amount, userId, orderData: !!orderData });
+    console.log('Incoming request body:', { transaction_id, amount, phone_number, network, orderData: !!orderData });
+
+    // Validate required fields before proceeding
+    const requiredFields = ['amount', 'currency', 'phone_number', 'network', 'transaction_id'];
+    const fieldValues = { amount, currency, phone_number, network, transaction_id };
+    
+    for (const field of requiredFields) {
+      if (!fieldValues[field]) {
+        console.error(`Missing required field: ${field}`);
+        return new Response(JSON.stringify({ 
+          error: `Missing required field: ${field}`,
+          received: Object.keys(payload)
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     // Save order to database first if orderData is provided
     let orderRecord: any = null;
@@ -62,49 +82,26 @@ serve(async (req) => {
     // Get Fapshi sandbox key
     const fapshiSandboxKey = Deno.env.get('FAPSHI_SANDBOX_KEY');
     if (!fapshiSandboxKey) {
-      throw new Error('FAPSHI_SANDBOX_KEY not configured');
-    }
-
-    // Format phone number for Fapshi (ensure 237 prefix)
-    let phoneNumber = orderData?.customerInfo?.phone || '';
-    if (phoneNumber.startsWith('0')) {
-      phoneNumber = '237' + phoneNumber.substring(1);
-    } else if (phoneNumber.startsWith('+237')) {
-      phoneNumber = phoneNumber.substring(1);
-    } else if (!phoneNumber.startsWith('237')) {
-      phoneNumber = '237' + phoneNumber;
-    }
-
-    // Detect network based on phone number prefix
-    const network = phoneNumber.startsWith('2376') ? 'MTN' : 'ORANGE';
-
-    // Validate required fields
-    const requiredFields = ['amount', 'currency', 'phone_number', 'network', 'transaction_id'];
-    const fieldValues = {
-      amount,
-      currency,
-      phone_number: phoneNumber,
-      network,
-      transaction_id: orderRecord?.order_number || orderId
-    };
-
-    for (const field of requiredFields) {
-      if (!fieldValues[field]) {
-        throw new Error(`Missing required field: ${field}`);
-      }
+      console.error('FAPSHI_SANDBOX_KEY not configured');
+      return new Response(JSON.stringify({ 
+        error: 'FAPSHI_SANDBOX_KEY not configured' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Build Fapshi payload
     const fapshiPayload = {
       amount: amount,
       currency: currency,
-      phone_number: phoneNumber,
+      phone_number: phone_number,
       network: network,
       merchant_key: fapshiSandboxKey,
-      transaction_id: orderRecord?.order_number || orderId,
-      description: `ChopTym order #${orderRecord?.order_number || orderId}`,
-      callback_url: callbackUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-webhook',
-      return_url: returnUrl || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`
+      transaction_id: orderRecord?.order_number || transaction_id,
+      description: description || `ChopTym order #${orderRecord?.order_number || transaction_id}`,
+      callback_url: callback_url || 'https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/fapshi-webhook',
+      return_url: return_url || `${req.headers.get('origin') || 'https://localhost:3000'}/order-confirmation`
     };
 
     console.log('Outgoing payload to Fapshi:', fapshiPayload);
