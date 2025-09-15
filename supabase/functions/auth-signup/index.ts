@@ -5,7 +5,8 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { VerifyEmail } from '../auth-email/_templates/verify-email.tsx';
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+// Use bcryptjs (no Worker dependency) for Edge Functions runtime
+import bcrypt from 'npm:bcryptjs@2.4.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,7 +47,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: false, error: 'Email already registered' }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const passwordHash = await bcrypt.hash(password);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     const { data: user, error: insertErr } = await supabase
       .from('auth_users')
