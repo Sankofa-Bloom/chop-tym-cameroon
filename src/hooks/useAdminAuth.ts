@@ -73,20 +73,20 @@ export const useAdminAuth = () => {
     setError(null);
     
     try {
-      const res = await fetch(`${functionsBaseUrl}/auth-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      // Use Supabase Edge Functions client so the required Authorization header is included
+      const { data, error } = await supabase.functions.invoke('auth-login', {
+        body: { email, password },
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data?.error || 'Sign in failed');
+
+      if (error || !data?.success) {
+        throw new Error((data as any)?.error || error?.message || 'Sign in failed');
       }
+
       localStorage.setItem('auth_token', data.token);
-      // Optionally, you can sync a Supabase session or rely solely on JWT
-      // For now, rely on existing onAuthStateChange for UI state
+      // Note: This token is not a Supabase session; admin checks rely on Supabase auth.
+      // If you prefer native Supabase auth, we can switch to supabase.auth.signInWithPassword.
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed");
+      setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
       setLoading(false);
     }
