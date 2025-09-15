@@ -8,8 +8,6 @@ export const useAdminAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const functionsBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-
   const checkAdminStatus = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -90,9 +88,52 @@ export const useAdminAuth = () => {
     }
   };
 
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName || 'Admin User',
+          },
+          emailRedirectTo: `${window.location.origin}/admin/login`
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // If signup was successful and user is confirmed, create admin role
+      if (data.user) {
+        // Insert admin role for this user
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: data.user.id,
+            role: 'admin'
+          });
+
+        if (roleError) {
+          console.error('Failed to assign admin role:', roleError);
+        }
+      }
+
+      return { data, error: null };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign up failed');
+      return { data: null, error: err instanceof Error ? err : new Error('Sign up failed') };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('auth_token');
     setUser(null);
     setIsAdmin(false);
   };
@@ -103,6 +144,7 @@ export const useAdminAuth = () => {
     loading,
     error,
     signIn,
+    signUp,
     signOut
   };
 };
