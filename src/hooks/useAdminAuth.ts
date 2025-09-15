@@ -8,6 +8,8 @@ export const useAdminAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const functionsBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
   const checkAdminStatus = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -37,7 +39,6 @@ export const useAdminAuth = () => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to prevent deadlock
           setTimeout(() => {
             checkAdminStatus(session.user.id);
           }, 0);
@@ -52,7 +53,6 @@ export const useAdminAuth = () => {
       }
     );
 
-    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       
@@ -73,12 +73,18 @@ export const useAdminAuth = () => {
     setError(null);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch(`${functionsBaseUrl}/auth-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
-
-      if (error) throw error;
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data?.error || 'Sign in failed');
+      }
+      localStorage.setItem('auth_token', data.token);
+      // Optionally, you can sync a Supabase session or rely solely on JWT
+      // For now, rely on existing onAuthStateChange for UI state
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
@@ -88,6 +94,7 @@ export const useAdminAuth = () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('auth_token');
     setUser(null);
     setIsAdmin(false);
   };

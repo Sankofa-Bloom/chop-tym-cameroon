@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth, type Profile as UserProfile } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 interface ProfileProps {
@@ -15,7 +15,7 @@ interface ProfileProps {
 }
 
 export const Profile = ({ onBack }: ProfileProps) => {
-  const { user, profile, signIn, signUp, signOut, updateProfile, isAuthenticated, loading } = useAuth();
+  const { user, profile, customSignIn, customSignUp, signOut, updateProfile, isAuthenticated, loading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,19 +42,19 @@ export const Profile = ({ onBack }: ProfileProps) => {
     setAuthLoading(true);
 
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password, fullName)
-        : await signIn(email, password);
+      const result = isSignUp 
+        ? await customSignUp(email, password, fullName)
+        : await customSignIn(email, password);
 
-      if (error) {
-        toast.error(error.message);
+      if (result.error) {
+        toast.error(result.error.message);
       } else {
-        toast.success(isSignUp ? 'Account created successfully!' : 'Signed in successfully!');
+        toast.success(isSignUp ? 'Account created! Check your email to verify.' : 'Signed in successfully!');
         setEmail('');
         setPassword('');
         setFullName('');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('An unexpected error occurred');
     } finally {
       setAuthLoading(false);
@@ -83,15 +83,8 @@ export const Profile = ({ onBack }: ProfileProps) => {
     }
   };
 
-  const startEditing = () => {
-    if (profile) {
-      setEditForm({
-        full_name: profile.full_name || '',
-        phone: profile.phone || ''
-      });
-      setIsEditing(true);
-    }
-  };
+  const startEditing = () => setIsEditing(true);
+  const cancelEditing = () => setIsEditing(false);
 
   if (loading) {
     return (
