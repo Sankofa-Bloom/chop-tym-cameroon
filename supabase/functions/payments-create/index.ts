@@ -46,7 +46,8 @@ serve(async (req) => {
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://choptym.com';
 
     if (!secretKey || !publicKey) {
-      return new Response(JSON.stringify({ success: false, error: 'Payment gateway keys not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const missing = [!secretKey ? 'FAPSHI_SECRET_KEY' : null, !publicKey ? 'FAPSHI_PUBLIC_KEY' : null].filter(Boolean).join(', ');
+      return new Response(JSON.stringify({ success: false, error: 'Payment gateway keys not configured', missing }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Construct callback URLs for the gateway to redirect and webhook notify
@@ -72,23 +73,37 @@ serve(async (req) => {
       public_key: publicKey,
     };
 
-    const resp = await fetch(`${apiBase}/v1/payments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${secretKey}`,
-      },
-      body: JSON.stringify(gatewayPayload),
-    });
+    let resp: Response;
+    try {
+      resp = await fetch(`${apiBase}/v1/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${secretKey}`,
+        },
+        body: JSON.stringify(gatewayPayload),
+      });
+    } catch (networkErr) {
+      console.error('payments-create network error:', networkErr);
+      return new Response(JSON.stringify({ success: false, error: 'Network error calling Fapshi API', details: String(networkErr) }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    const data = await resp.json().catch(() => ({}));
+    const raw = await resp.text();
+    let data: any = {};
+    try { data = raw ? JSON.parse(raw) : {}; } catch { data = { raw }; }
     if (!resp.ok) {
-      return new Response(JSON.stringify({ success: false, error: data?.message || 'Failed to create payment' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.error('payments-create gateway error:', resp.status, raw);
+      return new Response(JSON.stringify({ success: false, error: data?.message || 'Failed to create payment', status: resp.status, gateway: data }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Expecting data to contain a checkout/payment url and a transaction reference/id
-    const checkoutUrl = data.checkout_url || data.payment_url || data.url;
-    const transactionRef = data.reference || data.tx_ref || data.id;
+    const checkoutUrl = data.checkout_url || data.payment_url || data.url || data.paymentLink;
+    const transactionRef = data.reference || data.tx_ref || data.id || data.reference_id;
+
+    if (!checkoutUrl) {
+      console.error('payments-create missing checkoutUrl in response:', data);
+      return new Response(JSON.stringify({ success: false, error: 'Gateway did not return a checkout URL', gateway: data }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     return new Response(JSON.stringify({ success: true, checkoutUrl, transactionRef, gateway: data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
