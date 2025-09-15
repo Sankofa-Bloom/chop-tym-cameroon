@@ -110,13 +110,10 @@ export const useAdminAuth = () => {
 
       // If signup was successful and user is confirmed, create admin role
       if (data.user) {
-        // Insert admin role for this user
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: data.user.id,
-            role: 'admin'
-          });
+        // Use the security definer function to assign admin role
+        const { error: roleError } = await supabase.rpc('create_admin_user_role', {
+          user_id: data.user.id
+        });
 
         if (roleError) {
           console.error('Failed to assign admin role:', roleError);
