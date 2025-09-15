@@ -12,6 +12,12 @@ interface CartItem {
   quantity: number;
   image: string;
   restaurantId: string;
+  complements?: Array<{
+    complement_id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
 }
 
 interface CartSheetProps {
@@ -155,11 +161,22 @@ export const CartSheet = ({ isOpen, onClose, items, setItems, total, onCheckout 
                           transition={{ duration: 0.2 }}
                         />
                         
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm mb-1 text-balance">{item.name}</h4>
-                          <p className="text-xs text-muted-foreground mb-2">{item.restaurant}</p>
-                          
-                          <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm mb-1 text-balance">{item.name}</h4>
+                            <p className="text-xs text-muted-foreground mb-1">{item.restaurant}</p>
+                            
+                            {/* Display complements */}
+                            {item.complements && item.complements.length > 0 && (
+                              <div className="mb-2">
+                                {item.complements.map((complement, index) => (
+                                  <p key={complement.complement_id} className="text-xs text-muted-foreground">
+                                    + {complement.name} (×{complement.quantity})
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center justify-between">
                             <span className="font-bold text-primary">
                               {formatPrice(item.price * item.quantity)}
                             </span>

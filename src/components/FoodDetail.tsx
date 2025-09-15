@@ -3,13 +3,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Star, Clock, Minus, Plus, MapPin, Check } from "lucide-react";
 import { Dish, useRestaurantsByDish } from "@/hooks/useRealTimeData";
+import { useDishComplements, DishComplement } from "@/hooks/useComplements";
 
 interface FoodDetailProps {
   dish: Dish;
   onBack: () => void;
-  onAddToCart: (dish: any, quantity: number, restaurantId: string, price: number) => void;
+  onAddToCart: (dish: any, quantity: number, restaurantId: string, price: number, complements?: SelectedComplement[]) => void;
+}
+
+interface SelectedComplement {
+  complement_id: string;
+  name: string;
+  price: number;
+  quantity: number;
 }
 
 const pageVariants = {
@@ -36,18 +45,57 @@ const pageTransition = {
 export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
+  const [selectedComplements, setSelectedComplements] = useState<Record<string, number>>({});
   const { restaurantDishes, loading } = useRestaurantsByDish(dish.id);
+  const { dishComplements, loading: complementsLoading } = useDishComplements(dish.id);
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} F`;
   };
 
   const selectedRestaurantDish = restaurantDishes.find(rd => rd.restaurant_id === selectedRestaurant);
-  const totalPrice = (selectedRestaurantDish?.price || 0) * quantity;
+  
+  // Calculate complement prices
+  const complementsTotal = dishComplements.reduce((total, dishComplement) => {
+    const selectedQuantity = selectedComplements[dishComplement.complement_id] || 0;
+    return total + (dishComplement.complement.price * selectedQuantity);
+  }, 0);
+  
+  const totalPrice = ((selectedRestaurantDish?.price || 0) + complementsTotal) * quantity;
+
+  const handleComplementQuantityChange = (complementId: string, newQuantity: number, maxQuantity: number) => {
+    const clampedQuantity = Math.max(0, Math.min(newQuantity, maxQuantity));
+    setSelectedComplements(prev => ({
+      ...prev,
+      [complementId]: clampedQuantity
+    }));
+  };
 
   const handleAddToCart = () => {
     if (!selectedRestaurantDish) return;
-    onAddToCart(dish, quantity, selectedRestaurantDish.restaurant_id, selectedRestaurantDish.price);
+    
+    // Check if all required complements are selected
+    const requiredComplements = dishComplements.filter(dc => dc.is_required);
+    const missingRequired = requiredComplements.some(dc => 
+      !selectedComplements[dc.complement_id] || selectedComplements[dc.complement_id] === 0
+    );
+    
+    if (missingRequired) {
+      alert("Please select all required complements");
+      return;
+    }
+    
+    // Format selected complements for cart
+    const selectedComplementsForCart: SelectedComplement[] = dishComplements
+      .filter(dc => selectedComplements[dc.complement_id] > 0)
+      .map(dc => ({
+        complement_id: dc.complement_id,
+        name: dc.complement.name,
+        price: dc.complement.price,
+        quantity: selectedComplements[dc.complement_id]
+      }));
+    
+    onAddToCart(dish, quantity, selectedRestaurantDish.restaurant_id, selectedRestaurantDish.price, selectedComplementsForCart);
     onBack();
   };
 
@@ -267,17 +315,107 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
                         </div>
                       </div>
 
+                      {/* Complements Section */}
+                      {dishComplements.length > 0 && (
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="font-semibold text-lg mb-1">Complements</h3>
+                            <p className="text-sm text-muted-foreground">Customize your order</p>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {dishComplements.map((dishComplement) => (
+                              <div 
+                                key={dishComplement.id}
+                                className={`bg-background/70 rounded-lg p-4 border ${
+                                  dishComplement.is_required ? 'border-destructive/30 bg-destructive/5' : 'border-border'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="font-medium">{dishComplement.complement.name}</h4>
+                                      {dishComplement.is_required && (
+                                        <Badge variant="destructive" className="text-xs">Required</Badge>
+                                      )}
+                                    </div>
+                                    {dishComplement.complement.description && (
+                                      <p className="text-sm text-muted-foreground">
+                                        {dishComplement.complement.description}
+                                      </p>
+                                    )}
+                                    <p className="text-sm font-medium text-primary mt-1">
+                                      +{formatPrice(dishComplement.complement.price)} each
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-soft">
+                                    <motion.div whileTap={{ scale: 0.9 }}>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleComplementQuantityChange(
+                                          dishComplement.complement_id, 
+                                          (selectedComplements[dishComplement.complement_id] || 0) - 1,
+                                          dishComplement.max_quantity
+                                        )}
+                                        disabled={(selectedComplements[dishComplement.complement_id] || 0) <= 0}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                    </motion.div>
+                                    
+                                    <span className="text-sm font-medium min-w-[2rem] text-center">
+                                      {selectedComplements[dishComplement.complement_id] || 0}
+                                    </span>
+                                    
+                                    <motion.div whileTap={{ scale: 0.9 }}>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleComplementQuantityChange(
+                                          dishComplement.complement_id,
+                                          (selectedComplements[dishComplement.complement_id] || 0) + 1,
+                                          dishComplement.max_quantity
+                                        )}
+                                        disabled={(selectedComplements[dishComplement.complement_id] || 0) >= dishComplement.max_quantity}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </motion.div>
+                                  </div>
+                                </div>
+                                
+                                {dishComplement.max_quantity > 1 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Max: {dishComplement.max_quantity}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Price Summary */}
-                      <div className="bg-background/50 rounded-xl p-4 space-y-3">
-                        <div className="flex justify-between text-sm">
-                          <span>Price per item</span>
-                          <span className="font-medium">{formatPrice(selectedRestaurantDish?.price || 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Quantity</span>
-                          <span className="font-medium">×{quantity}</span>
-                        </div>
-                        <div className="border-t pt-3">
+                        <div className="bg-background/50 rounded-xl p-4 space-y-3">
+                          <div className="flex justify-between text-sm">
+                            <span>Price per item</span>
+                            <span className="font-medium">{formatPrice(selectedRestaurantDish?.price || 0)}</span>
+                          </div>
+                          {complementsTotal > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>Complements</span>
+                              <span className="font-medium">{formatPrice(complementsTotal)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-sm">
+                            <span>Quantity</span>
+                            <span className="font-medium">×{quantity}</span>
+                          </div>
+                          <Separator />
                           <div className="flex justify-between items-center">
                             <span className="font-semibold text-lg">Total</span>
                             <motion.span 
@@ -290,7 +428,6 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
                             </motion.span>
                           </div>
                         </div>
-                      </div>
 
                       {/* Add to Cart Button */}
                       <motion.div

@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_users: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_verified: boolean
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean
+          password_hash?: string
+        }
+        Relationships: []
+      }
+      complements: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       delivery_zones: {
         Row: {
           created_at: string
@@ -44,6 +104,51 @@ export type Database = {
         }
         Relationships: []
       }
+      dish_complements: {
+        Row: {
+          complement_id: string
+          created_at: string
+          dish_id: string
+          id: string
+          is_required: boolean
+          max_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          complement_id: string
+          created_at?: string
+          dish_id: string
+          id?: string
+          is_required?: boolean
+          max_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          complement_id?: string
+          created_at?: string
+          dish_id?: string
+          id?: string
+          is_required?: boolean
+          max_quantity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_complements_complement_id_fkey"
+            columns: ["complement_id"]
+            isOneToOne: false
+            referencedRelation: "complements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dish_complements_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dishes: {
         Row: {
           category: string
@@ -73,6 +178,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      email_verification_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          token: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          token: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          token?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_verification_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "auth_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {

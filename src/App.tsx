@@ -14,6 +14,7 @@ import { DashboardOverview } from "@/components/admin/DashboardOverview";
 import { RestaurantManagement } from "@/components/admin/RestaurantManagement";
 import { DeliveryManagement } from "@/components/admin/DeliveryManagement";
 import { OrdersManagement } from "@/components/admin/OrdersManagement";
+import AdminComplements from "./pages/admin/AdminComplements";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -57,6 +58,11 @@ const App = () => {
             <Route path="/admin/restaurants" element={
               <ProtectedAdminRoute>
                 <AdminLayout><RestaurantManagement /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/complements" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminComplements /></AdminLayout>
               </ProtectedAdminRoute>
             } />
             <Route path="/admin/delivery" element={

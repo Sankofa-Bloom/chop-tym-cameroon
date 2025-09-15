@@ -29,6 +29,12 @@ interface CartItem {
   quantity: number;
   image: string;
   restaurantId: string;
+  complements?: Array<{
+    complement_id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
 }
 
 const pageVariants = {
@@ -85,15 +91,19 @@ export default function Index() {
     }).filter(dish => dish.restaurantCount > 0);
   }, [dishes, restaurantDishes]);
 
-  const addToCart = (dish: Dish, quantity: number, restaurantId: string, price: number) => {
+  const addToCart = (dish: Dish, quantity: number, restaurantId: string, price: number, complements?: Array<{complement_id: string; name: string; price: number; quantity: number}>) => {
     const restaurant = restaurants.find(r => r.id === restaurantId);
     const existingItem = cart.find(item => 
-      item.id === dish.id && item.restaurantId === restaurantId
+      item.id === dish.id && 
+      item.restaurantId === restaurantId &&
+      JSON.stringify(item.complements || []) === JSON.stringify(complements || [])
     );
     
     if (existingItem) {
       setCart(cart.map(item => 
-        item.id === dish.id && item.restaurantId === restaurantId
+        item.id === dish.id && 
+        item.restaurantId === restaurantId &&
+        JSON.stringify(item.complements || []) === JSON.stringify(complements || [])
           ? { ...item, quantity: item.quantity + quantity }
           : item
       ));
@@ -106,6 +116,7 @@ export default function Index() {
         quantity,
         image: dish.image_url,
         restaurantId,
+        complements: complements || [],
       };
       setCart([...cart, newItem]);
     }
