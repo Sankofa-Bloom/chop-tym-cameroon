@@ -73,18 +73,16 @@ export const useAdminAuth = () => {
     setError(null);
     
     try {
-      // Use Supabase Edge Functions client so the required Authorization header is included
-      const { data, error } = await supabase.functions.invoke('auth-login', {
-        body: { email, password },
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (error || !data?.success) {
-        throw new Error((data as any)?.error || error?.message || 'Sign in failed');
+      if (error) {
+        throw new Error(error.message);
       }
 
-      localStorage.setItem('auth_token', data.token);
-      // Note: This token is not a Supabase session; admin checks rely on Supabase auth.
-      // If you prefer native Supabase auth, we can switch to supabase.auth.signInWithPassword.
+      // Session will be automatically handled by onAuthStateChange
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
