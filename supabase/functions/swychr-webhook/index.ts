@@ -18,7 +18,7 @@ serve(async (req: Request) => {
 
   try {
     const webhookData = await req.json();
-    console.log('Swychr webhook received:', webhookData);
+    console.log('Swychr webhook received:', webhookData, 'at', new Date().toISOString());
 
     const {
       payment_link_id,

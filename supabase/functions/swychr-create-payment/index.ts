@@ -18,7 +18,7 @@ serve(async (req: Request) => {
 
   try {
     const requestData = await req.json();
-    console.log('Swychr payment request:', requestData);
+    console.log('Swychr payment request received:', requestData, new Date().toISOString());
 
     const {
       amount,

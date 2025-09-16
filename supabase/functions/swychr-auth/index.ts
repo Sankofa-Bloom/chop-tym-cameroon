@@ -26,7 +26,7 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log('Authenticating with Swychr API...');
+    console.log('Authenticating with Swychr API...', new Date().toISOString());
 
     const authResponse = await fetch('https://api.accountpe.com/admin/auth', {
       method: 'POST',

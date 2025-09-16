@@ -18,7 +18,7 @@ serve(async (req: Request) => {
 
   try {
     const { payment_link_id } = await req.json();
-    console.log('Checking Swychr payment status for:', payment_link_id);
+    console.log('Checking Swychr payment status for:', payment_link_id, 'at', new Date().toISOString());
 
     if (!payment_link_id) {
       return new Response(
