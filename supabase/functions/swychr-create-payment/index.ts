@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -67,11 +68,13 @@ serve(async (req: Request) => {
     }
 
     // Get Swychr access token
-    const authResponse = await supabase.functions.invoke('swychr-auth');
-    if (authResponse.error || !authResponse.data?.access_token) {
-      console.error('Failed to get Swychr access token:', authResponse.error);
+    const swychrEmail = Deno.env.get('SWYCHR_API_EMAIL');
+    const swychrPassword = Deno.env.get('SWYCHR_API_PASSWORD');
+    
+    if (!swychrEmail || !swychrPassword) {
+      console.error('Missing Swychr credentials');
       return new Response(
-        JSON.stringify({ error: 'Failed to authenticate with Swychr' }),
+        JSON.stringify({ error: 'Payment service configuration error' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -79,7 +82,34 @@ serve(async (req: Request) => {
       );
     }
 
-    const accessToken = authResponse.data.access_token;
+    // Authenticate with Swychr directly
+    const authPayload = {
+      email: swychrEmail,
+      password: swychrPassword
+    };
+
+    const authResponse = await fetch('https://api.accountpe.com/admin/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(authPayload),
+    });
+
+    const authData = await authResponse.json();
+    
+    if (!authResponse.ok || !authData.access_token) {
+      console.error('Failed to authenticate with Swychr:', authData);
+      return new Response(
+        JSON.stringify({ error: 'Failed to authenticate with payment service' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const accessToken = authData.access_token;
     console.log('Got Swychr access token');
 
     // Create payment link
