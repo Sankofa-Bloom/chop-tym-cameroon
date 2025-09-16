@@ -36,3 +36,15 @@ verify_jwt = false
 
 [functions.fapshi-webhook]
 verify_jwt = false
+
+[functions.swychr-auth]
+verify_jwt = false
+
+[functions.swychr-create-payment]
+verify_jwt = false
+
+[functions.swychr-status]
+verify_jwt = false
+
+[functions.swychr-webhook]
+verify_jwt = false

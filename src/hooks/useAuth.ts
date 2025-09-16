@@ -157,16 +157,41 @@ export const useAuth = () => {
     customerPhone?: string;
     description?: string;
     metadata?: Record<string, unknown>;
+    paymentMethod?: 'fapshi' | 'swychr';
   }) => {
-    const { res, data } = await fnFetch('/payments-create', {
-      method: 'POST',
-      body: JSON.stringify(args)
-    });
-    if (!res.ok || !data.success || !data.checkoutUrl) {
-      return { error: new Error(data?.error || 'Failed to create payment') };
+    const paymentMethod = args.paymentMethod || 'fapshi';
+    
+    if (paymentMethod === 'swychr') {
+      // Create Swychr payment
+      const { res, data } = await fnFetch('/swychr-create-payment', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: args.amount,
+          customer_phone: args.customerPhone,
+          customer_name: args.customerName,
+          customer_email: args.customerEmail,
+          order_id: args.orderNumber,
+          description: args.description,
+          orderData: args.metadata?.orderData
+        })
+      });
+      if (!res.ok || !data.success || !data.payment_url) {
+        return { error: new Error(data?.error || 'Failed to create Swychr payment') };
+      }
+      window.location.href = data.payment_url as string;
+      return { error: null };
+    } else {
+      // Default to Fapshi payment
+      const { res, data } = await fnFetch('/payments-create', {
+        method: 'POST',
+        body: JSON.stringify(args)
+      });
+      if (!res.ok || !data.success || !data.checkoutUrl) {
+        return { error: new Error(data?.error || 'Failed to create payment') };
+      }
+      window.location.href = data.checkoutUrl as string;
+      return { error: null };
     }
-    window.location.href = data.checkoutUrl as string;
-    return { error: null };
   };
 
   const signOut = async () => {
