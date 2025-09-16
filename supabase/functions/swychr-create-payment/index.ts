@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
@@ -53,18 +54,12 @@ serve(async (req: Request) => {
         .single();
 
       if (orderError) {
-        console.error('Error saving order:', orderError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to save order' }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+        console.error('Error saving order (continuing without DB save):', orderError);
+        // Don't fail the whole payment flow if order save fails
+      } else if (orderResult) {
+        savedOrderId = orderResult.id;
+        console.log('Order saved with ID:', savedOrderId);
       }
-      
-      savedOrderId = orderResult.id;
-      console.log('Order saved with ID:', savedOrderId);
     }
 
     // Get Swychr access token
@@ -113,13 +108,16 @@ serve(async (req: Request) => {
     console.log('Got Swychr access token');
 
     // Create payment link
+    const normalizedPhoneRaw = String(customer_phone).replace(/\s+/g, '').replace(/^\+/, '');
+    const normalizedPhone = normalizedPhoneRaw.startsWith('237') ? normalizedPhoneRaw.slice(3) : normalizedPhoneRaw;
+
     const paymentPayload = {
       amount: parseFloat(amount),
       currency: 'XAF',
       country_code: 'CM',
-      customer_phone: customer_phone.replace(/^\+/, ''), // Remove + prefix if present
+      customer_phone: normalizedPhone,
       customer_name,
-      customer_email: customer_email || `${customer_phone}@choptym.com`,
+      customer_email: customer_email || `${normalizedPhone}@choptym.com`,
       pass_digital_charge: true,
       payment_reference: order_id,
       description: description || `Order ${order_id}`,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { config } from '@/lib/config';
+
 
 export interface Profile {
   id: string;
@@ -20,20 +20,13 @@ export const useAuth = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const functionsBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-
-  const fnFetch = async (path: string, init?: RequestInit) => {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-      ...(anonKey ? { Authorization: `Bearer ${anonKey}` } : {}),
-    };
-    const res = await fetch(`${functionsBaseUrl}${path}`, { ...init, headers });
-    const data = await res.json().catch(() => ({}));
-    return { res, data } as const;
+  // Helper to call Edge Functions safely via Supabase client
+  const invoke = async <T = any>(name: string, body?: any) => {
+    const { data, error } = await supabase.functions.invoke(name, {
+      body,
+    });
+    return { data: data as T, error } as const;
   };
-
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -85,15 +78,13 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // New custom auth calling Edge Functions
   const customSignUp = async (email: string, password: string, fullName?: string) => {
     try {
-      const { res, data } = await fnFetch('/auth-signup', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, fullName })
+      const { data, error } = await invoke<{ success?: boolean; error?: string }>('auth-signup', {
+        email, password, fullName
       });
-      if (!res.ok || !data.success) {
-        return { error: new Error(data?.error || 'Signup failed') };
+      if (error || !data?.success) {
+        return { error: new Error(data?.error || error?.message || 'Signup failed') };
       }
       return { error: null };
     } catch (err: any) {
@@ -103,12 +94,11 @@ export const useAuth = () => {
 
   const customSignIn = async (email: string, password: string) => {
     try {
-      const { res, data } = await fnFetch('/auth-login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
+      const { data, error } = await invoke<{ success?: boolean; token?: string; error?: string }>('auth-login', {
+        email, password
       });
-      if (!res.ok || !data.success) {
-        return { error: new Error(data?.error || 'Login failed'), token: undefined };
+      if (error || !data?.success || !data?.token) {
+        return { error: new Error(data?.error || error?.message || 'Login failed'), token: undefined };
       }
       localStorage.setItem('auth_token', data.token);
       return { error: null, token: data.token };
@@ -135,12 +125,9 @@ export const useAuth = () => {
     createdAt?: string;
   }) => {
     try {
-      const { res, data } = await fnFetch('/send-status-notification', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok || !data.success) {
-        return { error: new Error(data?.error || 'Email send failed') };
+      const { data, error } = await invoke<{ success?: boolean; error?: string }>('send-status-notification', payload);
+      if (error || !data?.success) {
+        return { error: new Error(data?.error || error?.message || 'Email send failed') };
       }
       return { error: null };
     } catch (err: any) {
@@ -162,32 +149,24 @@ export const useAuth = () => {
     const paymentMethod = args.paymentMethod || 'fapshi';
     
     if (paymentMethod === 'swychr') {
-      // Create Swychr payment
-      const { res, data } = await fnFetch('/swychr-create-payment', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: args.amount,
-          customer_phone: args.customerPhone,
-          customer_name: args.customerName,
-          customer_email: args.customerEmail,
-          order_id: args.orderNumber,
-          description: args.description,
-          orderData: args.metadata?.orderData
-        })
+      const { data, error } = await invoke<{ success?: boolean; payment_url?: string; error?: string }>('swychr-create-payment', {
+        amount: args.amount,
+        customer_phone: args.customerPhone,
+        customer_name: args.customerName,
+        customer_email: args.customerEmail,
+        order_id: args.orderNumber,
+        description: args.description,
+        orderData: args.metadata?.orderData
       });
-      if (!res.ok || !data.success || !data.payment_url) {
-        return { error: new Error(data?.error || 'Failed to create Swychr payment') };
+      if (error || !data?.success || !data.payment_url) {
+        return { error: new Error(data?.error || error?.message || 'Failed to create Swychr payment') };
       }
       window.location.href = data.payment_url as string;
       return { error: null };
     } else {
-      // Default to Fapshi payment
-      const { res, data } = await fnFetch('/payments-create', {
-        method: 'POST',
-        body: JSON.stringify(args)
-      });
-      if (!res.ok || !data.success || !data.checkoutUrl) {
-        return { error: new Error(data?.error || 'Failed to create payment') };
+      const { data, error } = await invoke<{ success?: boolean; checkoutUrl?: string; error?: string }>('payments-create', args);
+      if (error || !data?.success || !data.checkoutUrl) {
+        return { error: new Error(data?.error || error?.message || 'Failed to create payment') };
       }
       window.location.href = data.checkoutUrl as string;
       return { error: null };
