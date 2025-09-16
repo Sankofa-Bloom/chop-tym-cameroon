@@ -282,7 +282,7 @@ export const Profile = ({ onBack }: ProfileProps) => {
                                 setEditForm({ ...editForm, phone: value });
                               }
                             }}
-                            placeholder="WhatsApp Number: +237 6XX XXX XXX"
+                            placeholder="+237 6 XX XXX XXX"
                           />
                         </div>
                         <div className="flex gap-2">

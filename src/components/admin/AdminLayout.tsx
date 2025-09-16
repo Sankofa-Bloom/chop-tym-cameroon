@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   SidebarProvider,
   SidebarInset,
@@ -22,7 +22,6 @@ import {
   Zap,
   Settings
 } from "lucide-react";
-import { AdminAuth } from "./AdminAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
@@ -42,6 +41,7 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, isAdmin, loading } = useAdminAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -55,7 +55,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   if (!user || !isAdmin) {
-    return <AdminAuth />;
+    navigate("/admin/login", { replace: true });
+    return null;
   }
 
   return (

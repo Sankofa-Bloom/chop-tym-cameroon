@@ -233,7 +233,7 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
                   id="customerPhone"
                   value={formData.customerPhone}
                   onChange={(e) => handleInputChange("customerPhone", e.target.value)}
-                  placeholder="WhatsApp Number: +237 6XX XXX XXX"
+                  placeholder="+237 6 XX XXX XXX"
                   required
                 />
               </div>

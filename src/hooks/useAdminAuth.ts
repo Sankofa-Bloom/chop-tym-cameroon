@@ -88,46 +88,6 @@ export const useAdminAuth = () => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName || 'Admin User',
-          },
-          emailRedirectTo: `${window.location.origin}/admin/login`
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // If signup was successful and user is confirmed, create admin role
-      if (data.user) {
-        // Use the security definer function to assign admin role
-        const { error: roleError } = await supabase.rpc('create_admin_user_role', {
-          user_id: data.user.id
-        });
-
-        if (roleError) {
-          console.error('Failed to assign admin role:', roleError);
-        }
-      }
-
-      return { data, error: null };
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign up failed');
-      return { data: null, error: err instanceof Error ? err : new Error('Sign up failed') };
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -141,7 +101,6 @@ export const useAdminAuth = () => {
     loading,
     error,
     signIn,
-    signUp,
     signOut
   };
 };

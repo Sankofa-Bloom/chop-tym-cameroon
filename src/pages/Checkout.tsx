@@ -111,7 +111,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       }
 
       const orderId = generateOrderId();
-      console.log('Creating payment for:', { orderNumber: orderId, amount: finalTotal, name: formData.fullName });
+      
 
       // Prepare order data for database storage (if needed later)
       const orderData = {
@@ -319,7 +319,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="WhatsApp Number: +237 6XX XXX XXX"
+                  placeholder="+237 6 XX XXX XXX"
                   className="chop-input mt-1"
                   required
                   disabled={loading}

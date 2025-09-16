@@ -11,12 +11,11 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 export default function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, loading, error, signIn, signUp } = useAdminAuth();
+  const { user, isAdmin, loading, error, signIn } = useAdminAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [showSignup, setShowSignup] = useState(false);
 
   // Get redirect path and access denied state
   const from = location.state?.from || "/admin";
@@ -48,46 +47,6 @@ export default function AdminLogin() {
       setPassword("");
     } else {
       setAuthError(error);
-    }
-    
-    setAuthLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email.trim() || !password.trim()) {
-      setAuthError("Please enter both email and password");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthError(null);
-
-    const result = await signUp(email, password, "Admin User");
-
-    if (result?.error) {
-      setAuthError(result.error.message);
-    } else {
-      setAuthError("Admin account created successfully! You can now sign in.");
-      setShowSignup(false);
-      setEmail("");
-      setPassword("");
-    }
-    
-    setAuthLoading(false);
-  };
-
-  const createDefaultAdmin = async () => {
-    setAuthLoading(true);
-    setAuthError(null);
-
-    const result = await signUp("choptym237@gmail.com", "password", "Default Admin");
-
-    if (result?.error) {
-      setAuthError(result.error.message);
-    } else {
-      setAuthError("Default admin account created successfully! Email: choptym237@gmail.com, Password: password");
     }
     
     setAuthLoading(false);
@@ -161,114 +120,35 @@ export default function AdminLogin() {
           )}
         </CardHeader>
         <CardContent>
-          {!showSignup ? (
-            <>
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your admin email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={authLoading}>
-                  {authLoading ? "Signing In..." : "Sign In"}
-                </Button>
-              </form>
-
-              <div className="mt-4 space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowSignup(true)}
-                  disabled={authLoading}
-                >
-                  Create Admin Account
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={createDefaultAdmin}
-                  disabled={authLoading}
-                >
-                  Create Default Admin (choptym237@gmail.com)
-                </Button>
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-xs text-blue-800 dark:text-blue-200 text-center">
-                    <AlertCircle className="h-3 w-3 inline mr-1" />
-                    If you created an account but can't sign in, check your email for a confirmation link. 
-                    Or contact admin to disable email confirmation in Supabase settings.
-                  </p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Admin Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter admin email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter secure password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="new-password"
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={authLoading}>
-                  {authLoading ? "Creating Account..." : "Create Admin Account"}
-                </Button>
-              </form>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full mt-4"
-                onClick={() => {
-                  setShowSignup(false);
-                  setEmail("");
-                  setPassword("");
-                  setAuthError(null);
-                }}
-                disabled={authLoading}
-              >
-                Back to Sign In
-              </Button>
-            </>
-          )}
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your admin email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={authLoading}>
+              {authLoading ? "Signing In..." : "Sign In"}
+            </Button>
+          </form>
 
           {(authError || error) && (
             <Alert className="mt-4">

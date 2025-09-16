@@ -374,7 +374,7 @@ export default function AdminRestaurants() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="WhatsApp Number: +237 6XX XXX XXX"
+                  placeholder="+237 6 XX XXX XXX"
                 />
               </div>
               

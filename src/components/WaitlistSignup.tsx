@@ -120,7 +120,7 @@ export const WaitlistSignup = ({ selectedTown, onClose }: WaitlistSignupProps) =
               <Input
                 id="phone"
                 type="tel"
-                placeholder="WhatsApp Number: +237 6XX XXX XXX"
+                placeholder="+237 6 XX XXX XXX"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 className="pl-10"
