@@ -91,14 +91,16 @@ serve(async (req: Request) => {
       body: JSON.stringify(authPayload),
     });
 
-    const authData = await authResponse.json();
+    const authRaw = await authResponse.text();
+    let authData: any = {};
+    try { authData = authRaw ? JSON.parse(authRaw) : {}; } catch (_e) { authData = { raw: authRaw }; }
     
     if (!authResponse.ok || !authData.access_token) {
-      console.error('Failed to authenticate with Swychr:', authData);
+      console.error('Failed to authenticate with Swychr:', authResponse.status, authRaw);
       return new Response(
-        JSON.stringify({ error: 'Failed to authenticate with payment service' }),
+        JSON.stringify({ error: 'Failed to authenticate with payment service', status: authResponse.status, details: authData }),
         { 
-          status: 500, 
+          status: 502, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -137,11 +139,13 @@ serve(async (req: Request) => {
       body: JSON.stringify(paymentPayload),
     });
 
-    const paymentData = await paymentResponse.json();
+    const paymentRaw = await paymentResponse.text();
+    let paymentData: any = {};
+    try { paymentData = paymentRaw ? JSON.parse(paymentRaw) : {}; } catch (_e) { paymentData = { raw: paymentRaw }; }
     console.log('Swychr payment response:', paymentData);
 
     if (!paymentResponse.ok) {
-      console.error('Swychr payment creation failed:', paymentData);
+      console.error('Swychr payment creation failed:', paymentResponse.status, paymentRaw);
       
       // Update order status to failed if order was saved
       if (savedOrderId) {
@@ -154,6 +158,7 @@ serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ 
           error: 'Payment creation failed', 
+          status: paymentResponse.status,
           details: paymentData 
         }),
         { 

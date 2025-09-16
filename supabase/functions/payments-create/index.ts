@@ -43,18 +43,22 @@ serve(async (req) => {
 
     const apiBase = Deno.env.get('FAPSHI_API_BASE') || 'https://api.fapshi.com';
     const secretKey = Deno.env.get('FAPSHI_SECRET_KEY');
-    const publicKey = Deno.env.get('FAPSHI_PUBLIC_KEY');
+    const publicKey = Deno.env.get('FAPSHI_PUBLIC_KEY') || Deno.env.get('FAPSHI_MERCHANT_KEY') || Deno.env.get('FAPSHI_API_USER');
     const appBaseUrl = Deno.env.get('APP_BASE_URL') || 'https://choptym.com';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
 
     if (!secretKey || !publicKey) {
-      const missing = [!secretKey ? 'FAPSHI_SECRET_KEY' : null, !publicKey ? 'FAPSHI_PUBLIC_KEY' : null].filter(Boolean).join(', ');
+      const missing = [
+        !secretKey ? 'FAPSHI_SECRET_KEY' : null,
+        !publicKey ? 'FAPSHI_PUBLIC_KEY|FAPSHI_MERCHANT_KEY|FAPSHI_API_USER' : null
+      ].filter(Boolean).join(', ');
       return new Response(JSON.stringify({ success: false, error: 'Payment gateway keys not configured', missing }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Construct callback URLs for the gateway to redirect and webhook notify
     const successUrl = `${appBaseUrl}/payment/success?order=${encodeURIComponent(orderNumber)}`;
     const cancelUrl = `${appBaseUrl}/payment/cancel?order=${encodeURIComponent(orderNumber)}`;
-    const webhookUrl = `${appBaseUrl}/functions/v1/payments-webhook`;
+    const webhookUrl = `${supabaseUrl || 'https://qiupqrmtxwtgipbwcvoo.supabase.co'}/functions/v1/payments-webhook`;
 
     // NOTE: Adjust payload to match Fapshi API exactly. This is a commonly used structure.
     const gatewayPayload: Record<string, unknown> = {
