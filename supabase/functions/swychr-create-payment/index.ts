@@ -83,7 +83,7 @@ serve(async (req: Request) => {
       password: swychrPassword
     };
 
-    const authResponse = await fetch('https://api.accountpe.com/admin/auth', {
+    const authResponse = await fetch('https://api.accountpe.com/api/payin/admin/auth', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,23 +114,19 @@ serve(async (req: Request) => {
     const normalizedPhone = normalizedPhoneRaw.startsWith('237') ? normalizedPhoneRaw.slice(3) : normalizedPhoneRaw;
 
     const paymentPayload = {
-      amount: parseFloat(amount),
-      currency: 'XAF',
       country_code: 'CM',
-      customer_phone: normalizedPhone,
-      customer_name,
-      customer_email: customer_email || `${normalizedPhone}@choptym.com`,
-      pass_digital_charge: true,
-      payment_reference: order_id,
+      name: customer_name,
+      email: customer_email || `${normalizedPhone}@choptym.com`,
+      mobile: normalizedPhone,
+      amount: parseInt(amount),
+      transaction_id: order_id,
       description: description || `Order ${order_id}`,
-      redirect_url: `${Deno.env.get('APP_BASE_URL')}/order-confirmation?payment=success&reference=${order_id}`,
-      cancel_url: `${Deno.env.get('APP_BASE_URL')}/order-confirmation?payment=cancelled&reference=${order_id}`,
-      webhook_url: `${supabaseUrl}/functions/v1/swychr-webhook`
+      pass_digital_charge: true
     };
 
     console.log('Creating Swychr payment link with payload:', paymentPayload);
 
-    const paymentResponse = await fetch('https://api.accountpe.com/create_payment_links', {
+    const paymentResponse = await fetch('https://api.accountpe.com/api/payin/create_payment_links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -169,11 +165,11 @@ serve(async (req: Request) => {
     }
 
     // Update order with payment reference if order was saved
-    if (savedOrderId && paymentData.payment_link_id) {
+    if (savedOrderId && paymentData.data) {
       await supabase
         .from('orders')
         .update({ 
-          payment_reference: paymentData.payment_link_id,
+          payment_reference: paymentData.data.transaction_id || order_id,
           payment_status: 'pending'
         })
         .eq('id', savedOrderId);
@@ -182,9 +178,10 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        payment_url: paymentData.payment_url,
-        payment_link_id: paymentData.payment_link_id,
-        order_id: savedOrderId
+        payment_url: paymentData.data?.payment_url,
+        payment_link_id: paymentData.data?.transaction_id || order_id,
+        order_id: savedOrderId,
+        data: paymentData.data
       }),
       {
         status: 200,

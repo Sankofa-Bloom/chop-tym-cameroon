@@ -52,7 +52,7 @@ serve(async (req: Request) => {
       password: swychrPassword
     };
 
-    const authResponse = await fetch('https://api.accountpe.com/admin/auth', {
+    const authResponse = await fetch('https://api.accountpe.com/api/payin/admin/auth', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,12 +77,15 @@ serve(async (req: Request) => {
     console.log('Got Swychr access token for status check');
 
     // Check payment status
-    const statusResponse = await fetch(`https://api.accountpe.com/payment_link_status/${payment_link_id}`, {
-      method: 'GET',
+    const statusResponse = await fetch('https://api.accountpe.com/api/payin/payment_link_status', {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        transaction_id: payment_link_id
+      }),
     });
 
     const statusData = await statusResponse.json();
