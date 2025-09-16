@@ -97,7 +97,7 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
         deliveryFee: 0, // No delivery fee shown in cart
         total: parseInt(formData.estimatedValue) || 1000,
         notes: `CUSTOM ORDER REQUEST:\n\nDescription: ${formData.orderDescription}\n\nUrgency: ${formData.urgency}\n\nEstimated Value: ${formData.estimatedValue || "Not specified"} XAF`,
-        paymentMethod: "fapshi",
+        paymentMethod: "swychr",
       };
 
       const response = await fetch(`https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/process-payment`, {

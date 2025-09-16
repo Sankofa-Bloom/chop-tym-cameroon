@@ -28,15 +28,6 @@ verify_jwt = false
 [functions.check-payment-status]
 verify_jwt = false
 
-[functions.fapshi-create-payment]
-verify_jwt = false
-
-[functions.fapshi-status]
-verify_jwt = false
-
-[functions.fapshi-webhook]
-verify_jwt = false
-
 [functions.swychr-auth]
 verify_jwt = false
 

@@ -39,7 +39,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     notes: "",
     town: selectedTown,
     street: "",
-    paymentMethod: 'fapshi' as 'fapshi' | 'swychr'
+    paymentMethod: 'swychr' as 'swychr'
   });
 
   const { createPaymentAndRedirect } = useAuth();
@@ -361,48 +361,11 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
             </h2>
             
             <div className="space-y-3">
-              {/* Fapshi Option */}
-              <div 
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                  formData.paymentMethod === 'fapshi' 
-                    ? 'border-primary bg-primary/10' 
-                    : 'border-border bg-background hover:border-primary/50'
-                }`}
-                onClick={() => handleInputChange('paymentMethod', 'fapshi')}
-              >
+              {/* Swychr Payment */}
+              <div className="border-2 rounded-xl p-4 border-primary bg-primary/10">
                 <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    formData.paymentMethod === 'fapshi' ? 'border-primary' : 'border-muted-foreground'
-                  }`}>
-                    {formData.paymentMethod === 'fapshi' && (
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">Mobile Money (Fapshi)</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Pay with MTN Mobile Money, Orange Money, or Express Union
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Swychr Option */}
-              <div 
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                  formData.paymentMethod === 'swychr' 
-                    ? 'border-primary bg-primary/10' 
-                    : 'border-border bg-background hover:border-primary/50'
-                }`}
-                onClick={() => handleInputChange('paymentMethod', 'swychr')}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    formData.paymentMethod === 'swychr' ? 'border-primary' : 'border-muted-foreground'
-                  }`}>
-                    {formData.paymentMethod === 'swychr' && (
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    )}
+                  <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium">Card Payment (Swychr)</h3>

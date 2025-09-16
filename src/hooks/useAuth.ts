@@ -144,33 +144,22 @@ export const useAuth = () => {
     customerPhone?: string;
     description?: string;
     metadata?: Record<string, unknown>;
-    paymentMethod?: 'fapshi' | 'swychr';
+    paymentMethod?: 'swychr';
   }) => {
-    const paymentMethod = args.paymentMethod || 'fapshi';
-    
-    if (paymentMethod === 'swychr') {
-      const { data, error } = await invoke<{ success?: boolean; payment_url?: string; error?: string }>('swychr-create-payment', {
-        amount: args.amount,
-        customer_phone: args.customerPhone,
-        customer_name: args.customerName,
-        customer_email: args.customerEmail,
-        order_id: args.orderNumber,
-        description: args.description,
-        orderData: args.metadata?.orderData
-      });
-      if (error || !data?.success || !data.payment_url) {
-        return { error: new Error(data?.error || error?.message || 'Failed to create Swychr payment') };
-      }
-      window.location.href = data.payment_url as string;
-      return { error: null };
-    } else {
-      const { data, error } = await invoke<{ success?: boolean; checkoutUrl?: string; error?: string }>('payments-create', args);
-      if (error || !data?.success || !data.checkoutUrl) {
-        return { error: new Error(data?.error || error?.message || 'Failed to create payment') };
-      }
-      window.location.href = data.checkoutUrl as string;
-      return { error: null };
+    const { data, error } = await invoke<{ success?: boolean; payment_url?: string; error?: string }>('swychr-create-payment', {
+      amount: args.amount,
+      customer_phone: args.customerPhone,
+      customer_name: args.customerName,
+      customer_email: args.customerEmail,
+      order_id: args.orderNumber,
+      description: args.description,
+      orderData: args.metadata?.orderData
+    });
+    if (error || !data?.success || !data.payment_url) {
+      return { error: new Error(data?.error || error?.message || 'Failed to create Swychr payment') };
     }
+    window.location.href = data.payment_url as string;
+    return { error: null };
   };
 
   const signOut = async () => {
