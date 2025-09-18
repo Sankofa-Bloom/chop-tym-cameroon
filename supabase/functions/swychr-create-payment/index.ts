@@ -95,7 +95,10 @@ serve(async (req: Request) => {
     let authData: any = {};
     try { authData = authRaw ? JSON.parse(authRaw) : {}; } catch (_e) { authData = { raw: authRaw }; }
     
-    if (!authResponse.ok || !authData.access_token) {
+    // Check for both access_token and token fields
+    const accessToken = authData.access_token || authData.token;
+    
+    if (!authResponse.ok || !accessToken) {
       console.error('Failed to authenticate with Swychr:', authResponse.status, authRaw);
       return new Response(
         JSON.stringify({ error: 'Failed to authenticate with payment service', status: authResponse.status, details: authData }),
@@ -105,8 +108,6 @@ serve(async (req: Request) => {
         }
       );
     }
-
-    const accessToken = authData.access_token;
     console.log('Got Swychr access token');
 
     // Create payment link

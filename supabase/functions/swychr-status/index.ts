@@ -62,7 +62,10 @@ serve(async (req: Request) => {
 
     const authData = await authResponse.json();
     
-    if (!authResponse.ok || !authData.access_token) {
+    // Check for both access_token and token fields
+    const accessToken = authData.access_token || authData.token;
+    
+    if (!authResponse.ok || !accessToken) {
       console.error('Failed to authenticate with Swychr:', authData);
       return new Response(
         JSON.stringify({ error: 'Failed to authenticate with payment service' }),
@@ -72,8 +75,6 @@ serve(async (req: Request) => {
         }
       );
     }
-
-    const accessToken = authData.access_token;
     console.log('Got Swychr access token for status check');
 
     // Check payment status
