@@ -176,6 +176,31 @@ serve(async (req: Request) => {
         .eq('id', savedOrderId);
     }
 
+    // Send admin notification email immediately when payment link is created
+    if (orderData && paymentData.data?.payment_link) {
+      try {
+        console.log('Sending admin notification email...');
+        const { error: emailError } = await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            orderData: {
+              ...orderData,
+              paymentUrl: paymentData.data.payment_link
+            }
+          }
+        });
+        
+        if (emailError) {
+          console.error('Failed to send admin notification:', emailError);
+          // Don't fail the payment creation if email fails
+        } else {
+          console.log('Admin notification sent successfully');
+        }
+      } catch (error) {
+        console.error('Error sending admin notification:', error);
+        // Don't fail the payment creation if email fails
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

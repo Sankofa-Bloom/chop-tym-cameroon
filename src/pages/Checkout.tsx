@@ -11,6 +11,7 @@ import { useStreets } from "@/hooks/useStreets";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface CheckoutItem {
   id: string;
@@ -32,6 +33,7 @@ interface CheckoutProps {
 
 export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: CheckoutProps) => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -39,7 +41,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     notes: "",
     town: selectedTown,
     street: "",
-    paymentMethod: 'swychr' as 'swychr'
+    paymentMethod: 'swychr' as 'swychr' | 'offline'
   });
 
   const { createPaymentAndRedirect } = useAuth();
@@ -112,6 +114,60 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
 
       const orderId = generateOrderId();
       
+      // Format phone number for gateway metadata
+      let phoneNumber = formData.phone.replace(/^\+?237\s?/, '');
+      if (!phoneNumber.startsWith('237')) {
+        phoneNumber = '237' + phoneNumber;
+      }
+
+      // Handle offline payment method
+      if (formData.paymentMethod === 'offline') {
+        // For offline payment, save order and send admin notification
+        const orderData = {
+          order_number: orderId,
+          customer_name: formData.fullName,
+          customer_phone: phoneNumber,
+          delivery_address: `${formData.address}, ${selectedStreet?.name}, ${formData.town}`,
+          town: formData.town,
+          items,
+          subtotal: total,
+          delivery_fee: deliveryFee,
+          total: finalTotal,
+          notes: formData.notes,
+          payment_method: 'offline'
+        };
+
+        const { data, error } = await supabase.functions.invoke('offline-payment', {
+          body: { orderData }
+        });
+
+        if (error || !data?.success) {
+          toast.error(error?.message || 'Failed to place offline order');
+          setLoading(false);
+          return;
+        }
+
+        toast.success("Order placed! Please make payment to the mobile money number shown and we'll prepare your order.");
+        
+        const finalOrderData = {
+          items,
+          customerInfo: {
+            ...formData,
+            selectedZone: selectedStreet?.delivery_zone?.zone_name,
+            selectedStreet: selectedStreet?.name
+          },
+          subtotal: total,
+          deliveryFee,
+          total: finalTotal,
+          timestamp: new Date().toISOString(),
+          orderNumber: orderId,
+          paymentMethod: 'offline'
+        };
+
+        // Navigate to order confirmation with offline payment indicator
+        navigate(`/order-confirmation?method=offline&reference=${orderId}`);
+        return;
+      }
 
       // Prepare order data for database storage (if needed later)
       const orderData = {
@@ -128,10 +184,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       };
 
       // Format phone number for gateway metadata
-      let phoneNumber = formData.phone.replace(/^\+?237\s?/, '');
-      if (!phoneNumber.startsWith('237')) {
-        phoneNumber = '237' + phoneNumber;
-      }
 
       const { error } = await createPaymentAndRedirect({
         orderNumber: orderId,
@@ -361,20 +413,67 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
             </h2>
             
             <div className="space-y-3">
-              {/* Swychr Payment */}
-              <div className="border-2 rounded-xl p-4 border-primary bg-primary/10">
+              {/* Online Payment */}
+              <div 
+                className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                  formData.paymentMethod === 'swychr' 
+                    ? 'border-primary bg-primary/10' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => handleInputChange('paymentMethod', 'swychr')}
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    {formData.paymentMethod === 'swychr' && (
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium">Card Payment (Swychr)</h3>
+                    <h3 className="font-medium">Online Payments</h3>
                     <p className="text-sm text-muted-foreground">
-                      Pay securely with your debit or credit card
+                      MTN Mobile Money, Orange Money, Bank Card, etc.
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Offline Payment */}
+              <div 
+                className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                  formData.paymentMethod === 'offline' 
+                    ? 'border-primary bg-primary/10' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => handleInputChange('paymentMethod', 'offline')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                    {formData.paymentMethod === 'offline' && (
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium">Offline Payment</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Pay via Mobile Money transfer
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+          {/* Offline Payment Details */}
+          {formData.paymentMethod === 'offline' && (
+            <div className="mt-3 p-4 bg-muted/50 rounded-lg border">
+              <h4 className="font-medium mb-2">Payment Details:</h4>
+      <div className="space-y-1 text-sm">
+        <p><strong>MTN Number:</strong> 670 416 449</p>
+        <p><strong>Name:</strong> Mpah Ngwese</p>
+        <p className="text-muted-foreground mt-2">
+          Please transfer <strong>{formatPrice(finalTotal)}</strong> to the above number and include your order reference in the transfer message.
+        </p>
+      </div>
+            </div>
+          )}
             </div>
           </div>
 

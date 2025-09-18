@@ -104,82 +104,92 @@ export const OrderConfirmation = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Card className={`${config.bgColor} ${config.borderColor}`}>
-          <CardHeader className="text-center pb-4">
-            <div className={`w-16 h-16 mx-auto ${config.bgColor} rounded-full flex items-center justify-center mb-4`}>
-              <StatusIcon className={`w-8 h-8 ${config.color}`} />
+    <Card className={`${config.bgColor} ${config.borderColor}`}>
+      <CardHeader className="text-center pb-4">
+        <div className={`w-16 h-16 mx-auto ${config.bgColor} rounded-full flex items-center justify-center mb-4`}>
+          <StatusIcon className={`w-8 h-8 ${config.color}`} />
+        </div>
+        <CardTitle className="text-xl">{config.title}</CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <p className="text-center text-muted-foreground">
+          {config.description}
+        </p>
+        
+        {orderDetails && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Reference:</span>
+              <Badge variant="outline">{orderDetails.reference || reference}</Badge>
             </div>
-            <CardTitle className="text-xl">{config.title}</CardTitle>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <p className="text-center text-muted-foreground">
-              {config.description}
-            </p>
             
-            {orderDetails && (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Reference:</span>
-                  <Badge variant="outline">{orderDetails.reference || reference}</Badge>
-                </div>
-                
-                {orderDetails.amount && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Amount:</span>
-                    <span className="font-medium">{orderDetails.amount} {orderDetails.currency || 'XAF'}</span>
-                  </div>
-                )}
-                
-                {orderDetails.status && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Status:</span>
-                    <Badge className={config.color}>{orderDetails.status}</Badge>
-                  </div>
-                )}
+            {orderDetails.amount && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Amount:</span>
+                <span className="font-medium">{orderDetails.amount} {orderDetails.currency || 'XAF'}</span>
               </div>
             )}
             
-            <div className="pt-4 space-y-2">
-              <Button 
-                onClick={() => navigate('/')} 
-                className="w-full"
-                variant={paymentStatus === 'success' ? 'default' : 'outline'}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-              
-              {paymentStatus === 'failed' && (
-                <Button 
-                  onClick={() => navigate('/checkout')} 
-                  className="w-full"
-                  variant="default"
-                >
-                  Try Again
-                </Button>
-              )}
-              
-              {paymentStatus === 'pending' && (
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  className="w-full"
-                  variant="outline"
-                >
-                  Refresh Status
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        {paymentStatus === 'success' && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
-            <p className="text-sm text-green-800">
-              📞 You will receive a WhatsApp message with your order details and delivery updates.
-            </p>
+            {orderDetails.status && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Badge className={config.color}>{orderDetails.status}</Badge>
+              </div>
+            )}
           </div>
         )}
+        
+        <div className="pt-4 space-y-2">
+          <Button 
+            onClick={() => navigate('/')} 
+            className="w-full"
+            variant={paymentStatus === 'success' ? 'default' : 'outline'}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+          
+          {paymentStatus === 'failed' && (
+            <Button 
+              onClick={() => navigate('/checkout')} 
+              className="w-full"
+              variant="default"
+            >
+              Try Again
+            </Button>
+          )}
+          
+          {paymentStatus === 'pending' && (
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="w-full"
+              variant="outline"
+            >
+              Refresh Status
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+    
+    {paymentStatus === 'success' && (
+      <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+        <p className="text-sm text-green-800">
+          {orderDetails?.paymentMethod === 'offline' || searchParams.get('method') === 'offline' ? (
+            <>
+              💰 Please complete your payment by transferring to:
+              <br />
+              <strong>MTN: 670 416 449 (Mpah Ngwese)</strong>
+              <br />
+              Include your order reference in the transfer message.
+            </>
+          ) : (
+            "📞 You will receive a WhatsApp message with your order details and delivery updates."
+          )}
+        </p>
+      </div>
+    )}
       </div>
     </div>
   );

@@ -150,12 +150,30 @@ export const OrderNotificationEmail = ({
             <>
               <Hr style={separator} />
               <Section style={paymentSection}>
+                <Heading style={h2}>Payment Information</Heading>
                 <Text style={paymentText}>
-                  <strong>Payment Status:</strong> Pending
+                  <strong>Payment Status:</strong> Pending (Online Payment)
                 </Text>
                 <Link href={paymentUrl} style={paymentLink}>
                   View Payment Link
                 </Link>
+              </Section>
+            </>
+          )}
+
+          {!paymentUrl && (
+            <>
+              <Hr style={separator} />
+              <Section style={paymentSection}>
+                <Heading style={h2}>Payment Information</Heading>
+                <Text style={paymentText}>
+                  <strong>Payment Method:</strong> Offline Payment (Mobile Money)
+                </Text>
+                <Text style={offlinePaymentDetails}>
+                  Customer should transfer <strong>{formatPrice(total)}</strong> to:<br/>
+                  <strong>MTN: 670 416 449 (Mpah Ngwese)</strong><br/>
+                  Reference: <strong>{orderNumber}</strong>
+                </Text>
               </Section>
             </>
           )}
@@ -394,4 +412,15 @@ const footer = {
 const footerText = {
   fontSize: '12px',
   color: '#8898aa',
+}
+
+const offlinePaymentDetails = {
+  fontSize: '14px',
+  color: '#333',
+  backgroundColor: '#fff3cd',
+  padding: '15px',
+  borderRadius: '6px',
+  border: '1px solid #ffeaa7',
+  margin: '10px 0',
+  lineHeight: '1.5',
 }

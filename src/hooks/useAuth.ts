@@ -144,7 +144,7 @@ export const useAuth = () => {
     customerPhone?: string;
     description?: string;
     metadata?: Record<string, unknown>;
-    paymentMethod?: 'swychr';
+    paymentMethod?: 'swychr' | 'offline';
   }) => {
     const { data, error } = await invoke<{ success?: boolean; payment_url?: string; error?: string }>('swychr-create-payment', {
       amount: args.amount,
