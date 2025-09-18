@@ -179,7 +179,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        payment_url: paymentData.data?.payment_url,
+        payment_url: paymentData.data?.payment_link,
         payment_link_id: paymentData.data?.transaction_id || order_id,
         order_id: savedOrderId,
         data: paymentData.data
