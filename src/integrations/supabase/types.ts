@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      auth_users: {
-        Row: {
-          created_at: string
-          email: string
-          full_name: string | null
-          id: string
-          is_verified: boolean
-          password_hash: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          full_name?: string | null
-          id?: string
-          is_verified?: boolean
-          password_hash: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          id?: string
-          is_verified?: boolean
-          password_hash?: string
-        }
-        Relationships: []
-      }
       complements: {
         Row: {
           created_at: string
@@ -178,38 +151,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      email_verification_tokens: {
-        Row: {
-          created_at: string
-          expires_at: string
-          token: string
-          used: boolean
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at: string
-          token: string
-          used?: boolean
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          token?: string
-          used?: boolean
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "email_verification_tokens_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "auth_users"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       orders: {
         Row: {

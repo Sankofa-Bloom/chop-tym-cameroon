@@ -78,33 +78,36 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const customSignUp = async (email: string, password: string, fullName?: string) => {
-    try {
-      const { data, error } = await invoke<{ success?: boolean; error?: string }>('auth-signup', {
-        email, password, fullName
-      });
-      if (error || !data?.success) {
-        return { error: new Error(data?.error || error?.message || 'Signup failed') };
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: fullName ? { full_name: fullName } : undefined
       }
-      return { error: null };
-    } catch (err: any) {
-      return { error: new Error(err?.message || 'Signup failed') };
+    });
+
+    if (error) {
+      return { error };
     }
+
+    return { error: null };
   };
 
-  const customSignIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await invoke<{ success?: boolean; token?: string; error?: string }>('auth-login', {
-        email, password
-      });
-      if (error || !data?.success || !data?.token) {
-        return { error: new Error(data?.error || error?.message || 'Login failed'), token: undefined };
-      }
-      localStorage.setItem('auth_token', data.token);
-      return { error: null, token: data.token };
-    } catch (err: any) {
-      return { error: new Error(err?.message || 'Login failed'), token: undefined };
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { error };
     }
+
+    return { error: null };
   };
 
   const sendOrderStatusEmail = async (payload: {
@@ -166,7 +169,6 @@ export const useAuth = () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
       setProfile(null);
-      localStorage.removeItem('auth_token');
     }
     return { error };
   };
@@ -191,8 +193,8 @@ export const useAuth = () => {
     session,
     profile,
     loading,
-    customSignUp,
-    customSignIn,
+    signUp,
+    signIn,
     sendOrderStatusEmail,
     createPaymentAndRedirect,
     signOut,

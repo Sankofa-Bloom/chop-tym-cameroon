@@ -15,7 +15,7 @@ interface ProfileProps {
 }
 
 export const Profile = ({ onBack }: ProfileProps) => {
-  const { user, profile, customSignIn, customSignUp, signOut, updateProfile, isAuthenticated, loading } = useAuth();
+  const { user, profile, loading, signIn, signUp, signOut, updateProfile, isAuthenticated } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,8 +43,8 @@ export const Profile = ({ onBack }: ProfileProps) => {
 
     try {
       const result = isSignUp 
-        ? await customSignUp(email, password, fullName)
-        : await customSignIn(email, password);
+        ? await signUp(email, password, fullName)
+        : await signIn(email, password);
 
       if (result.error) {
         toast.error(result.error.message);
