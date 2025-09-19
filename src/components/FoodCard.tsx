@@ -44,6 +44,7 @@ export const FoodCard = ({ dish, onViewDetail, index = 0 }: FoodCardProps) => {
         transition: { duration: 0.3, ease: "easeOut" }
       }}
       className="group"
+      onClick={() => onViewDetail(dish)}
     >
       <Card className="overflow-hidden hover-lift cursor-pointer border-0 card-premium">
         <motion.div 
@@ -114,18 +115,9 @@ export const FoodCard = ({ dish, onViewDetail, index = 0 }: FoodCardProps) => {
                 <p className="text-xs text-muted-foreground">Starting from</p>
               </div>
               
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  onClick={() => onViewDetail(dish)}
-                  className="gradient-prestigious text-primary-foreground shadow-strong hover:shadow-gold transition-all duration-300 border border-primary/20"
-                  size="sm"
-                >
-                  View Details
-                </Button>
-              </motion.div>
+              <div className="text-xs text-muted-foreground/70">
+                Click to view details
+              </div>
             </div>
           </motion.div>
         </CardContent>
