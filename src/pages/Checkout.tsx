@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { OfflinePaymentDialog } from "@/components/OfflinePaymentDialog";
 
 interface CheckoutItem {
   id: string;
@@ -50,6 +51,10 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
   const { streets } = useStreets(formData.town);
   const [selectedStreet, setSelectedStreet] = useState<any>(null);
   const [selectedTownData, setSelectedTownData] = useState<any>(null);
+  
+  // Dialog state for offline payment
+  const [showOfflineDialog, setShowOfflineDialog] = useState(false);
+  const [offlineOrderData, setOfflineOrderData] = useState<any>(null);
   
   // Calculate delivery fee based on town's free delivery setting and selected street's zone
   const deliveryFee = selectedTownData?.free_delivery ? 0 : (selectedStreet?.delivery_zone?.delivery_fee || 500);
@@ -100,6 +105,55 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     return `CT-${date}-${random}`;
   };
 
+  const handleMarkAsPaid = async () => {
+    if (!offlineOrderData) return;
+
+    try {
+      // Update order status to paid in database
+      const { error } = await supabase
+        .from('orders')
+        .update({ payment_status: 'paid' })
+        .eq('id', offlineOrderData.orderId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Send order confirmation email
+      try {
+        await supabase.functions.invoke('send-order-confirmation', {
+          body: {
+            orderData: {
+              order_number: offlineOrderData.orderNumber,
+              customer_name: offlineOrderData.customerInfo.fullName,
+              customer_phone: offlineOrderData.customerInfo.phone,
+              total: offlineOrderData.total,
+              payment_method: 'offline',
+              items: items.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+              }))
+            },
+            customerEmail: null // No email for offline orders
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send order confirmation email:', emailError);
+        // Don't fail the whole process if email fails
+      }
+
+      toast.success("Payment confirmed! Your order is now being processed.");
+      setShowOfflineDialog(false);
+      
+      // Navigate to success page
+      navigate(`/order-confirmation?method=offline&reference=${offlineOrderData.orderNumber}&status=paid`);
+    } catch (error) {
+      console.error('Error marking order as paid:', error);
+      throw error;
+    }
+  };
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -147,7 +201,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
           return;
         }
 
-        toast.success("Order placed! Please make payment to the mobile money number shown and we'll prepare your order.");
+        toast.success("Order placed successfully!");
         
         const finalOrderData = {
           items,
@@ -164,8 +218,15 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
           paymentMethod: 'offline'
         };
 
-        // Navigate to order confirmation with offline payment indicator
-        navigate(`/order-confirmation?method=offline&reference=${orderId}`);
+        // Store order data and show dialog instead of navigating
+        setOfflineOrderData({
+          orderNumber: orderId,
+          total: finalTotal,
+          customerInfo: formData,
+          orderId: data.order_id
+        });
+        setShowOfflineDialog(true);
+        setLoading(false);
         return;
       }
 
@@ -493,6 +554,18 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
           </Button>
         </form>
       </div>
+      
+      {/* Offline Payment Dialog */}
+      <OfflinePaymentDialog
+        isOpen={showOfflineDialog}
+        onClose={() => setShowOfflineDialog(false)}
+        onMarkPaid={handleMarkAsPaid}
+        orderData={offlineOrderData || {
+          orderNumber: '',
+          total: 0,
+          customerInfo: { fullName: '', phone: '' }
+        }}
+      />
     </div>
   );
 };
