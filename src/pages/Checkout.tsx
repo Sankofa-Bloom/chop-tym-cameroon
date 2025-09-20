@@ -119,30 +119,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         throw error;
       }
 
-      // Send order confirmation email
-      try {
-        await supabase.functions.invoke('send-order-confirmation', {
-          body: {
-            orderData: {
-              order_number: offlineOrderData.orderNumber,
-              customer_name: offlineOrderData.customerInfo.fullName,
-              customer_phone: offlineOrderData.customerInfo.phone,
-              total: offlineOrderData.total,
-              payment_method: 'offline',
-              items: items.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-              }))
-            },
-            customerEmail: null // No email for offline orders
-          }
-        });
-      } catch (emailError) {
-        console.error('Failed to send order confirmation email:', emailError);
-        // Don't fail the whole process if email fails
-      }
-
       toast.success("Payment confirmed! Your order is now being processed.");
       setShowOfflineDialog(false);
       
