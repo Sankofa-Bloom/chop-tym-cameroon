@@ -121,9 +121,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
 
       toast.success("Payment confirmed! Your order is now being processed.");
       setShowOfflineDialog(false);
-      
-      // Navigate to success page
-      navigate(`/order-confirmation?method=offline&reference=${offlineOrderData.orderNumber}&status=paid`);
     } catch (error) {
       console.error('Error marking order as paid:', error);
       throw error;
@@ -498,19 +495,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
                 </div>
               </div>
 
-          {/* Offline Payment Details */}
-          {formData.paymentMethod === 'offline' && (
-            <div className="mt-3 p-4 bg-muted/50 rounded-lg border">
-              <h4 className="font-medium mb-2">Payment Details:</h4>
-      <div className="space-y-1 text-sm">
-        <p><strong>MTN Number:</strong> 670 416 449</p>
-        <p><strong>Name:</strong> Mpah Ngwese</p>
-        <p className="text-muted-foreground mt-2">
-          Please transfer <strong>{formatPrice(finalTotal)}</strong> to the above number and include your order reference in the transfer message.
-        </p>
-      </div>
-            </div>
-          )}
             </div>
           </div>
 
