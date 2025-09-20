@@ -71,26 +71,13 @@ export const OfflinePaymentDialog = ({
                 <div className="flex items-center justify-between bg-background rounded p-2 border">
                   <div>
                     <p className="font-medium">MTN Mobile Money</p>
-                    <p className="text-primary font-mono">677 123 456</p>
+                    <p className="text-primary font-mono">670 416 449</p>
+                    <p className="text-sm text-muted-foreground">Mpah Ngwese</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleCopyNumber("677123456")}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between bg-background rounded p-2 border">
-                  <div>
-                    <p className="font-medium">Orange Money</p>
-                    <p className="text-primary font-mono">691 123 456</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleCopyNumber("691123456")}
+                    onClick={() => handleCopyNumber("670416449")}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
