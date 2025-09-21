@@ -15,7 +15,7 @@ export const WhatsAppFloat = () => {
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 2, type: "spring", stiffness: 200 }}
-      className="fixed bottom-20 right-6 z-50"
+      className="fixed bottom-28 right-4 z-40"
       style={{ zIndex: 9999 }}
     >
       <motion.button
