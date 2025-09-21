@@ -67,7 +67,17 @@ serve(async (req: Request) => {
       const { error: emailError } = await supabase.functions.invoke('send-admin-notification', {
         body: {
           orderData: {
-            ...orderData,
+            orderNumber: orderData.order_number,
+            customerInfo: {
+              fullName: orderData.customer_name,
+              phone: orderData.customer_phone,
+              address: orderData.delivery_address,
+              notes: orderData.notes
+            },
+            items: orderData.items,
+            subtotal: orderData.subtotal,
+            deliveryFee: orderData.delivery_fee,
+            total: orderData.total,
             paymentUrl: null, // No payment URL for offline payments
             paymentMethod: 'offline'
           }
