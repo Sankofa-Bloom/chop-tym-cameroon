@@ -49,7 +49,7 @@ serve(async (req) => {
 
     // Send email to admin using Zoho SMTP
     await client.send({
-      from: Deno.env.get('ZOHO_SMTP_USERNAME')!,
+      from: `ChopTym <${Deno.env.get('ZOHO_SMTP_USERNAME')!}>`,
       to: 'choptym237@gmail.com',
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
       html,
