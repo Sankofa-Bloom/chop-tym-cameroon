@@ -54,11 +54,9 @@ serve(async (req) => {
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
       html,
       content: `New order ${orderData.orderNumber} from ${orderData.customerInfo.fullName}\nPhone: ${orderData.customerInfo.phone}\nAddress: ${orderData.customerInfo.address}\nTotal: ${orderData.total}\n`,
-      headers: {
-        'From': `ChopTym <${Deno.env.get('ZOHO_SMTP_USERNAME')!}>`,
-        'Reply-To': Deno.env.get('ZOHO_REPLY_TO') || `ChopTym <${Deno.env.get('ZOHO_SMTP_USERNAME')!}>`,
-        'MIME-Version': '1.0'
-      }
+        headers: {
+          'Reply-To': Deno.env.get('ZOHO_REPLY_TO') || `ChopTym <${Deno.env.get('ZOHO_SMTP_USERNAME')!}>`,
+        }
     });
 
     console.log('Admin notification sent via Zoho SMTP successfully');
