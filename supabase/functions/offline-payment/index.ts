@@ -61,10 +61,12 @@ serve(async (req: Request) => {
       console.log('Offline order saved with ID:', savedOrderId);
     }
 
-    // Send admin notification email immediately
+    // Send admin notification email immediately using both services for redundancy
     try {
       console.log('Sending admin notification for offline payment...');
-      const { error: emailError } = await supabase.functions.invoke('send-admin-notification', {
+      
+      // Try Resend first (more reliable)
+      const { error: resendError } = await supabase.functions.invoke('send-admin-notification-resend', {
         body: {
           orderData: {
             orderNumber: orderData.order_number,
@@ -84,12 +86,39 @@ serve(async (req: Request) => {
         }
       });
       
-      if (emailError) {
-        console.error('Failed to send admin notification:', emailError);
-        // Don't fail the order creation if email fails
+      if (resendError) {
+        console.error('Resend notification failed, trying Zoho backup:', resendError);
+        
+        // Fallback to Zoho SMTP
+        const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            orderData: {
+              orderNumber: orderData.order_number,
+              customerInfo: {
+                fullName: orderData.customer_name,
+                phone: orderData.customer_phone,
+                address: orderData.delivery_address,
+                notes: orderData.notes
+              },
+              items: orderData.items,
+              subtotal: orderData.subtotal,
+              deliveryFee: orderData.delivery_fee,
+              total: orderData.total,
+              paymentUrl: null,
+              paymentMethod: 'offline'
+            }
+          }
+        });
+        
+        if (zohoError) {
+          console.error('Both notification services failed:', zohoError);
+        } else {
+          console.log('Admin notification sent via Zoho backup');
+        }
       } else {
-        console.log('Admin notification sent successfully');
+        console.log('Admin notification sent via Resend successfully');
       }
+      
     } catch (error) {
       console.error('Error sending admin notification:', error);
       // Don't fail the order creation if email fails
