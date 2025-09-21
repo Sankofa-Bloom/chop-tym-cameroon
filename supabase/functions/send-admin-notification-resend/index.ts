@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import React from 'npm:react@18.3.1';
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { Resend } from 'npm:resend@4.0.0';
-import { OrderNotificationEmail } from '../send-admin-notification/_templates/order-notification.tsx';
+import { OrderNotificationEmail } from './_templates/order-notification.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
