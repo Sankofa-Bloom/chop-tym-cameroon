@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { OfflinePaymentDialog } from "@/components/OfflinePaymentDialog";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 
 interface CheckoutItem {
   id: string;
@@ -42,10 +43,11 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     notes: "",
     town: selectedTown,
     street: "",
-    paymentMethod: 'swychr' as 'swychr' | 'offline'
+    paymentMethod: 'swychr' as string
   });
 
   const { createPaymentAndRedirect } = useAuth();
+  const { paymentMethods, loading: paymentMethodsLoading } = usePaymentMethods();
 
   const { towns } = useTowns();
   const { streets } = useStreets(formData.town);
@@ -74,7 +76,16 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       const town = towns.find(t => t.name === formData.town);
       setSelectedTownData(town);
     }
-  }, [formData.town, towns]);
+  // Add effect to set default payment method
+  useEffect(() => {
+    // Set default payment method to first available method
+    if (paymentMethods.length > 0 && !formData.paymentMethod) {
+      setFormData(prev => ({
+        ...prev,
+        paymentMethod: paymentMethods[0].code
+      }));
+    }
+  }, [paymentMethods]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
@@ -117,6 +128,19 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
 
       if (error) {
         throw error;
+      }
+
+      // Send order confirmation email to customer for offline payment
+      try {
+        await supabase.functions.invoke('send-order-confirmation', {
+          body: {
+            order_id: offlineOrderData.orderId,
+            customer_email: null // This will skip sending email to customer, only admin gets notified
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't fail the payment confirmation if email fails
       }
 
       toast.success("Payment confirmed! Your order is now being processed.");
@@ -227,7 +251,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         customerName: formData.fullName,
         customerPhone: phoneNumber,
         description: `ChopTym order #${orderId}`,
-        paymentMethod: formData.paymentMethod,
+        paymentMethod: formData.paymentMethod as 'swychr' | 'offline',
         metadata: {
           town: formData.town,
           street: formData.street,
@@ -447,54 +471,48 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
             </h2>
             
             <div className="space-y-3">
-              {/* Online Payment */}
-              <div 
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                  formData.paymentMethod === 'swychr' 
-                    ? 'border-primary bg-primary/10' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-                onClick={() => handleInputChange('paymentMethod', 'swychr')}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                    {formData.paymentMethod === 'swychr' && (
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">Online Payments</h3>
-                    <p className="text-sm text-muted-foreground">
-                      MTN Mobile Money, Orange Money, Bank Card, etc.
-                    </p>
-                  </div>
+              {paymentMethodsLoading ? (
+                <div className="text-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                  <p className="text-sm text-muted-foreground mt-2">Loading payment methods...</p>
                 </div>
-              </div>
-
-              {/* Offline Payment */}
-              <div 
-                className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                  formData.paymentMethod === 'offline' 
-                    ? 'border-primary bg-primary/10' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-                onClick={() => handleInputChange('paymentMethod', 'offline')}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                    {formData.paymentMethod === 'offline' && (
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    )}
+              ) : (
+                paymentMethods.map((method) => (
+                  <div 
+                    key={method.code}
+                    className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                      formData.paymentMethod === method.code 
+                        ? 'border-primary bg-primary/10' 
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => handleInputChange('paymentMethod', method.code)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                        {formData.paymentMethod === method.code && (
+                          <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{method.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {method.description}
+                        </p>
+                        {method.fees && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Fees: {method.fees}
+                          </p>
+                        )}
+                        {method.processing_time && (
+                          <p className="text-xs text-primary font-medium">
+                            {method.processing_time}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">Offline Payment</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Pay via Mobile Money transfer
-                    </p>
-                  </div>
-                </div>
-              </div>
-
+                ))
+              )}
             </div>
           </div>
 

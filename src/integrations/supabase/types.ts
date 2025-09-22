@@ -209,6 +209,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          display_order: number
+          fees: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          name: string
+          processing_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          fees?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          processing_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          fees?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          processing_time?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -15,6 +15,7 @@ import { RestaurantManagement } from "@/components/admin/RestaurantManagement";
 import { DeliveryManagement } from "@/components/admin/DeliveryManagement";
 import { OrdersManagement } from "@/components/admin/OrdersManagement";
 import AdminComplements from "./pages/admin/AdminComplements";
+import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -68,6 +69,11 @@ const App = () => {
             <Route path="/admin/delivery" element={
               <ProtectedAdminRoute>
                 <AdminLayout><DeliveryManagement /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/payment-methods" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminPaymentMethods /></AdminLayout>
               </ProtectedAdminRoute>
             } />
             <Route path="/admin/orders" element={

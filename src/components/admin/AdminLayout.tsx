@@ -20,7 +20,8 @@ import {
   ShoppingBag,
   MapPin,
   Zap,
-  Settings
+  Settings,
+  CreditCard
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,6 +32,7 @@ const sidebarItems = [
   { title: "Restaurants", url: "/admin/restaurants", icon: Store },
   { title: "Complements", url: "/admin/complements", icon: ChefHat },
   { title: "Delivery", url: "/admin/delivery", icon: MapPin },
+  { title: "Payment Methods", url: "/admin/payment-methods", icon: CreditCard },
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
 ];
 
