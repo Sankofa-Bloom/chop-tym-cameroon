@@ -38,7 +38,7 @@ serve(async (req) => {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: 'ChopTym Orders <orders@choptym.com>',
+      from: 'ChopTym <support@choptym.com>',
       to: ['choptym237@gmail.com'],
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
       html,

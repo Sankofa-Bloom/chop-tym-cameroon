@@ -49,14 +49,11 @@ serve(async (req) => {
 
     // Send email to admin using Zoho SMTP
     await client.send({
-      from: `ChopTym <${Deno.env.get('ZOHO_SMTP_USERNAME')!}>`,
+      from: `ChopTym <support@choptym.com>`,
       to: 'choptym237@gmail.com',
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
       html,
       content: `New order ${orderData.orderNumber} from ${orderData.customerInfo.fullName}\nPhone: ${orderData.customerInfo.phone}\nAddress: ${orderData.customerInfo.address}\nTotal: ${orderData.total}\n`,
-        headers: {
-          'Reply-To': Deno.env.get('ZOHO_REPLY_TO') || `ChopTym <${Deno.env.get('ZOHO_SMTP_USERNAME')!}>`,
-        }
     });
 
     console.log('Admin notification sent via Zoho SMTP successfully');

@@ -48,7 +48,7 @@ serve(async (req: Request) => {
 
     // Send the email
     await client.send({
-      from: Deno.env.get('ZOHO_SMTP_USERNAME')!,
+      from: `ChopTym <support@choptym.com>`,
       to: customerEmail,
       subject: 'Welcome to ChopTym! 🍽️',
       html: html,
