@@ -1,3 +1,4 @@
+// Optimized checkout component for processing orders
 import { useState, useEffect } from "react";
 import { ArrowLeft, CreditCard, MapPin, Phone, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { OfflinePaymentDialog } from "@/components/OfflinePaymentDialog";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import { validateOrderData, optimizeOrderData, normalizePhoneNumber } from "@/utils/checkoutOptimization";
 
 interface CheckoutItem {
   id: string;
@@ -76,9 +78,10 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       const town = towns.find(t => t.name === formData.town);
       setSelectedTownData(town);
     }
-  // Add effect to set default payment method
+  }, [formData.town, towns]);
+
+  // Set default payment method to first available method
   useEffect(() => {
-    // Set default payment method to first available method
     if (paymentMethods.length > 0 && !formData.paymentMethod) {
       setFormData(prev => ({
         ...prev,
@@ -156,9 +159,10 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     setLoading(true);
 
     try {
-      // Validate required fields
-      if (!formData.fullName || !formData.phone || !formData.address || !formData.town || !formData.street) {
-        toast.error("Please fill in all required fields");
+      // Validate required fields quickly
+      const validation = validateOrderData(formData);
+      if (!validation.isValid) {
+        toast.error(validation.errors[0]);
         setLoading(false);
         return;
       }
@@ -166,15 +170,12 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       const orderId = generateOrderId();
       
       // Format phone number for gateway metadata
-      let phoneNumber = formData.phone.replace(/^\+?237\s?/, '');
-      if (!phoneNumber.startsWith('237')) {
-        phoneNumber = '237' + phoneNumber;
-      }
+      const phoneNumber = normalizePhoneNumber(formData.phone);
 
       // Handle offline payment method
       if (formData.paymentMethod === 'offline') {
         // For offline payment, save order and send admin notification
-        const orderData = {
+        const baseOrderData = {
           order_number: orderId,
           customer_name: formData.fullName,
           customer_phone: phoneNumber,
@@ -188,6 +189,8 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
           payment_method: 'offline'
         };
 
+        const orderData = optimizeOrderData(baseOrderData);
+
         const { data, error } = await supabase.functions.invoke('offline-payment', {
           body: { orderData }
         });
@@ -200,21 +203,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
 
         toast.success("Order placed successfully!");
         
-        const finalOrderData = {
-          items,
-          customerInfo: {
-            ...formData,
-            selectedZone: selectedStreet?.delivery_zone?.zone_name,
-            selectedStreet: selectedStreet?.name
-          },
-          subtotal: total,
-          deliveryFee,
-          total: finalTotal,
-          timestamp: new Date().toISOString(),
-          orderNumber: orderId,
-          paymentMethod: 'offline'
-        };
-
         // Store order data and show dialog instead of navigating
         setOfflineOrderData({
           orderNumber: orderId,
@@ -240,8 +228,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         total: finalTotal,
         timestamp: new Date().toISOString()
       };
-
-      // Format phone number for gateway metadata
 
       const { error } = await createPaymentAndRedirect({
         orderNumber: orderId,
