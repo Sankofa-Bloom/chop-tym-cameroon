@@ -211,6 +211,7 @@ export type Database = {
       }
       payment_methods: {
         Row: {
+          category: string
           code: string
           created_at: string
           description: string | null
@@ -220,10 +221,12 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          payment_details: Json | null
           processing_time: string | null
           updated_at: string
         }
         Insert: {
+          category?: string
           code: string
           created_at?: string
           description?: string | null
@@ -233,10 +236,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          payment_details?: Json | null
           processing_time?: string | null
           updated_at?: string
         }
         Update: {
+          category?: string
           code?: string
           created_at?: string
           description?: string | null
@@ -246,6 +251,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          payment_details?: Json | null
           processing_time?: string | null
           updated_at?: string
         }

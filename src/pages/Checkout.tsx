@@ -172,8 +172,9 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       // Format phone number for gateway metadata
       const phoneNumber = normalizePhoneNumber(formData.phone);
 
-      // Handle offline payment method
-      if (formData.paymentMethod === 'offline') {
+      // Check if payment method is offline
+      const selectedMethod = paymentMethods.find(m => m.code === formData.paymentMethod);
+      if (selectedMethod?.category === 'offline') {
         // For offline payment, save order and send admin notification
         const baseOrderData = {
           order_number: orderId,
@@ -456,48 +457,103 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
               Payment Method
             </h2>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               {paymentMethodsLoading ? (
                 <div className="text-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                   <p className="text-sm text-muted-foreground mt-2">Loading payment methods...</p>
                 </div>
               ) : (
-                paymentMethods.map((method) => (
-                  <div 
-                    key={method.code}
-                    className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                      formData.paymentMethod === method.code 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => handleInputChange('paymentMethod', method.code)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                        {formData.paymentMethod === method.code && (
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{method.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {method.description}
-                        </p>
-                        {method.fees && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Fees: {method.fees}
-                          </p>
-                        )}
-                        {method.processing_time && (
-                          <p className="text-xs text-primary font-medium">
-                            {method.processing_time}
-                          </p>
-                        )}
-                      </div>
+                <>
+                  {/* Online Payment Methods */}
+                  {paymentMethods.filter(method => method.category === 'online').length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Online Payments</h3>
+                      {paymentMethods.filter(method => method.category === 'online').map((method) => (
+                        <div 
+                          key={method.code}
+                          className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                            formData.paymentMethod === method.code 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                          onClick={() => handleInputChange('paymentMethod', method.code)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                              {formData.paymentMethod === method.code && (
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-medium">{method.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {method.description}
+                              </p>
+                              {method.fees && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Fees: {method.fees}
+                                </p>
+                              )}
+                              {method.processing_time && (
+                                <p className="text-xs text-primary font-medium">
+                                  {method.processing_time}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))
+                  )}
+
+                  {/* Offline Payment Methods */}
+                  {paymentMethods.filter(method => method.category === 'offline').length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Offline Payments</h3>
+                      {paymentMethods.filter(method => method.category === 'offline').map((method) => (
+                        <div 
+                          key={method.code}
+                          className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                            formData.paymentMethod === method.code 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                          onClick={() => handleInputChange('paymentMethod', method.code)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                              {formData.paymentMethod === method.code && (
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">{method.name}</h3>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                  Manual Verification
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {method.description}
+                              </p>
+                              {method.fees && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Fees: {method.fees}
+                                </p>
+                              )}
+                              {method.processing_time && (
+                                <p className="text-xs text-primary font-medium">
+                                  Processing: {method.processing_time}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

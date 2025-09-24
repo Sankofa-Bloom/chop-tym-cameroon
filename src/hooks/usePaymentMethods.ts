@@ -11,6 +11,15 @@ export interface PaymentMethod {
   icon_url?: string;
   fees?: string;
   processing_time?: string;
+  category: 'online' | 'offline';
+  payment_details?: {
+    methods?: Array<{
+      name: string;
+      phone: string;
+      account_name: string;
+      instructions: string;
+    }>;
+  };
 }
 
 export const usePaymentMethods = () => {
@@ -28,7 +37,7 @@ export const usePaymentMethods = () => {
         .order("display_order");
 
       if (error) throw error;
-      setPaymentMethods(data || []);
+      setPaymentMethods((data || []) as PaymentMethod[]);
       setError(null);
     } catch (err) {
       console.error("Error fetching payment methods:", err);

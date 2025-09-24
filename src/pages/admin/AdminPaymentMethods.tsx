@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -34,6 +35,15 @@ interface PaymentMethod {
   icon_url?: string;
   fees?: string;
   processing_time?: string;
+  category: 'online' | 'offline';
+  payment_details?: {
+    methods?: Array<{
+      name: string;
+      phone: string;
+      account_name: string;
+      instructions: string;
+    }>;
+  };
 }
 
 export default function AdminPaymentMethods() {
@@ -51,6 +61,7 @@ export default function AdminPaymentMethods() {
     icon_url: "",
     fees: "",
     processing_time: "",
+    category: "online" as 'online' | 'offline',
   });
 
   useEffect(() => {
@@ -65,7 +76,7 @@ export default function AdminPaymentMethods() {
         .order("display_order");
 
       if (error) throw error;
-      setPaymentMethods(data || []);
+      setPaymentMethods((data || []) as PaymentMethod[]);
     } catch (error) {
       console.error("Error fetching payment methods:", error);
       toast.error("Failed to fetch payment methods");
@@ -115,6 +126,7 @@ export default function AdminPaymentMethods() {
       icon_url: method.icon_url || "",
       fees: method.fees || "",
       processing_time: method.processing_time || "",
+      category: method.category,
     });
     setIsDialogOpen(true);
   };
@@ -163,6 +175,7 @@ export default function AdminPaymentMethods() {
       icon_url: "",
       fees: "",
       processing_time: "",
+      category: "online",
     });
     setEditingMethod(null);
   };
@@ -240,6 +253,22 @@ export default function AdminPaymentMethods() {
               </div>
               
               <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value: 'online' | 'offline') => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">Online Payment</SelectItem>
+                    <SelectItem value="offline">Offline Payment</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
                 <Label htmlFor="display_order">Display Order</Label>
                 <Input
                   id="display_order"
@@ -276,6 +305,7 @@ export default function AdminPaymentMethods() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Fees</TableHead>
                 <TableHead>Processing Time</TableHead>
@@ -289,6 +319,15 @@ export default function AdminPaymentMethods() {
                 <TableRow key={method.id}>
                   <TableCell className="font-medium">{method.name}</TableCell>
                   <TableCell>{method.code}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      method.category === 'offline' 
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    }`}>
+                      {method.category === 'offline' ? 'Offline' : 'Online'}
+                    </span>
+                  </TableCell>
                   <TableCell className="max-w-xs truncate">{method.description}</TableCell>
                   <TableCell>{method.fees}</TableCell>
                   <TableCell>{method.processing_time}</TableCell>
