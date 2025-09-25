@@ -43,7 +43,7 @@ serve(async (req: Request) => {
     console.log('Saving offline order to database...');
     
     // Remove fields that don't exist in the orders table
-    const { created_timestamp, normalized_phone, ...cleanOrderData } = orderData;
+    const { created_timestamp, normalized_phone, total_formatted, ...cleanOrderData } = orderData;
     
     const { data: orderResult, error: orderError } = await supabase
       .from('orders')
