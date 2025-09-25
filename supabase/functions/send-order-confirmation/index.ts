@@ -76,7 +76,7 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error('Error in send-order-confirmation function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error)?.message || 'Unknown error occurred' }),
       {
         status: 500,
         headers: {

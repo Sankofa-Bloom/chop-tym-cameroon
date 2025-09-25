@@ -27,7 +27,7 @@ serve(async (req) => {
     console.error('Error in check-pending-orders function:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: (error as Error)?.message || 'Unknown error occurred'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

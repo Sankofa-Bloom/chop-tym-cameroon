@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -203,7 +202,7 @@ serve(async (req) => {
     console.error('Error in send-user-notification function:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: (error as Error)?.message || 'Unknown error occurred'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

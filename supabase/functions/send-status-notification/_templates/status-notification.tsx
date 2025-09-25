@@ -18,14 +18,18 @@ interface StatusNotificationEmailProps {
   customerName: string;
   customerPhone: string;
   deliveryAddress: string;
-  items: any[];
+  items: Array<{
+    name: string;
+    restaurant: string;
+    quantity: number;
+    price: number;
+  }>;
   subtotal: number;
   deliveryFee: number;
   total: number;
-  oldStatus?: string;
   newStatus: string;
-  notificationType: 'success' | 'failed' | 'pending_long' | 'status_update';
-  paymentReference?: string;
+  oldStatus?: string;
+  notificationType: 'order_placed' | 'status_update' | 'delivery_complete';
   createdAt: string;
   notes?: string;
 }
@@ -39,10 +43,9 @@ export const StatusNotificationEmail = ({
   subtotal,
   deliveryFee,
   total,
-  oldStatus,
   newStatus,
+  oldStatus,
   notificationType,
-  paymentReference,
   createdAt,
   notes,
 }: StatusNotificationEmailProps) => {
@@ -54,182 +57,209 @@ export const StatusNotificationEmail = ({
     }).format(price);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return '#16a34a';
-      case 'pending':
-        return '#eab308';
-      case 'failed':
-        return '#dc2626';
-      default:
-        return '#6b7280';
-    }
-  };
-
   const getNotificationTitle = () => {
     switch (notificationType) {
-      case 'success':
-        return `✅ Payment Successful - Order ${orderNumber}`;
-      case 'failed':
-        return `❌ Payment Failed - Order ${orderNumber}`;
-      case 'pending_long':
-        return `⏰ Order Pending Too Long - Order ${orderNumber}`;
+      case 'order_placed':
+        return 'Order Confirmation';
       case 'status_update':
-        return `📋 Order Status Updated - Order ${orderNumber}`;
+        return 'Order Status Update';
+      case 'delivery_complete':
+        return 'Order Delivered';
       default:
-        return `📦 Order Update - Order ${orderNumber}`;
+        return 'Order Notification';
     }
   };
 
   const getNotificationMessage = () => {
     switch (notificationType) {
-      case 'success':
-        return 'The payment for this order has been completed successfully.';
-      case 'failed':
-        return 'The payment for this order has failed. Please follow up with the customer.';
-      case 'pending_long':
-        return 'This order has been pending for more than 30 minutes. Please check the payment status.';
+      case 'order_placed':
+        return `Thank you for your order! Your order ${orderNumber} has been placed and is being prepared.`;
       case 'status_update':
-        return `Order status has been updated from "${oldStatus}" to "${newStatus}".`;
+        return `Your order ${orderNumber} status has been updated to: ${newStatus.toUpperCase()}`;
+      case 'delivery_complete':
+        return `Great news! Your order ${orderNumber} has been delivered successfully.`;
       default:
-        return 'Order status has been updated.';
+        return `Order ${orderNumber} notification`;
     }
   };
 
-  return React.createElement(Html, null,
-    React.createElement(Head),
-    React.createElement(Preview, null, getNotificationTitle()),
-    React.createElement(Body, { style: main },
-      React.createElement(Container, { style: container },
-        React.createElement(Section, { style: header },
-          React.createElement(Text, { style: logo }, "🍽️ ChopTym")
-        ),
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return '#f59e0b';
+      case 'confirmed':
+        return '#3b82f6';
+      case 'preparing':
+        return '#8b5cf6';
+      case 'ready':
+        return '#10b981';
+      case 'out_for_delivery':
+        return '#f97316';
+      case 'delivered':
+        return '#22c55e';
+      case 'cancelled':
+        return '#ef4444';
+      default:
+        return '#6b7280';
+    }
+  };
 
-        React.createElement(Section, { style: statusSection },
-          React.createElement(Heading, { style: h1 }, getNotificationTitle()),
-          React.createElement(Text, { style: notificationText }, getNotificationMessage()),
+  return (
+    <Html>
+      <Head />
+      <Preview>{getNotificationTitle()} - ChopTym</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Text style={logo}>🍽️ ChopTym</Text>
+            <Text style={tagline}>Food Delivery</Text>
+          </Section>
+          
+          <Section style={alertSection}>
+            <Text style={alertIcon}>📱</Text>
+            <Heading style={h1}>{getNotificationTitle()}</Heading>
+            <Text style={notificationText}>{getNotificationMessage()}</Text>
+          </Section>
 
-          React.createElement(Section, { style: orderInfoSection },
-            React.createElement(Heading, { style: sectionHeading }, "Order Information"),
-            React.createElement(Row, { style: infoRow },
-              React.createElement(Column, { style: infoColumn },
-                React.createElement(Text, { style: infoLabel }, "Order Number:"),
-                React.createElement(Text, { style: infoValue }, orderNumber)
-              ),
-              React.createElement(Column, { style: infoColumn },
-                React.createElement(Text, { style: infoLabel }, "Status:"),
-                React.createElement(Text, { style: {...infoValue, color: getStatusColor(newStatus)} }, newStatus.toUpperCase())
-              )
-            ),
+          <Section style={orderInfoSection}>
+            <Heading style={sectionHeading}>Order Information</Heading>
+            <Row style={infoRow}>
+              <Column style={infoColumn}>
+                <Text style={infoLabel}>Order Number:</Text>
+                <Text style={infoValue}>{orderNumber}</Text>
+              </Column>
+              <Column style={infoColumn}>
+                <Text style={infoLabel}>Status:</Text>
+                <Text style={{...infoValue, color: getStatusColor(newStatus)}}>{newStatus.toUpperCase()}</Text>
+              </Column>
+            </Row>
             
-            oldStatus && notificationType === 'status_update' ? React.createElement(Row, { style: infoRow },
-              React.createElement(Column, null,
-                React.createElement(Text, { style: infoLabel }, "Previous Status:"),
-                React.createElement(Text, { style: {...infoValue, color: getStatusColor(oldStatus)} }, oldStatus.toUpperCase())
-              )
-            ) : null,
+            {oldStatus && notificationType === 'status_update' && (
+              <Row style={infoRow}>
+                <Column>
+                  <Text style={infoLabel}>Previous Status:</Text>
+                  <Text style={{...infoValue, color: getStatusColor(oldStatus)}}>{oldStatus.toUpperCase()}</Text>
+                </Column>
+              </Row>
+            )}
 
-            React.createElement(Row, { style: infoRow },
-              React.createElement(Column, { style: infoColumn },
-                React.createElement(Text, { style: infoLabel }, "Order Date:"),
-                React.createElement(Text, { style: infoValue }, 
-                  new Date(createdAt).toLocaleDateString('fr-CM', {
+            <Row style={infoRow}>
+              <Column style={infoColumn}>
+                <Text style={infoLabel}>Order Date:</Text>
+                <Text style={infoValue}>
+                  {new Date(createdAt).toLocaleDateString('fr-CM', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                )
-              ),
-              paymentReference ? React.createElement(Column, { style: infoColumn },
-                React.createElement(Text, { style: infoLabel }, "Payment Reference:"),
-                React.createElement(Text, { style: infoValue }, paymentReference)
-              ) : null
-            )
-          ),
+                    minute: '2-digit'
+                  })}
+                </Text>
+              </Column>
+              <Column style={infoColumn}>
+                <Text style={infoLabel}>Customer:</Text>
+                <Text style={infoValue}>{customerName}</Text>
+              </Column>
+            </Row>
 
-          React.createElement(Hr, { style: hr }),
+            <Row style={infoRow}>
+              <Column>
+                <Text style={infoLabel}>Phone:</Text>
+                <Text style={infoValue}>{customerPhone}</Text>
+              </Column>
+            </Row>
 
-          React.createElement(Section, { style: customerSection },
-            React.createElement(Heading, { style: sectionHeading }, "Customer Information"),
-            React.createElement(Text, { style: customerInfo }, `Name: ${customerName}\nPhone: ${customerPhone}\nAddress: ${deliveryAddress}`)
-          ),
+            <Row style={infoRow}>
+              <Column>
+                <Text style={infoLabel}>Delivery Address:</Text>
+                <Text style={infoValue}>{deliveryAddress}</Text>
+              </Column>
+            </Row>
+          </Section>
 
-          React.createElement(Hr, { style: hr }),
+          <Hr style={hr} />
 
-          React.createElement(Section, { style: itemsSection },
-            React.createElement(Heading, { style: sectionHeading }, "Order Items"),
-            ...(items ? items.map((item: any, index: number) => 
-              React.createElement(Row, { key: index, style: itemRow },
-                React.createElement(Column, { style: {width: '60%'} },
-                  React.createElement(Text, { style: itemName }, item.name),
-                  React.createElement(Text, { style: itemRestaurant }, item.restaurant)
-                ),
-                React.createElement(Column, { style: {width: '20%', textAlign: 'center'} },
-                  React.createElement(Text, { style: itemQuantity }, `×${item.quantity}`)
-                ),
-                React.createElement(Column, { style: {width: '20%', textAlign: 'right'} },
-                  React.createElement(Text, { style: itemPrice }, formatPrice(item.price * item.quantity))
-                )
-              )
-            ) : [])
-          ),
+          <Section style={itemsSection}>
+            <Heading style={sectionHeading}>Order Items</Heading>
+            {items && items.map((item, index) => (
+              <Row key={index} style={itemRow}>
+                <Column style={{width: '60%'}}>
+                  <Text style={itemName}>{item.name}</Text>
+                  <Text style={itemRestaurant}>{item.restaurant}</Text>
+                </Column>
+                <Column style={{width: '20%', textAlign: 'center' as const}}>
+                  <Text style={itemQuantity}>x{item.quantity}</Text>
+                </Column>
+                <Column style={{width: '20%', textAlign: 'right' as const}}>
+                  <Text style={itemPrice}>{formatPrice(item.price * item.quantity)}</Text>
+                </Column>
+              </Row>
+            ))}
+          </Section>
 
-          React.createElement(Hr, { style: hr }),
+          <Hr style={hr} />
 
-          React.createElement(Section, { style: totalSection },
-            React.createElement(Row, { style: totalRow },
-              React.createElement(Column, { style: {width: '70%'} },
-                React.createElement(Text, { style: totalLabel }, "Subtotal:")
-              ),
-              React.createElement(Column, { style: {width: '30%', textAlign: 'right'} },
-                React.createElement(Text, { style: totalValue }, formatPrice(subtotal))
-              )
-            ),
+          <Section style={totalSection}>
+            <Row style={totalRow}>
+              <Column style={{width: '70%'}}>
+                <Text style={totalLabel}>Subtotal:</Text>
+              </Column>
+              <Column style={{width: '30%', textAlign: 'right' as const}}>
+                <Text style={totalValue}>{formatPrice(subtotal)}</Text>
+              </Column>
+            </Row>
             
-            React.createElement(Row, { style: totalRow },
-              React.createElement(Column, { style: {width: '70%'} },
-                React.createElement(Text, { style: totalLabel }, "Delivery Fee:")
-              ),
-              React.createElement(Column, { style: {width: '30%', textAlign: 'right'} },
-                React.createElement(Text, { style: totalValue }, formatPrice(deliveryFee))
-              )
-            ),
+            <Row style={totalRow}>
+              <Column style={{width: '70%'}}>
+                <Text style={totalLabel}>Delivery Fee:</Text>
+              </Column>
+              <Column style={{width: '30%', textAlign: 'right' as const}}>
+                <Text style={totalValue}>{formatPrice(deliveryFee)}</Text>
+              </Column>
+            </Row>
             
-            React.createElement(Row, { style: finalTotalRow },
-              React.createElement(Column, { style: {width: '70%'} },
-                React.createElement(Text, { style: finalTotalLabel }, "Total:")
-              ),
-              React.createElement(Column, { style: {width: '30%', textAlign: 'right'} },
-                React.createElement(Text, { style: finalTotalValue }, formatPrice(total))
-              )
-            )
-          ),
+            <Row style={finalTotalRow}>
+              <Column style={{width: '70%'}}>
+                <Text style={finalTotalLabel}>Total:</Text>
+              </Column>
+              <Column style={{width: '30%', textAlign: 'right' as const}}>
+                <Text style={finalTotalValue}>{formatPrice(total)}</Text>
+              </Column>
+            </Row>
+          </Section>
 
-          notes ? React.createElement(Hr, { style: hr }) : null,
-          notes ? React.createElement(Section, { style: notesSection },
-            React.createElement(Heading, { style: sectionHeading }, "Notes"),
-            React.createElement(Text, { style: notesText }, notes)
-          ) : null,
+          {notes && (
+            <>
+              <Hr style={hr} />
+              <Section style={notesSection}>
+                <Heading style={sectionHeading}>Special Instructions</Heading>
+                <Text style={notesText}>{notes}</Text>
+              </Section>
+            </>
+          )}
 
-          React.createElement(Hr, { style: hr }),
-          
-          React.createElement(Text, { style: footer }, 
-            "ChopTym Cameroon - Food Delivery Service\nThis is an automated notification from the ChopTym admin system."
-          )
-        )
-      )
-    )
+          <Hr style={hr} />
+
+          <Section style={footer}>
+            <Text style={footerText}>
+              This notification was sent from ChopTym order management system.
+            </Text>
+            <Text style={footerText}>
+              If you have any questions, please contact us at support@choptym.com
+            </Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
   );
 };
 
-// ChopTym Brand Colors
-const chopTymOrange = 'hsl(25, 95%, 53%)'
-const chopTymDark = 'hsl(20, 14.3%, 4.1%)'
+export default StatusNotificationEmail;
 
-// Styles
+// ChopTym Brand Colors
+const chopTymOrange = 'hsl(25, 95%, 53%)';
+const chopTymDark = 'hsl(20, 14.3%, 4.1%)';
+
 const main = {
   backgroundColor: '#fef7f0',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
@@ -255,12 +285,24 @@ const logo = {
   fontSize: '28px',
   fontWeight: 'bold',
   color: '#ffffff',
-  margin: '0',
+  margin: '0 0 5px',
 };
 
-const statusSection = {
+const tagline = {
+  fontSize: '14px',
+  color: '#ffffff',
+  margin: '0',
+  opacity: '0.9',
+};
+
+const alertSection = {
   padding: '30px 20px',
   textAlign: 'center' as const,
+};
+
+const alertIcon = {
+  fontSize: '32px',
+  margin: '0 0 15px',
 };
 
 const h1 = {
@@ -272,22 +314,19 @@ const h1 = {
 };
 
 const notificationText = {
-  margin: '0 auto',
   fontSize: '16px',
   lineHeight: '24px',
-  color: '#525252',
-  textAlign: 'center' as const,
-  padding: '0 40px',
-  marginBottom: '30px',
+  color: '#333',
+  margin: '0 0 20px',
 };
 
 const sectionHeading = {
-  fontSize: '20px',
-  lineHeight: '28px',
-  fontWeight: 'bold',
   color: chopTymDark,
+  fontSize: '18px',
+  fontWeight: 'bold',
   margin: '20px 0 15px',
-  padding: '0 20px',
+  borderBottom: `2px solid ${chopTymOrange}`,
+  paddingBottom: '5px',
 };
 
 const orderInfoSection = {
@@ -303,29 +342,17 @@ const infoColumn = {
 };
 
 const infoLabel = {
-  fontSize: '14px',
-  color: '#6b7280',
-  margin: '0',
-  fontWeight: '600',
+  fontSize: '12px',
+  color: '#666',
+  margin: '0 0 2px',
+  textTransform: 'uppercase' as const,
+  fontWeight: 'bold',
 };
 
 const infoValue = {
-  fontSize: '16px',
-  color: '#111827',
-  margin: '4px 0 0',
-  fontWeight: '400',
-};
-
-const customerSection = {
-  padding: '0 20px',
-};
-
-const customerInfo = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#525252',
-  margin: '0',
-  whiteSpace: 'pre-line' as const,
+  fontSize: '14px',
+  color: '#333',
+  margin: '0 0 10px',
 };
 
 const itemsSection = {
@@ -333,39 +360,41 @@ const itemsSection = {
 };
 
 const itemRow = {
-  borderBottom: '1px solid #e5e7eb',
-  paddingBottom: '8px',
-  marginBottom: '8px',
+  borderBottom: '1px solid #f0f0f0',
+  paddingBottom: '10px',
+  marginBottom: '10px',
 };
 
 const itemName = {
-  fontSize: '16px',
-  fontWeight: '600',
-  color: '#111827',
-  margin: '0',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  color: '#333',
+  margin: '0 0 4px',
 };
 
 const itemRestaurant = {
-  fontSize: '14px',
-  color: '#6b7280',
-  margin: '4px 0 0',
+  fontSize: '12px',
+  color: '#666',
+  margin: '0',
 };
 
 const itemQuantity = {
-  fontSize: '16px',
-  color: '#111827',
-  margin: '0',
+  fontSize: '14px',
+  color: '#333',
+  fontWeight: 'bold',
 };
 
 const itemPrice = {
-  fontSize: '16px',
-  fontWeight: '600',
-  color: '#111827',
-  margin: '0',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  color: chopTymOrange,
 };
 
 const totalSection = {
-  padding: '0 20px',
+  backgroundColor: '#f8f9fa',
+  margin: '20px 0',
+  padding: '15px 20px',
+  borderRadius: '6px',
 };
 
 const totalRow = {
@@ -373,35 +402,31 @@ const totalRow = {
 };
 
 const totalLabel = {
-  fontSize: '16px',
-  color: '#6b7280',
-  margin: '0',
+  fontSize: '14px',
+  color: '#333',
 };
 
 const totalValue = {
-  fontSize: '16px',
-  color: '#111827',
-  margin: '0',
+  fontSize: '14px',
+  color: '#333',
 };
 
 const finalTotalRow = {
-  borderTop: '2px solid #111827',
-  paddingTop: '8px',
-  marginTop: '8px',
+  borderTop: '1px solid #ddd',
+  paddingTop: '10px',
+  marginTop: '10px',
 };
 
 const finalTotalLabel = {
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#111827',
-  margin: '0',
+  fontSize: '16px',
+  fontWeight: 'bold',
+  color: '#333',
 };
 
 const finalTotalValue = {
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#111827',
-  margin: '0',
+  fontSize: '16px',
+  fontWeight: 'bold',
+  color: chopTymOrange,
 };
 
 const notesSection = {
@@ -409,24 +434,28 @@ const notesSection = {
 };
 
 const notesText = {
-  fontSize: '16px',
-  lineHeight: '24px',
-  color: '#525252',
-  margin: '0',
+  fontSize: '14px',
+  color: '#333',
+  backgroundColor: '#f8f9fa',
+  padding: '15px',
+  borderRadius: '6px',
   fontStyle: 'italic',
+  margin: '10px 0',
 };
 
 const hr = {
-  borderColor: '#f0f0f0',
-  margin: '0',
+  borderColor: '#e6ebf1',
+  margin: '20px 0',
 };
 
 const footer = {
-  color: '#666',
-  fontSize: '12px',
-  lineHeight: '16px',
+  padding: '20px',
   textAlign: 'center' as const,
-  padding: '30px 20px',
   backgroundColor: '#f8f9fa',
-  whiteSpace: 'pre-line' as const,
+};
+
+const footerText = {
+  fontSize: '12px',
+  color: '#8898aa',
+  margin: '5px 0',
 };

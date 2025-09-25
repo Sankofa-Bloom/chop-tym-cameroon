@@ -32,7 +32,6 @@ serve(async (req) => {
         oldStatus,
         newStatus,
         notificationType,
-        paymentReference: orderData.paymentReference,
         createdAt: orderData.createdAt,
         notes: orderData.notes,
       })
