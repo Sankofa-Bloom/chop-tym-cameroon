@@ -18,6 +18,10 @@ serve(async (req: Request) => {
   }
 
   try {
+    console.log('Offline payment function called at:', new Date().toISOString());
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
     const requestData = await req.json();
     console.log('Offline payment request received:', requestData, new Date().toISOString());
 

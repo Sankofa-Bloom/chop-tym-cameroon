@@ -19,6 +19,10 @@ serve(async (req: Request) => {
   }
 
   try {
+    console.log('Swychr create payment function called at:', new Date().toISOString());
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
     const requestData = await req.json();
     console.log('Swychr payment request received:', requestData, new Date().toISOString());
 

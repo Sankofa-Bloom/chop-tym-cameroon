@@ -149,20 +149,29 @@ export const useAuth = () => {
     metadata?: Record<string, unknown>;
     paymentMethod?: 'swychr' | 'offline';
   }) => {
-    const { data, error } = await invoke<{ success?: boolean; payment_url?: string; error?: string }>('swychr-create-payment', {
-      amount: args.amount,
-      customer_phone: args.customerPhone,
-      customer_name: args.customerName,
-      customer_email: args.customerEmail,
-      order_id: args.orderNumber,
-      description: args.description,
-      orderData: args.metadata?.orderData
-    });
-    if (error || !data?.success || !data.payment_url) {
-      return { error: new Error(data?.error || error?.message || 'Failed to create Swychr payment') };
+    console.log('createPaymentAndRedirect called with:', args);
+    try {
+      const { data, error } = await invoke<{ success?: boolean; payment_url?: string; error?: string }>('swychr-create-payment', {
+        amount: args.amount,
+        customer_phone: args.customerPhone,
+        customer_name: args.customerName,
+        customer_email: args.customerEmail,
+        order_id: args.orderNumber,
+        description: args.description,
+        orderData: args.metadata?.orderData
+      });
+      console.log('Swychr response:', { data, error });
+      
+      if (error || !data?.success || !data.payment_url) {
+        return { error: new Error(data?.error || error?.message || 'Failed to create Swychr payment') };
+      }
+      
+      window.location.href = data.payment_url as string;
+      return { error: null };
+    } catch (err: any) {
+      console.error('Error in createPaymentAndRedirect:', err);
+      return { error: new Error(err?.message || 'Payment creation failed') };
     }
-    window.location.href = data.payment_url as string;
-    return { error: null };
   };
 
   const signOut = async () => {
