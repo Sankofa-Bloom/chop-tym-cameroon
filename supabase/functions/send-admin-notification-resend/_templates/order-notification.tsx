@@ -11,8 +11,8 @@ import {
   Row,
   Column,
   Hr,
-} from 'npm:@react-email/components@0.0.22'
-import * as React from 'npm:react@18.3.1'
+} from 'https://esm.sh/@react-email/components@0.0.22'
+import * as React from 'https://esm.sh/react@18.3.1'
 
 interface OrderNotificationEmailProps {
   orderNumber: string
@@ -338,7 +338,6 @@ const priceText = {
 }
 
 const totalSection = {
-  padding: '0 20px',
   backgroundColor: '#f8f9fa',
   margin: '20px 0',
   padding: '15px 20px',

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import React from 'npm:react@18.3.1';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
+import React from 'https://esm.sh/react@18.3.1';
+import { renderAsync } from 'https://esm.sh/@react-email/components@0.0.22';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
 import { OrderNotificationEmail } from './_templates/order-notification.tsx';
 
