@@ -167,10 +167,14 @@ export default function Index() {
   };
 
   const handleSearchClick = () => {
-    setShowSearch(true);
-    setTimeout(() => {
-      document.getElementById('main-search-input')?.focus();
-    }, 100);
+    // Scroll to featured dishes section
+    const featuredSection = document.getElementById('featured-dishes');
+    if (featuredSection) {
+      featuredSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
   };
 
   const handleCustomOrderClick = () => {
@@ -480,6 +484,7 @@ export default function Index() {
 
             {/* Featured Dishes */}
             <motion.section
+              id="featured-dishes"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
