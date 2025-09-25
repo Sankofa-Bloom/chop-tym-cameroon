@@ -41,10 +41,14 @@ serve(async (req: Request) => {
     // Save order to database
     let savedOrderId = null;
     console.log('Saving offline order to database...');
+    
+    // Remove created_timestamp as it doesn't exist in the orders table
+    const { created_timestamp, ...cleanOrderData } = orderData;
+    
     const { data: orderResult, error: orderError } = await supabase
       .from('orders')
       .insert([{
-        ...orderData,
+        ...cleanOrderData,
         payment_status: 'pending',
         payment_method: 'offline'
       }])
