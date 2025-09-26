@@ -120,17 +120,30 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
   };
 
   const handleMarkAsPaid = async () => {
-    if (!offlineOrderData) return;
+    if (!offlineOrderData) {
+      toast.error("No order data available");
+      return;
+    }
+
+    console.log('Marking order as paid:', offlineOrderData);
 
     try {
       // Update order status to paid in database
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('orders')
         .update({ payment_status: 'paid' })
-        .eq('id', offlineOrderData.orderId);
+        .eq('id', offlineOrderData.orderId)
+        .select();
+
+      console.log('Update result:', { data, error });
 
       if (error) {
-        throw error;
+        console.error('Database update error:', error);
+        throw new Error(`Failed to update order: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('Order not found in database');
       }
 
       // Send order confirmation email to customer for offline payment
