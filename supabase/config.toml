@@ -39,3 +39,6 @@ verify_jwt = false
 
 [functions.offline-payment]
 verify_jwt = false
+
+[functions.mark-offline-paid]
+verify_jwt = false

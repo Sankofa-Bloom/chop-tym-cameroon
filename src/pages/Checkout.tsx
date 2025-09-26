@@ -128,35 +128,20 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     console.log('Marking order as paid:', offlineOrderData);
 
     try {
-      // Update order status to paid in database
-      const { error, data } = await supabase
-        .from('orders')
-        .update({ payment_status: 'paid' })
-        .eq('id', offlineOrderData.orderId)
-        .select();
+      // Mark as paid via edge function (bypasses RLS safely)
+      const { data, error } = await supabase.functions.invoke('mark-offline-paid', {
+        body: { order_id: offlineOrderData.orderId }
+      });
 
-      console.log('Update result:', { data, error });
+      console.log('mark-offline-paid result:', { data, error });
 
       if (error) {
-        console.error('Database update error:', error);
-        throw new Error(`Failed to update order: ${error.message}`);
+        console.error('Function error:', error);
+        throw new Error(error.message || 'Failed to mark as paid');
       }
 
-      if (!data || data.length === 0) {
-        throw new Error('Order not found in database');
-      }
-
-      // Send order confirmation email to customer for offline payment
-      try {
-        await supabase.functions.invoke('send-order-confirmation', {
-          body: {
-            order_id: offlineOrderData.orderId,
-            customer_email: null // This will skip sending email to customer, only admin gets notified
-          }
-        });
-      } catch (emailError) {
-        console.error('Error sending confirmation email:', emailError);
-        // Don't fail the payment confirmation if email fails
+      if (!data?.success) {
+        throw new Error(data?.message || 'Failed to mark as paid');
       }
 
       toast.success("Payment confirmed! Your order is now being processed.");
