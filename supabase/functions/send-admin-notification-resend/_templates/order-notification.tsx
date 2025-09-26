@@ -65,7 +65,8 @@ export const OrderNotificationEmail = ({
           
           <Section style={alertSection}>
             <Text style={alertIcon}>🔔</Text>
-            <Heading style={h1}>New Order Received!</Heading></Section>
+            <Heading style={h1}>New Order Received!</Heading>
+          </Section>
           
           <Section style={orderHeader}>
             <Text style={orderNumberText}>Order #{orderNumber}</Text>

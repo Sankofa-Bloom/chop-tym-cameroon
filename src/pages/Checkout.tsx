@@ -143,6 +143,8 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     console.log('Marking order as paid:', offlineOrderData);
 
     try {
+      setLoading(true);
+      
       // Mark as paid via edge function (bypasses RLS safely)
       const { data, error } = await supabase.functions.invoke('mark-offline-paid', {
         body: { order_id: offlineOrderData.orderId }
@@ -152,18 +154,34 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
 
       if (error) {
         console.error('Function error:', error);
-        throw new Error(error.message || 'Failed to mark as paid');
+        toast.error(`Failed to mark as paid: ${error.message || 'Unknown error'}`);
+        return;
       }
 
       if (!data?.success) {
-        throw new Error(data?.message || 'Failed to mark as paid');
+        console.error('Mark as paid failed:', data);
+        toast.error(data?.message || 'Failed to mark as paid');
+        return;
       }
 
       toast.success("Payment confirmed! Your order is now being processed.");
       setShowOfflineDialog(false);
-    } catch (error) {
+      
+      // Navigate to confirmation page
+      navigate('/order-confirmation', { 
+        state: { 
+          orderData: {
+            orderNumber: offlineOrderData.orderNumber,
+            total: offlineOrderData.total,
+            customerInfo: offlineOrderData.customerInfo
+          }
+        }
+      });
+    } catch (error: any) {
       console.error('Error marking order as paid:', error);
-      throw error;
+      toast.error(`Failed to mark as paid: ${error.message || 'Unknown error'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
