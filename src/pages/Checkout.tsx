@@ -112,11 +112,26 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     }));
   };
 
-  const generateOrderId = () => {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    return `CT-${date}-${random}`;
+  const generateTownOrderId = async (town: string) => {
+    try {
+      const { data, error } = await supabase.rpc('generate_town_order_number', {
+        order_town: town
+      });
+      
+      if (error) {
+        console.error('Error generating town order ID:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Failed to generate town order ID:', error);
+      // Fallback to generic order ID if database function fails
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      return `CT-${date}-${random}`;
+    }
   };
 
   const handleMarkAsPaid = async () => {
@@ -165,7 +180,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         return;
       }
 
-      const orderId = generateOrderId();
+      const orderId = await generateTownOrderId(formData.town);
       
       // Format phone number for gateway metadata
       const phoneNumber = normalizePhoneNumber(formData.phone);
