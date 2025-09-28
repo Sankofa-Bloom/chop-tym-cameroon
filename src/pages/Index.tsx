@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { CustomOrderForm } from "@/components/CustomOrderForm";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,7 @@ const staggerContainer = {
 };
 
 export default function Index() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedTown, setSelectedTown] = useState("Limbe");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -68,6 +69,24 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("home");
   const [showSearch, setShowSearch] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+
+  // Check for order success parameters
+  useEffect(() => {
+    const orderSuccess = searchParams.get('orderSuccess');
+    const orderNumber = searchParams.get('orderNumber');
+    
+    if (orderSuccess === 'true' && orderNumber) {
+      setShowOrderSuccess(true);
+      // Clear URL parameters after showing success
+      setSearchParams({});
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        setShowOrderSuccess(false);
+      }, 10000);
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch data from database
   const { restaurants, loading: restaurantsLoading } = useRestaurants(selectedTown);
@@ -265,6 +284,51 @@ export default function Index() {
           transition={pageTransition}
           className="min-h-screen bg-transparent pb-20 relative"
         >
+          {/* Order Success Banner */}
+          <AnimatePresence>
+            {showOrderSuccess && (
+              <motion.div
+                initial={{ opacity: 0, y: -100 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -100 }}
+                className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-green-500 to-green-600 text-white p-4 shadow-lg"
+              >
+                <div className="container mx-auto max-w-7xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      ✅
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Order Confirmed!</h3>
+                      <p className="text-green-100">
+                        Order #{searchParams.get('orderNumber')} • Total: {new Intl.NumberFormat('fr-CM', {
+                          style: 'currency',
+                          currency: 'XAF',
+                          minimumFractionDigits: 0,
+                        }).format(parseInt(searchParams.get('total') || '0'))}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowOrderSuccess(false)}
+                    className="text-white hover:bg-white/20"
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <div className="container mx-auto max-w-7xl mt-3 p-3 bg-white/10 rounded-lg">
+                  <p className="text-sm text-green-100">
+                    💰 Please complete your payment by transferring to: <strong>MTN: 670 416 449 (Mpah Ngwese)</strong>
+                    <br />
+                    Include your order number in the transfer message. You'll receive WhatsApp updates about your order!
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Header */}
           <motion.header 
             initial={{ opacity: 0, y: -20 }}
