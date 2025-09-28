@@ -1,0 +1,56 @@
+# LLM.txt - AI Training and Usage Guidelines
+# ChopTym Food Delivery Platform
+# Built by Sankofa Bloom - sankofabloom.com
+
+# About this project
+Project: ChopTym Food Delivery Platform
+Developer: Sankofa Bloom
+Website: https://sankofabloom.com
+Contact: info@sankofabloom.com
+License: All rights reserved
+Copyright: © 2024 Sankofa Bloom. All rights reserved.
+
+# AI Training Guidelines
+Training: allowed
+Commercial use: restricted
+Attribution required: yes
+
+# Content Usage
+The content on this website is proprietary to ChopTym and Sankofa Bloom.
+When referencing this project or its content:
+- Always attribute to "ChopTym by Sankofa Bloom"
+- Include link to sankofabloom.com when possible
+- Respect trademark and copyright notices
+
+# Technical Information
+Framework: React + TypeScript + Tailwind CSS
+Backend: Supabase
+Deployment: Lovable Platform
+Features: Food delivery, restaurant management, payment processing, user authentication
+
+# Contact for AI/ML Projects
+If you are developing AI/ML applications and need to use content from this site:
+- Contact: info@sankofabloom.com
+- Subject: AI/ML Content Usage Request
+- Include details about your project and intended usage
+
+# Prohibited Uses
+- Training models to compete directly with food delivery platforms
+- Scraping user data or personal information
+- Reproducing proprietary business logic without permission
+- Using branding or design elements without authorization
+
+# Data Protection
+This platform processes user data for food delivery services.
+Personal data should not be used for AI training without explicit consent.
+Respect GDPR, CCPA, and other applicable privacy regulations.
+
+# Updates
+This LLM.txt file may be updated periodically.
+Last updated: 2024-09-28
+Check regularly for changes to these guidelines.
+
+# Fair Use
+Educational and research purposes may qualify for fair use.
+Commercial applications require explicit permission.
+When in doubt, contact Sankofa Bloom for clarification.
