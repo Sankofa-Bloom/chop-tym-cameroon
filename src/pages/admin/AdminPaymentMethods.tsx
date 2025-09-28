@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Settings, Phone, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface PaymentMethod {
@@ -51,6 +51,14 @@ export default function AdminPaymentMethods() {
   const [loading, setLoading] = useState(true);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [editingDetails, setEditingDetails] = useState<PaymentMethod | null>(null);
+  const [paymentDetails, setPaymentDetails] = useState<Array<{
+    name: string;
+    phone: string;
+    account_name: string;
+    instructions: string;
+  }>>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -162,6 +170,53 @@ export default function AdminPaymentMethods() {
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleEditDetails = (method: PaymentMethod) => {
+    setEditingDetails(method);
+    setPaymentDetails(method.payment_details?.methods || []);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const addPaymentDetail = () => {
+    setPaymentDetails([...paymentDetails, {
+      name: "",
+      phone: "",
+      account_name: "",
+      instructions: ""
+    }]);
+  };
+
+  const updatePaymentDetail = (index: number, field: string, value: string) => {
+    const updated = [...paymentDetails];
+    updated[index] = { ...updated[index], [field]: value };
+    setPaymentDetails(updated);
+  };
+
+  const removePaymentDetail = (index: number) => {
+    setPaymentDetails(paymentDetails.filter((_, i) => i !== index));
+  };
+
+  const savePaymentDetails = async () => {
+    if (!editingDetails) return;
+
+    try {
+      const { error } = await supabase
+        .from("payment_methods")
+        .update({ 
+          payment_details: { methods: paymentDetails }
+        })
+        .eq("id", editingDetails.id);
+
+      if (error) throw error;
+      
+      toast.success("Payment details updated successfully");
+      setIsDetailsDialogOpen(false);
+      fetchPaymentMethods();
+    } catch (error) {
+      console.error("Error saving payment details:", error);
+      toast.error("Failed to save payment details");
     }
   };
 
@@ -347,6 +402,16 @@ export default function AdminPaymentMethods() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                      {method.category === 'offline' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditDetails(method)}
+                          title="Edit Payment Details"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -362,6 +427,103 @@ export default function AdminPaymentMethods() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Payment Details Management Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Payment Details - {editingDetails?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Payment Options</h3>
+              <Button onClick={addPaymentDetail} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Payment Option
+              </Button>
+            </div>
+
+            {paymentDetails.map((detail, index) => (
+              <Card key={index} className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor={`name-${index}`}>Option Name</Label>
+                    <Input
+                      id={`name-${index}`}
+                      value={detail.name}
+                      onChange={(e) => updatePaymentDetail(index, 'name', e.target.value)}
+                      placeholder="e.g., Personal Account, Business Account"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`phone-${index}`}>Phone Number</Label>
+                    <Input
+                      id={`phone-${index}`}
+                      value={detail.phone}
+                      onChange={(e) => updatePaymentDetail(index, 'phone', e.target.value)}
+                      placeholder="e.g., +237 6XX XXX XXX"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`account-${index}`}>Account Name</Label>
+                    <Input
+                      id={`account-${index}`}
+                      value={detail.account_name}
+                      onChange={(e) => updatePaymentDetail(index, 'account_name', e.target.value)}
+                      placeholder="Account holder name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`instructions-${index}`}>Instructions</Label>
+                    <Input
+                      id={`instructions-${index}`}
+                      value={detail.instructions}
+                      onChange={(e) => updatePaymentDetail(index, 'instructions', e.target.value)}
+                      placeholder="Payment instructions"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    <span>{detail.phone}</span>
+                    <User className="h-4 w-4 ml-4" />
+                    <span>{detail.account_name}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removePaymentDetail(index)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+
+            {paymentDetails.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No payment options configured.</p>
+                <p className="text-sm">Click "Add Payment Option" to get started.</p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setIsDetailsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={savePaymentDetails}>
+                Save Payment Details
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
