@@ -19,8 +19,17 @@ serve(async (req) => {
   try {
     const { orderData } = await req.json();
     console.log('Sending admin notification (Resend) for order:', orderData.orderNumber);
+    console.log('Order data received:', JSON.stringify(orderData, null, 2));
+
+    // Check if Resend API key is configured
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY environment variable not configured');
+    }
+    console.log('Resend API key found:', resendApiKey.substring(0, 10) + '...');
 
     // Render the React email template
+    console.log('Rendering email template...');
     const html = await renderAsync(
       React.createElement(OrderNotificationEmail, {
         orderNumber: orderData.orderNumber,
@@ -35,10 +44,12 @@ serve(async (req) => {
         paymentUrl: orderData.paymentUrl,
       })
     );
+    console.log('Email template rendered successfully');
 
     // Send email using Resend
+    console.log('Sending email via Resend...');
     const { data, error } = await resend.emails.send({
-      from: 'ChopTym <support@choptym.com>',
+      from: 'ChopTym <onboarding@resend.dev>',
       to: ['choptym237@gmail.com'],
       subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
       html,

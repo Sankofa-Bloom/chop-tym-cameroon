@@ -27,10 +27,10 @@ serve(async (req: Request) => {
       );
     }
 
-    // Fetch order to validate
+    // Fetch order to validate and get full order data
     const { data: order, error: fetchError } = await supabase
       .from('orders')
-      .select('id, payment_status, payment_method, customer_name, order_number, items, total')
+      .select('id, payment_status, payment_method, customer_name, order_number, items, total, customer_phone, delivery_address, notes')
       .eq('id', order_id)
       .maybeSingle();
 
@@ -74,6 +74,69 @@ serve(async (req: Request) => {
         JSON.stringify({ success: false, message: 'Failed to update order status' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
+    }
+
+    // Send admin notification about payment confirmation
+    try {
+      console.log('Sending admin notification for payment confirmation...');
+      
+      // Try Resend first (more reliable)
+      const { error: resendError } = await supabase.functions.invoke('send-admin-notification-resend', {
+        body: {
+          orderData: {
+            orderNumber: order.order_number,
+            customerInfo: {
+              fullName: order.customer_name,
+              phone: order.customer_phone || 'N/A',
+              address: order.delivery_address || 'N/A',
+              notes: order.notes || 'Payment confirmed for offline order'
+            },
+            items: order.items || [],
+            subtotal: order.total,
+            deliveryFee: 0,
+            total: order.total,
+            paymentUrl: null,
+            paymentMethod: 'offline',
+            paymentStatus: 'paid'
+          }
+        }
+      });
+      
+      if (resendError) {
+        console.error('Resend admin notification failed:', resendError);
+        
+          const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
+            body: {
+              orderData: {
+                orderNumber: order.order_number,
+                customerInfo: {
+                  fullName: order.customer_name,
+                  phone: order.customer_phone || 'N/A',
+                  address: order.delivery_address || 'N/A', 
+                  notes: order.notes || 'Payment confirmed for offline order'
+                },
+                items: order.items || [],
+                subtotal: order.total,
+                deliveryFee: 0,
+                total: order.total,
+                paymentUrl: null,
+                paymentMethod: 'offline',
+                paymentStatus: 'paid'
+              }
+            }
+          });
+        
+        if (zohoError) {
+          console.error('Both admin notification services failed:', zohoError);
+        } else {
+          console.log('Admin notification sent via Zoho backup');
+        }
+      } else {
+        console.log('Admin notification sent via Resend successfully');
+      }
+      
+    } catch (emailError) {
+      console.error('Admin notification failed (non-blocking):', emailError);
     }
 
     // Try sending confirmation; don't fail if email fails
