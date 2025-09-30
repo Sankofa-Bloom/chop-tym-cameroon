@@ -69,12 +69,11 @@ serve(async (req: Request) => {
       console.log('Offline order saved with ID:', savedOrderId);
     }
 
-    // Send admin notification email immediately using both services for redundancy
+    // Send admin notification email immediately using Zoho only
     try {
-      console.log('Sending admin notification for offline payment...');
+      console.log('Sending admin notification for offline payment via Zoho...');
       
-      // Try Resend first (more reliable)
-      const { error: resendError } = await supabase.functions.invoke('send-admin-notification-resend', {
+      const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
         body: {
           orderData: {
             orderNumber: orderData.order_number,
@@ -88,43 +87,16 @@ serve(async (req: Request) => {
             subtotal: orderData.subtotal,
             deliveryFee: orderData.delivery_fee,
             total: orderData.total,
-            paymentUrl: null, // No payment URL for offline payments
+            paymentUrl: null,
             paymentMethod: 'offline'
           }
         }
       });
       
-      if (resendError) {
-        console.error('Resend notification failed, trying Zoho backup:', resendError);
-        
-        // Fallback to Zoho SMTP
-        const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
-          body: {
-            orderData: {
-              orderNumber: orderData.order_number,
-              customerInfo: {
-                fullName: orderData.customer_name,
-                phone: orderData.customer_phone,
-                address: orderData.delivery_address,
-                notes: orderData.notes
-              },
-              items: orderData.items,
-              subtotal: orderData.subtotal,
-              deliveryFee: orderData.delivery_fee,
-              total: orderData.total,
-              paymentUrl: null,
-              paymentMethod: 'offline'
-            }
-          }
-        });
-        
-        if (zohoError) {
-          console.error('Both notification services failed:', zohoError);
-        } else {
-          console.log('Admin notification sent via Zoho backup');
-        }
+      if (zohoError) {
+        console.error('Zoho notification failed:', zohoError);
       } else {
-        console.log('Admin notification sent via Resend successfully');
+        console.log('Admin notification sent via Zoho SMTP successfully');
       }
       
     } catch (error) {

@@ -76,19 +76,18 @@ serve(async (req: Request) => {
       );
     }
 
-    // Send admin notification about payment confirmation
+    // Send admin notification about payment confirmation via Zoho only
     try {
-      console.log('Sending admin notification for payment confirmation...');
+      console.log('Sending admin notification for payment confirmation via Zoho...');
       
-      // Try Resend first (more reliable)
-      const { error: resendError } = await supabase.functions.invoke('send-admin-notification-resend', {
+      const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
         body: {
           orderData: {
             orderNumber: order.order_number,
             customerInfo: {
               fullName: order.customer_name,
               phone: order.customer_phone || 'N/A',
-              address: order.delivery_address || 'N/A',
+              address: order.delivery_address || 'N/A', 
               notes: order.notes || 'Payment confirmed for offline order'
             },
             items: order.items || [],
@@ -102,37 +101,10 @@ serve(async (req: Request) => {
         }
       });
       
-      if (resendError) {
-        console.error('Resend admin notification failed:', resendError);
-        
-          const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
-            body: {
-              orderData: {
-                orderNumber: order.order_number,
-                customerInfo: {
-                  fullName: order.customer_name,
-                  phone: order.customer_phone || 'N/A',
-                  address: order.delivery_address || 'N/A', 
-                  notes: order.notes || 'Payment confirmed for offline order'
-                },
-                items: order.items || [],
-                subtotal: order.total,
-                deliveryFee: 0,
-                total: order.total,
-                paymentUrl: null,
-                paymentMethod: 'offline',
-                paymentStatus: 'paid'
-              }
-            }
-          });
-        
-        if (zohoError) {
-          console.error('Both admin notification services failed:', zohoError);
-        } else {
-          console.log('Admin notification sent via Zoho backup');
-        }
+      if (zohoError) {
+        console.error('Zoho admin notification failed:', zohoError);
       } else {
-        console.log('Admin notification sent via Resend successfully');
+        console.log('Admin notification sent via Zoho SMTP successfully');
       }
       
     } catch (emailError) {

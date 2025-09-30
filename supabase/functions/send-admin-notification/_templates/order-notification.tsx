@@ -81,11 +81,9 @@ export const OrderNotificationEmail = ({
 
           <Section style={customerSection}>
             <Heading style={h2}>Customer Information</Heading>
-            <Text style={customerInfo}>
-              <strong>Name:</strong> {customerName}<br />
-              <strong>Phone:</strong> {customerPhone}<br />
-              <strong>Delivery Address:</strong> {deliveryAddress}
-            </Text>
+            <Text style={customerInfo}><strong>Name:</strong> {customerName}</Text>
+            <Text style={customerInfo}><strong>Phone:</strong> {customerPhone}</Text>
+            <Text style={customerInfo}><strong>Delivery Address:</strong> {deliveryAddress}</Text>
           </Section>
 
           <Hr style={separator} />
@@ -171,8 +169,12 @@ export const OrderNotificationEmail = ({
                   <strong>Payment Method:</strong> Offline Payment (Mobile Money)
                 </Text>
                 <Text style={offlinePaymentDetails}>
-                  Customer should transfer <strong>{formatPrice(total)}</strong> to:<br/>
-                  <strong>MTN: 670 416 449 (Mpah Ngwese)</strong><br/>
+                  Customer should transfer <strong>{formatPrice(total)}</strong> to:
+                </Text>
+                <Text style={offlinePaymentDetails}>
+                  <strong>MTN: 670 416 449 (Mpah Ngwese)</strong>
+                </Text>
+                <Text style={offlinePaymentDetails}>
                   Reference: <strong>{orderNumber}</strong>
                 </Text>
               </Section>

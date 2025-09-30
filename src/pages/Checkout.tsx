@@ -167,8 +167,8 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       toast.success("Payment confirmed! Your order is now being processed.");
       setShowOfflineDialog(false);
       
-      // Navigate to home with order success parameters
-      navigate('/?orderSuccess=true&orderNumber=' + offlineOrderData.orderNumber + '&total=' + offlineOrderData.total);
+      // Refresh and navigate to home with order success parameters
+      window.location.href = '/?orderSuccess=true&orderNumber=' + offlineOrderData.orderNumber + '&total=' + offlineOrderData.total;
     } catch (error: any) {
       console.error('Error marking order as paid:', error);
       toast.error(`Failed to mark as paid: ${error.message || 'Unknown error'}`);
