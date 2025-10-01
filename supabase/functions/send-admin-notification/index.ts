@@ -34,12 +34,13 @@ serve(async (req) => {
       })
     );
 
-    // Configure SMTP client for Zoho
+    // Configure SMTP client for Zoho (use STARTTLS on 587, TLS on 465)
+    const smtpPort = parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587');
     const client = new SMTPClient({
       connection: {
-        hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',  
-        port: parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587'),
-        tls: true,
+        hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',
+        port: smtpPort,
+        tls: smtpPort === 465,
         auth: {
           username: Deno.env.get('ZOHO_SMTP_USERNAME')!,
           password: Deno.env.get('ZOHO_SMTP_PASSWORD')!,
