@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import React from 'https://esm.sh/react@18.3.1';
 import { renderAsync } from 'https://esm.sh/@react-email/components@0.0.22';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
+import { Resend } from 'npm:resend@4.0.0';
 import { OrderNotificationEmail } from './_templates/order-notification.tsx';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -48,20 +48,41 @@ serve(async (req) => {
       },
     });
 
-    // Send email to admin using Zoho SMTP
-    await client.send({
-      from: `ChopTym <support@choptym.com>`,
-      to: 'choptym237@gmail.com',
-      subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
-      html,
-      content: `New order ${orderData.orderNumber} from ${orderData.customerInfo.fullName}\nPhone: ${orderData.customerInfo.phone}\nAddress: ${orderData.customerInfo.address}\nTotal: ${orderData.total}\n`,
-    });
+    // Try Zoho first, then fallback to Resend if Zoho fails
+    let sent = false;
+    try {
+      await client.send({
+        from: `ChopTym <support@choptym.com>`,
+        to: 'choptym237@gmail.com',
+        subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
+        html,
+        content: `New order ${orderData.orderNumber} from ${orderData.customerInfo.fullName}\nPhone: ${orderData.customerInfo.phone}\nAddress: ${orderData.customerInfo.address}\nTotal: ${orderData.total}\n`,
+      });
+      console.log('Admin notification sent via Zoho SMTP successfully');
+      sent = true;
+    } catch (smtpErr) {
+      console.error('Zoho SMTP send failed, trying Resend fallback:', smtpErr);
+    }
 
-    console.log('Admin notification sent via Zoho SMTP successfully');
+    if (!sent) {
+      const resendApiKey = Deno.env.get('RESEND_API_KEY');
+      if (!resendApiKey) {
+        throw new Error('RESEND_API_KEY not set and Zoho failed — cannot send admin email');
+      }
+      const resend = new Resend(resendApiKey);
+      const data = await resend.emails.send({
+        from: 'ChopTym <onboarding@resend.dev>',
+        to: ['choptym237@gmail.com'],
+        subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
+        html,
+      });
+      console.log('Admin notification sent via Resend fallback', data?.id || '');
+      sent = true;
+    }
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Admin notification sent via Zoho SMTP'
+      message: 'Admin notification sent'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
