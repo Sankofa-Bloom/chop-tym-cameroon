@@ -106,8 +106,37 @@ serve(async (req: Request) => {
 
     console.log(`Order ${order.id} updated to status: ${orderStatus}`);
 
-    // Send confirmation email if payment is successful
+    // Send notifications if payment is successful
     if (orderStatus === 'paid') {
+      // Send admin notification
+      try {
+        console.log('Sending admin notification for online payment...');
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            orderData: {
+              orderNumber: order.order_number,
+              customerInfo: {
+                fullName: order.customer_name,
+                phone: order.customer_phone || customer_phone,
+                address: order.delivery_address || 'N/A',
+                notes: order.notes || 'Online payment via Swychr'
+              },
+              items: order.items || [],
+              subtotal: order.subtotal || order.total,
+              deliveryFee: order.delivery_fee || 0,
+              total: order.total,
+              paymentUrl: null,
+              paymentMethod: 'online',
+              paymentStatus: 'paid'
+            }
+          }
+        });
+        console.log('Admin notification sent for online payment');
+      } catch (emailError) {
+        console.error('Failed to send admin notification:', emailError);
+      }
+
+      // Send customer confirmation email
       try {
         await supabase.functions.invoke('send-order-confirmation', {
           body: {
