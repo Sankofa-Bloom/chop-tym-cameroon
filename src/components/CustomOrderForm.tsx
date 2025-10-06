@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { generateOrderId } from "@/utils/paymentUtils";
+import { normalizePhoneNumber } from "@/utils/checkoutOptimization";
 
 interface CustomOrderFormProps {
   onBack: () => void;
@@ -63,6 +66,7 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { createPaymentAndRedirect } = useAuth();
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'customerPhone') {
@@ -81,67 +85,67 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
     setIsSubmitting(true);
 
     try {
-      // Prepare order data for custom order
+      const orderId = generateOrderId();
+      const phoneNumber = normalizePhoneNumber(formData.customerPhone);
+      const estimatedValue = parseInt(formData.estimatedValue) || 1000;
+      
+      // Prepare order data
       const orderData = {
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
-        deliveryAddress: formData.deliveryAddress,
+        order_number: orderId,
+        customer_name: formData.customerName,
+        customer_phone: phoneNumber,
+        delivery_address: formData.deliveryAddress,
         town: selectedTown,
         items: [{
           name: "Custom Order Request",
           restaurant: "ChopTym Custom Delivery",
-          price: parseInt(formData.estimatedValue) || 1000,
+          price: estimatedValue,
           quantity: 1,
         }],
-        subtotal: parseInt(formData.estimatedValue) || 1000,
-        deliveryFee: 0, // No delivery fee shown in cart
-        total: parseInt(formData.estimatedValue) || 1000,
+        subtotal: estimatedValue,
+        delivery_fee: 0,
+        total: estimatedValue,
         notes: `CUSTOM ORDER REQUEST:\n\nDescription: ${formData.orderDescription}\n\nUrgency: ${formData.urgency}\n\nEstimated Value: ${formData.estimatedValue || "Not specified"} XAF`,
-        paymentMethod: "swychr",
+        payment_method: "swychr",
       };
 
-      const response = await fetch(`https://qiupqrmtxwtgipbwcvoo.supabase.co/functions/v1/process-payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orderData })
+      const { error } = await createPaymentAndRedirect({
+        orderNumber: orderId,
+        amount: estimatedValue,
+        currency: 'XAF',
+        customerName: formData.customerName,
+        customerPhone: phoneNumber,
+        description: `ChopTym Custom Order #${orderId}`,
+        paymentMethod: 'swychr',
+        metadata: { orderData }
       });
 
-      const result = await response.json();
-      
-      if (result.success) {
-        toast({
-          title: "Custom Order Submitted! 🎉",
-          description: `Order #${result.orderNumber} received. We'll contact you shortly to confirm details.`,
-        });
-
-        if (result.paymentUrl) {
-          window.open(result.paymentUrl, '_blank');
-        }
-
-        // Reset form
-        setFormData({
-          customerName: "",
-          customerPhone: "",
-          deliveryAddress: "",
-          orderDescription: "",
-          urgency: "normal",
-          estimatedValue: "",
-        });
-        
-        onBack();
-      } else {
-        throw new Error(result.error || 'Failed to submit order');
+      if (error) {
+        throw error;
       }
+
+      toast({
+        title: "Custom Order Submitted! 🎉",
+        description: `Order #${orderId} received. Redirecting to payment...`,
+      });
+
+      // Reset form
+      setFormData({
+        customerName: "",
+        customerPhone: "",
+        deliveryAddress: "",
+        orderDescription: "",
+        urgency: "normal",
+        estimatedValue: "",
+      });
+
     } catch (error) {
       console.error('Error submitting custom order:', error);
       toast({
         title: "Submission Failed",
-        description: "Failed to submit your custom order. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to submit your custom order. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };

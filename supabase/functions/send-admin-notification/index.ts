@@ -16,20 +16,27 @@ serve(async (req) => {
 
   try {
     const { orderData } = await req.json();
-    console.log('Sending admin notification (Zoho SMTP) for order:', orderData.orderNumber);
+    console.log('Sending admin notification (Zoho SMTP) for order:', orderData);
 
+    // Handle both nested and flat orderData structures
+    const orderNumber = orderData.orderNumber || orderData.order_number;
+    const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
+    const customerPhone = orderData.customerInfo?.phone || orderData.customer_phone;
+    const deliveryAddress = orderData.customerInfo?.address || orderData.delivery_address;
+    const notes = orderData.customerInfo?.notes || orderData.notes;
+    
     // Render the React email template
     const html = await renderAsync(
       React.createElement(OrderNotificationEmail, {
-        orderNumber: orderData.orderNumber,
-        customerName: orderData.customerInfo.fullName,
-        customerPhone: orderData.customerInfo.phone,
-        deliveryAddress: orderData.customerInfo.address,
+        orderNumber: orderNumber,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        deliveryAddress: deliveryAddress,
         items: orderData.items,
         subtotal: orderData.subtotal,
-        deliveryFee: orderData.deliveryFee,
+        deliveryFee: orderData.deliveryFee || orderData.delivery_fee,
         total: orderData.total,
-        notes: orderData.customerInfo.notes,
+        notes: notes,
         paymentUrl: orderData.paymentUrl,
       })
     );
@@ -51,12 +58,17 @@ serve(async (req) => {
     // Try Zoho first, then fallback to Resend if Zoho fails
     let sent = false;
     try {
+      const orderNumber = orderData.orderNumber || orderData.order_number;
+      const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
+      const customerPhone = orderData.customerInfo?.phone || orderData.customer_phone;
+      const deliveryAddress = orderData.customerInfo?.address || orderData.delivery_address;
+      
       await client.send({
         from: `ChopTym <support@choptym.com>`,
         to: 'choptym237@gmail.com',
-        subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
+        subject: `🍽️ New Order: ${orderNumber} - ${customerName}`,
         html,
-        content: `New order ${orderData.orderNumber} from ${orderData.customerInfo.fullName}\nPhone: ${orderData.customerInfo.phone}\nAddress: ${orderData.customerInfo.address}\nTotal: ${orderData.total}\n`,
+        content: `New order ${orderNumber} from ${customerName}\nPhone: ${customerPhone}\nAddress: ${deliveryAddress}\nTotal: ${orderData.total}\n`,
       });
       console.log('Admin notification sent via Zoho SMTP successfully');
       sent = true;
@@ -69,11 +81,14 @@ serve(async (req) => {
       if (!resendApiKey) {
         throw new Error('RESEND_API_KEY not set and Zoho failed — cannot send admin email');
       }
+      const orderNumber = orderData.orderNumber || orderData.order_number;
+      const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
+      
       const resend = new Resend(resendApiKey);
       const data = await resend.emails.send({
         from: 'ChopTym <onboarding@resend.dev>',
         to: ['choptym237@gmail.com'],
-        subject: `🍽️ New Order: ${orderData.orderNumber} - ${orderData.customerInfo.fullName}`,
+        subject: `🍽️ New Order: ${orderNumber} - ${customerName}`,
         html,
       });
       console.log('Admin notification sent via Resend fallback', data?.id || '');
