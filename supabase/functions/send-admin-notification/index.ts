@@ -102,6 +102,9 @@ serve(async (req) => {
         console.error('Zoho SMTP send failed:', smtpErr);
       }
     }
+    if (!sent) {
+      throw new Error('Failed to send admin notification via Resend and Zoho SMTP');
+    }
     return new Response(JSON.stringify({
       success: true,
       message: 'Admin notification sent'
