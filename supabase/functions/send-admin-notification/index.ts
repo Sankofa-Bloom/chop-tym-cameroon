@@ -41,60 +41,67 @@ serve(async (req) => {
       })
     );
 
-    // Configure SMTP client for Zoho (use STARTTLS on 587, TLS on 465)
-    const smtpPort = parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587');
-    const client = new SMTPClient({
-      connection: {
-        hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',
-        port: smtpPort,
-        tls: smtpPort === 465,
-        auth: {
-          username: Deno.env.get('ZOHO_SMTP_USERNAME')!,
-          password: Deno.env.get('ZOHO_SMTP_PASSWORD')!,
-        },
-      },
-    });
-
-    // Try Zoho first, then fallback to Resend if Zoho fails
+    // Prefer Resend first (more reliable), then fallback to Zoho SMTP
     let sent = false;
+
+    // Try Resend first if API key is present
     try {
-      const orderNumber = orderData.orderNumber || orderData.order_number;
-      const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
-      const customerPhone = orderData.customerInfo?.phone || orderData.customer_phone;
-      const deliveryAddress = orderData.customerInfo?.address || orderData.delivery_address;
-      
-      await client.send({
-        from: `ChopTym <support@choptym.com>`,
-        to: 'choptym237@gmail.com',
-        subject: `🍽️ New Order: ${orderNumber} - ${customerName}`,
-        html,
-        content: `New order ${orderNumber} from ${customerName}\nPhone: ${customerPhone}\nAddress: ${deliveryAddress}\nTotal: ${orderData.total}\n`,
-      });
-      console.log('Admin notification sent via Zoho SMTP successfully');
-      sent = true;
-    } catch (smtpErr) {
-      console.error('Zoho SMTP send failed, trying Resend fallback:', smtpErr);
-    }
-
-    if (!sent) {
       const resendApiKey = Deno.env.get('RESEND_API_KEY');
-      if (!resendApiKey) {
-        throw new Error('RESEND_API_KEY not set and Zoho failed — cannot send admin email');
+      if (resendApiKey) {
+        const orderNumber = orderData.orderNumber || orderData.order_number;
+        const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
+
+        const resend = new Resend(resendApiKey);
+        const data = await resend.emails.send({
+          from: 'ChopTym <onboarding@resend.dev>',
+          to: ['choptym237@gmail.com'],
+          subject: `🍽️ New Order: ${orderNumber} - ${customerName}`,
+          html,
+        });
+        console.log('Admin notification sent via Resend', data?.id || '');
+        sent = true;
+      } else {
+        console.warn('RESEND_API_KEY not set, skipping Resend and trying Zoho SMTP');
       }
-      const orderNumber = orderData.orderNumber || orderData.order_number;
-      const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
-      
-      const resend = new Resend(resendApiKey);
-      const data = await resend.emails.send({
-        from: 'ChopTym <onboarding@resend.dev>',
-        to: ['choptym237@gmail.com'],
-        subject: `🍽️ New Order: ${orderNumber} - ${customerName}`,
-        html,
-      });
-      console.log('Admin notification sent via Resend fallback', data?.id || '');
-      sent = true;
+    } catch (resendErr) {
+      console.error('Resend send failed, will try Zoho SMTP fallback:', resendErr);
     }
 
+    // If not sent via Resend, try Zoho SMTP
+    if (!sent) {
+      // Configure SMTP client for Zoho (use STARTTLS on 587, TLS on 465)
+      const smtpPort = parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587');
+      const client = new SMTPClient({
+        connection: {
+          hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',
+          port: smtpPort,
+          tls: smtpPort === 465,
+          auth: {
+            username: Deno.env.get('ZOHO_SMTP_USERNAME')!,
+            password: Deno.env.get('ZOHO_SMTP_PASSWORD')!,
+          },
+        },
+      });
+
+      try {
+        const orderNumber = orderData.orderNumber || orderData.order_number;
+        const customerName = orderData.customerInfo?.fullName || orderData.customer_name;
+        const customerPhone = orderData.customerInfo?.phone || orderData.customer_phone;
+        const deliveryAddress = orderData.customerInfo?.address || orderData.delivery_address;
+
+        await client.send({
+          from: `ChopTym <support@choptym.com>`,
+          to: 'choptym237@gmail.com',
+          subject: `🍽️ New Order: ${orderNumber} - ${customerName}`,
+          html,
+          content: `New order ${orderNumber} from ${customerName}\nPhone: ${customerPhone}\nAddress: ${deliveryAddress}\nTotal: ${orderData.total}\n`,
+        });
+        console.log('Admin notification sent via Zoho SMTP successfully');
+        sent = true;
+      } catch (smtpErr) {
+        console.error('Zoho SMTP send failed:', smtpErr);
+      }
+    }
     return new Response(JSON.stringify({
       success: true,
       message: 'Admin notification sent'
