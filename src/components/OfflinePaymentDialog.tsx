@@ -31,7 +31,9 @@ export const OfflinePaymentDialog = ({
 
   useEffect(() => {
     const offlineMethods = paymentMethods.filter(method => 
-      method.category === 'offline' && method.is_active
+      method.category === 'offline' && 
+      method.is_active && 
+      !method.name.toLowerCase().includes('orange')
     );
     setOfflinePaymentMethods(offlineMethods);
   }, [paymentMethods]);

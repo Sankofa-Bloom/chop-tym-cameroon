@@ -65,6 +65,7 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
     estimatedValue: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderNumber, setOrderNumber] = useState<string>("");
   const { toast } = useToast();
   const { createPaymentAndRedirect } = useAuth();
 
@@ -78,6 +79,13 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
       }
     }
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Generate order number once user starts filling name and phone
+    if ((field === 'customerName' || field === 'customerPhone') && !orderNumber) {
+      if (formData.customerName || formData.customerPhone || value) {
+        setOrderNumber(generateOrderId());
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,9 +93,10 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
     setIsSubmitting(true);
 
     try {
-      const orderId = generateOrderId();
+      const orderId = orderNumber || generateOrderId();
       const phoneNumber = normalizePhoneNumber(formData.customerPhone);
       const estimatedValue = parseInt(formData.estimatedValue) || 1000;
+      const lastThreeDigits = orderId.slice(-3);
       
       // Prepare order data
       const orderData = {
@@ -115,7 +124,7 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
         currency: 'XAF',
         customerName: formData.customerName,
         customerPhone: phoneNumber,
-        description: `ChopTym Custom Order #${orderId}`,
+        description: `ChopTym Custom Order #${lastThreeDigits}`,
         paymentMethod: 'swychr',
         metadata: { orderData }
       });
@@ -138,6 +147,7 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
         urgency: "normal",
         estimatedValue: "",
       });
+      setOrderNumber("");
 
     } catch (error) {
       console.error('Error submitting custom order:', error);
@@ -338,6 +348,21 @@ export const CustomOrderForm = ({ onBack, selectedTown }: CustomOrderFormProps) 
                     Optional: Helps us prepare for payment
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Order Number Display */}
+          <Card className="bg-primary/10 border-primary/20">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-1">Your Order Number</p>
+                <p className="text-2xl font-bold text-primary font-mono tracking-wider">
+                  {orderNumber || "---"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {orderNumber ? `Use the last 3 digits (${orderNumber.slice(-3)}) when making payment` : "Fill in your details to generate"}
+                </p>
               </div>
             </CardContent>
           </Card>
