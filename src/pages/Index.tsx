@@ -93,10 +93,32 @@ export default function Index() {
   const { dishes, loading: dishesLoading } = useDishes();
   const { restaurantDishes, loading: restaurantDishesLoading } = useRestaurantDishes(selectedTown);
 
-  // Transform data for display
+  // Helper function to check if restaurant is currently open
+  const isRestaurantOpen = (restaurant: any) => {
+    if (!restaurant.is_open_now) return false;
+    
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const convertedDay = currentDay === 0 ? 7 : currentDay; // Convert to 1 = Monday, 7 = Sunday
+    
+    // Check if today is in operating days
+    if (!restaurant.operating_days?.includes(convertedDay)) return false;
+    
+    // Check time
+    const currentTime = now.toTimeString().slice(0, 8); // HH:MM:SS
+    const opensAt = restaurant.opens_at || '08:00:00';
+    const closesAt = restaurant.closes_at || '22:00:00';
+    
+    return currentTime >= opensAt && currentTime <= closesAt;
+  };
+
+  // Transform data for display - only show dishes from open restaurants
   const dishesWithPricing = useMemo(() => {
     return dishes.map(dish => {
-      const dishRestaurants = restaurantDishes.filter(rd => rd.dish_id === dish.id);
+      // Filter to only include dishes from open restaurants
+      const dishRestaurants = restaurantDishes.filter(rd => 
+        rd.dish_id === dish.id && isRestaurantOpen(rd.restaurant)
+      );
       const prices = dishRestaurants.map(rd => rd.price);
       const ratings = dishRestaurants.map(rd => rd.restaurant.rating);
       
