@@ -18,6 +18,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Profile } from "@/components/Profile";
 import { Toaster } from "@/components/ui/sonner";
 import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
+import heroImage from "@/assets/choptym-delivery-hero.jpg";
 
 type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile" | "custom";
 
@@ -467,12 +468,11 @@ export default function Index() {
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <Card className="relative overflow-hidden border-0 shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-orange-600" />
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute inset-0 bg-repeat opacity-30" style={{
-                    backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="#ffffff" fill-opacity="0.1"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>')}")`
-                  }} />
-                </div>
+                <div 
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url(${heroImage})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-orange-600/30 to-primary/40 backdrop-blur-[2px]" />
                 
                 <CardContent className="relative z-10 p-6 sm:p-8 lg:p-12">
                   <motion.div
