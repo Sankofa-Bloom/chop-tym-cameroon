@@ -2,12 +2,13 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { CustomOrderForm } from "@/components/CustomOrderForm";
+import { CustomOrderCard } from "@/components/CustomOrderCard";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package, Phone, Mail } from "lucide-react";
+import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package, Phone, Mail, UtensilsCrossed } from "lucide-react";
 import { FoodCard } from "@/components/FoodCard";
 import { FoodDetail } from "@/components/FoodDetail";
 import { CartSheet } from "@/components/CartSheet";
@@ -610,6 +611,30 @@ export default function Index() {
                       />
                     ))}
                   </motion.div>
+                  
+                  {filteredDishes.length === 0 && !searchQuery && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="space-y-6"
+                    >
+                      <Card className="border-2 border-primary/20 bg-card/50 backdrop-blur-sm p-8 text-center space-y-4">
+                        <div className="flex justify-center">
+                          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center">
+                            <UtensilsCrossed className="w-10 h-10 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-semibold text-foreground">No Dishes Available Right Now</h3>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            Our restaurant partners are currently closed, but you can still order your favorite dishes using our custom order feature!
+                          </p>
+                        </div>
+                      </Card>
+                      
+                      <CustomOrderCard onCustomOrder={handleCustomOrderClick} />
+                    </motion.div>
+                  )}
                   
                   {filteredDishes.length === 0 && searchQuery && (
                     <motion.div 
