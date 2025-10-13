@@ -22,15 +22,12 @@ export function CustomOrderCard({ onCustomOrder }: CustomOrderCardProps) {
         </p>
       </div>
       
-      <div className="space-y-3">
-        <p className="text-primary font-medium">Starting from 2,000 FCFA</p>
-        <Button 
-          onClick={onCustomOrder}
-          className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg transition-all duration-200"
-        >
-          Custom Order
-        </Button>
-      </div>
+      <Button 
+        onClick={onCustomOrder}
+        className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg transition-all duration-200"
+      >
+        Custom Order
+      </Button>
     </Card>
   );
 }
