@@ -19,6 +19,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Profile } from "@/components/Profile";
 import { Toaster } from "@/components/ui/sonner";
 import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
+import { useAppSettings } from "@/hooks/useAppSettings";
 import heroImage from "@/assets/choptym-delivery-hero.jpg";
 
 type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile" | "custom";
@@ -94,6 +95,7 @@ export default function Index() {
   const { restaurants, loading: restaurantsLoading } = useRestaurants(selectedTown);
   const { dishes, loading: dishesLoading } = useDishes();
   const { restaurantDishes, loading: restaurantDishesLoading } = useRestaurantDishes(selectedTown);
+  const { pricingMode, loading: settingsLoading } = useAppSettings();
 
   // Helper function to check if restaurant is currently open
   const isRestaurantOpen = (restaurant: any) => {
@@ -114,25 +116,36 @@ export default function Index() {
     return currentTime >= opensAt && currentTime <= closesAt;
   };
 
-  // Transform data for display - only show dishes from open restaurants
+  // Transform data for display
   const dishesWithPricing = useMemo(() => {
-    return dishes.map(dish => {
-      // Filter to only include dishes from open restaurants
-      const dishRestaurants = restaurantDishes.filter(rd => 
-        rd.dish_id === dish.id && isRestaurantOpen(rd.restaurant)
-      );
-      const prices = dishRestaurants.map(rd => rd.price);
-      const ratings = dishRestaurants.map(rd => rd.restaurant.rating);
-      
-      return {
+    if (pricingMode.mode === 'simple') {
+      // Simple mode: show all dishes with flat pricing
+      return dishes.map(dish => ({
         ...dish,
-        minPrice: Math.min(...prices) || 0,
-        maxPrice: Math.max(...prices) || 0,
-        restaurantCount: dishRestaurants.length,
-        avgRating: ratings.reduce((a, b) => a + b, 0) / ratings.length || 0,
-      };
-    }).filter(dish => dish.restaurantCount > 0);
-  }, [dishes, restaurantDishes]);
+        minPrice: pricingMode.flat_price || 1000,
+        maxPrice: pricingMode.flat_price || 1000,
+        restaurantCount: 1,
+        avgRating: 4.5,
+      }));
+    } else {
+      // Restaurant mode: only show dishes from open restaurants
+      return dishes.map(dish => {
+        const dishRestaurants = restaurantDishes.filter(rd => 
+          rd.dish_id === dish.id && isRestaurantOpen(rd.restaurant)
+        );
+        const prices = dishRestaurants.map(rd => rd.price);
+        const ratings = dishRestaurants.map(rd => rd.restaurant.rating);
+        
+        return {
+          ...dish,
+          minPrice: Math.min(...prices) || 0,
+          maxPrice: Math.max(...prices) || 0,
+          restaurantCount: dishRestaurants.length,
+          avgRating: ratings.reduce((a, b) => a + b, 0) / ratings.length || 0,
+        };
+      }).filter(dish => dish.restaurantCount > 0);
+    }
+  }, [dishes, restaurantDishes, pricingMode]);
 
   const addToCart = (dish: Dish, quantity: number, restaurantId: string, price: number, complements?: Array<{complement_id: string; name: string; price: number; quantity: number}>) => {
     const restaurant = restaurants.find(r => r.id === restaurantId);

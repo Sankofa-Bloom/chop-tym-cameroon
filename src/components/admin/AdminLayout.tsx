@@ -34,6 +34,7 @@ const sidebarItems = [
   { title: "Delivery", url: "/admin/delivery", icon: MapPin },
   { title: "Payment Methods", url: "/admin/payment-methods", icon: CreditCard },
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
+  { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 interface AdminLayoutProps {

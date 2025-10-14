@@ -16,6 +16,7 @@ import { DeliveryManagement } from "@/components/admin/DeliveryManagement";
 import { OrdersManagement } from "@/components/admin/OrdersManagement";
 import AdminComplements from "./pages/admin/AdminComplements";
 import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
+import AdminSettings from "./pages/admin/AdminSettings";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -79,6 +80,11 @@ const App = () => {
             <Route path="/admin/orders" element={
               <ProtectedAdminRoute>
                 <AdminLayout><OrdersManagement /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminSettings /></AdminLayout>
               </ProtectedAdminRoute>
             } />
             
