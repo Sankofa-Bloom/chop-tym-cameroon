@@ -116,10 +116,24 @@ export default function Index() {
     return currentTime >= opensAt && currentTime <= closesAt;
   };
 
+  // Check if dishes are available based on time
+  const areDishesAvailable = useMemo(() => {
+    if (pricingMode.mode === 'restaurant') return true;
+    
+    const now = new Date();
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+    const startTime = pricingMode.availability_hours?.start || '09:00';
+    const endTime = pricingMode.availability_hours?.end || '18:00';
+    
+    return currentTime >= startTime && currentTime <= endTime;
+  }, [pricingMode]);
+
   // Transform data for display
   const dishesWithPricing = useMemo(() => {
     if (pricingMode.mode === 'simple') {
-      // Simple mode: show all dishes with flat pricing
+      // Simple mode: show all dishes with flat pricing if within availability hours
+      if (!areDishesAvailable) return [];
+      
       return dishes.map(dish => ({
         ...dish,
         minPrice: pricingMode.flat_price || 1000,
@@ -145,7 +159,7 @@ export default function Index() {
         };
       }).filter(dish => dish.restaurantCount > 0);
     }
-  }, [dishes, restaurantDishes, pricingMode]);
+  }, [dishes, restaurantDishes, pricingMode, areDishesAvailable]);
 
   const addToCart = (dish: Dish, quantity: number, restaurantId: string, price: number, complements?: Array<{complement_id: string; name: string; price: number; quantity: number}>) => {
     const restaurant = restaurants.find(r => r.id === restaurantId);
@@ -634,13 +648,19 @@ export default function Index() {
                       <Card className="border-2 border-primary/20 bg-card/50 backdrop-blur-sm p-8 text-center space-y-4">
                         <div className="flex justify-center">
                           <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center">
-                            <UtensilsCrossed className="w-10 h-10 text-muted-foreground" />
+                            <Clock className="w-10 h-10 text-muted-foreground" />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <h3 className="text-xl font-semibold text-foreground">No Dishes Available Right Now</h3>
+                          <h3 className="text-xl font-semibold text-foreground">
+                            {pricingMode.mode === 'simple' && !areDishesAvailable 
+                              ? 'We\'re Currently Closed' 
+                              : 'No Dishes Available Right Now'}
+                          </h3>
                           <p className="text-muted-foreground max-w-md mx-auto">
-                            Our restaurant partners are currently closed, but you can still order your favorite dishes using our custom order feature!
+                            {pricingMode.mode === 'simple' && !areDishesAvailable 
+                              ? `Our kitchen is open from ${pricingMode.availability_hours?.start || '09:00'} to ${pricingMode.availability_hours?.end || '18:00'}. You can still place a custom order for any item you'd like!`
+                              : 'Our restaurant partners are currently closed, but you can still order your favorite dishes using our custom order feature!'}
                           </p>
                         </div>
                       </Card>

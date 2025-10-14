@@ -4,10 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 interface PricingMode {
   mode: 'simple' | 'restaurant';
   flat_price?: number;
+  availability_hours?: {
+    start: string;
+    end: string;
+  };
 }
 
 export const useAppSettings = () => {
-  const [pricingMode, setPricingMode] = useState<PricingMode>({ mode: 'simple', flat_price: 1000 });
+  const [pricingMode, setPricingMode] = useState<PricingMode>({ 
+    mode: 'simple', 
+    flat_price: 1000,
+    availability_hours: { start: '09:00', end: '18:00' }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

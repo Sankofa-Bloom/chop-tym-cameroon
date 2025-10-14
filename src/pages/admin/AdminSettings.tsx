@@ -13,6 +13,8 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [pricingMode, setPricingMode] = useState<'simple' | 'restaurant'>('simple');
   const [flatPrice, setFlatPrice] = useState(1000);
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('18:00');
 
   useEffect(() => {
     fetchSettings();
@@ -28,9 +30,15 @@ export default function AdminSettings() {
 
       if (error) throw error;
       if (data?.value && typeof data.value === 'object' && 'mode' in data.value) {
-        const settings = data.value as { mode: 'simple' | 'restaurant'; flat_price?: number };
+        const settings = data.value as { 
+          mode: 'simple' | 'restaurant'; 
+          flat_price?: number;
+          availability_hours?: { start: string; end: string };
+        };
         setPricingMode(settings.mode);
         setFlatPrice(settings.flat_price || 1000);
+        setStartTime(settings.availability_hours?.start || '09:00');
+        setEndTime(settings.availability_hours?.end || '18:00');
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -48,7 +56,11 @@ export default function AdminSettings() {
         .update({
           value: {
             mode: pricingMode,
-            flat_price: pricingMode === 'simple' ? flatPrice : undefined
+            flat_price: pricingMode === 'simple' ? flatPrice : undefined,
+            availability_hours: {
+              start: startTime,
+              end: endTime
+            }
           }
         })
         .eq('key', 'pricing_mode');
@@ -109,22 +121,53 @@ export default function AdminSettings() {
           </RadioGroup>
 
           {pricingMode === 'simple' && (
-            <div className="space-y-2 pt-4 border-t">
-              <Label htmlFor="flatPrice">Flat Price (XAF)</Label>
-              <Input
-                id="flatPrice"
-                type="number"
-                min="0"
-                step="100"
-                value={flatPrice}
-                onChange={(e) => setFlatPrice(parseInt(e.target.value) || 0)}
-                className="max-w-xs"
-              />
-              <p className="text-sm text-muted-foreground">
-                All dishes will be displayed at this price
-              </p>
+            <div className="space-y-4 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="flatPrice">Flat Price (XAF)</Label>
+                <Input
+                  id="flatPrice"
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={flatPrice}
+                  onChange={(e) => setFlatPrice(parseInt(e.target.value) || 0)}
+                  className="max-w-xs"
+                />
+                <p className="text-sm text-muted-foreground">
+                  All dishes will be displayed at this price
+                </p>
+              </div>
             </div>
           )}
+
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-medium">Dish Availability Hours</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startTime">Opens At</Label>
+                <Input
+                  id="startTime"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endTime">Closes At</Label>
+                <Input
+                  id="endTime"
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Dishes will only be available for ordering during these hours
+            </p>
+          </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

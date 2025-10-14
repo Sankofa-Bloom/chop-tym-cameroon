@@ -7,9 +7,10 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Star, Clock, Minus, Plus, MapPin, Check } from "lucide-react";
 import { Dish, useRestaurantsByDish } from "@/hooks/useRealTimeData";
 import { useDishComplements, DishComplement } from "@/hooks/useComplements";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 interface FoodDetailProps {
-  dish: Dish;
+  dish: Dish & { minPrice?: number; maxPrice?: number };
   onBack: () => void;
   onAddToCart: (dish: any, quantity: number, restaurantId: string, price: number, complements?: SelectedComplement[]) => void;
 }
@@ -46,8 +47,11 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
   const [selectedComplements, setSelectedComplements] = useState<Record<string, number>>({});
+  const { pricingMode } = useAppSettings();
   const { restaurantDishes, loading } = useRestaurantsByDish(dish.id);
   const { dishComplements, loading: complementsLoading } = useDishComplements(dish.id);
+  
+  const isSimpleMode = pricingMode.mode === 'simple';
 
   const formatPrice = (price: number) => {
     return `${price.toLocaleString()} F`;
@@ -55,13 +59,16 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
 
   const selectedRestaurantDish = restaurantDishes.find(rd => rd.restaurant_id === selectedRestaurant);
   
+  // In simple mode, use the flat price from the dish
+  const basePrice = isSimpleMode ? (dish.minPrice || pricingMode.flat_price || 1000) : (selectedRestaurantDish?.price || 0);
+  
   // Calculate complement prices
   const complementsTotal = dishComplements.reduce((total, dishComplement) => {
     const selectedQuantity = selectedComplements[dishComplement.complement_id] || 0;
     return total + (dishComplement.complement.price * selectedQuantity);
   }, 0);
   
-  const totalPrice = ((selectedRestaurantDish?.price || 0) + complementsTotal) * quantity;
+  const totalPrice = (basePrice + complementsTotal) * quantity;
 
   const handleComplementQuantityChange = (complementId: string, newQuantity: number, maxQuantity: number) => {
     const clampedQuantity = Math.max(0, Math.min(newQuantity, maxQuantity));
@@ -72,7 +79,8 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
   };
 
   const handleAddToCart = () => {
-    if (!selectedRestaurantDish) return;
+    // In simple mode, no restaurant selection needed
+    if (!isSimpleMode && !selectedRestaurantDish) return;
     
     // Check if all required complements are selected
     const requiredComplements = dishComplements.filter(dc => dc.is_required);
@@ -95,7 +103,10 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
         quantity: selectedComplements[dc.complement_id]
       }));
     
-    onAddToCart(dish, quantity, selectedRestaurantDish.restaurant_id, selectedRestaurantDish.price, selectedComplementsForCart);
+    const restaurantId = isSimpleMode ? 'default' : selectedRestaurantDish!.restaurant_id;
+    const price = isSimpleMode ? basePrice : selectedRestaurantDish!.price;
+    
+    onAddToCart(dish, quantity, restaurantId, price, selectedComplementsForCart);
     onBack();
   };
 
@@ -169,15 +180,16 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
         </motion.div>
 
         <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-          {/* Restaurant Selection */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <h2 className="font-heading font-semibold text-xl sm:text-2xl mb-4 sm:mb-6">
-              Choose Your Restaurant
-            </h2>
+          {/* Restaurant Selection - Only in restaurant mode */}
+          {!isSimpleMode && (
+            <motion.section
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <h2 className="font-heading font-semibold text-xl sm:text-2xl mb-4 sm:mb-6">
+                Choose Your Restaurant
+              </h2>
             
             {loading ? (
               <div className="grid gap-4">
@@ -260,10 +272,11 @@ export const FoodDetail = ({ dish, onBack, onAddToCart }: FoodDetailProps) => {
               </div>
             )}
           </motion.section>
+          )}
 
           {/* Quantity & Total */}
           <AnimatePresence>
-            {selectedRestaurant && (
+            {(isSimpleMode || selectedRestaurant) && (
               <motion.section
                 initial={{ opacity: 0, y: 30, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
