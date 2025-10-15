@@ -73,7 +73,7 @@ serve(async (req: Request) => {
     try {
       console.log('Sending admin notification for offline payment via Zoho...');
       
-      const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
+      const { error: zohoError } = await supabase.functions.invoke('send-admin-order-placed', {
         body: {
           orderData: {
             orderNumber: orderData.order_number,

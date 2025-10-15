@@ -183,7 +183,7 @@ serve(async (req: Request) => {
     if (orderData && paymentData.data?.payment_link) {
       try {
         console.log('Sending admin notification email...');
-        const { error: emailError } = await supabase.functions.invoke('send-admin-notification', {
+        const { error: emailError } = await supabase.functions.invoke('send-admin-order-placed', {
           body: {
             orderData: {
               ...orderData,

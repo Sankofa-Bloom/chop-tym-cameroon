@@ -111,7 +111,7 @@ serve(async (req: Request) => {
       // Send admin notification
       try {
         console.log('Sending admin notification for online payment...');
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-admin-payment-confirmed', {
           body: {
             orderData: {
               orderNumber: order.order_number,

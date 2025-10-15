@@ -80,7 +80,7 @@ serve(async (req: Request) => {
     try {
       console.log('Sending admin notification for payment confirmation via Zoho...');
       
-      const { error: zohoError } = await supabase.functions.invoke('send-admin-notification', {
+      const { error: zohoError } = await supabase.functions.invoke('send-admin-payment-confirmed', {
         body: {
           orderData: {
             orderNumber: order.order_number,

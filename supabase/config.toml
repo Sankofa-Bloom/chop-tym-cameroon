@@ -51,3 +51,9 @@ verify_jwt = false
 
 [functions.mtn-momo-webhook]
 verify_jwt = false
+
+[functions.send-admin-order-placed]
+verify_jwt = false
+
+[functions.send-admin-payment-confirmed]
+verify_jwt = false
