@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import React from 'https://esm.sh/react@18.3.1';
 import { renderAsync } from 'https://esm.sh/@react-email/components@0.0.22';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
-import { Resend } from 'npm:resend@4.0.0';
+// Resend removed - using Zoho SMTP only
 import { OrderNotificationEmail } from './_templates/order-notification.tsx';
 
 const corsHeaders = {
@@ -41,58 +41,27 @@ serve(async (req) => {
       })
     );
 
-    let sent = false;
-
-    // Try Resend first
-    try {
-      const resendApiKey = Deno.env.get('RESEND_API_KEY');
-      if (resendApiKey) {
-        const resend = new Resend(resendApiKey);
-        const data = await resend.emails.send({
-          from: 'ChopTym <onboarding@resend.dev>',
-          to: ['choptym237@gmail.com'],
-          subject: `🆕 New Order Placed: ${orderNumber} - ${customerName}`,
-          html,
-        });
-        console.log('Order placed admin email sent via Resend', data?.id || '');
-        sent = true;
-      }
-    } catch (resendErr) {
-      console.error('Resend send failed, will try Zoho SMTP fallback:', resendErr);
-    }
-
-    if (!sent) {
-      // Fallback to Zoho SMTP
-      const smtpPort = parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587');
-      const client = new SMTPClient({
-        connection: {
-          hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',
-          port: smtpPort,
-          tls: smtpPort === 465,
-          auth: {
-            username: Deno.env.get('ZOHO_SMTP_USERNAME')!,
-            password: Deno.env.get('ZOHO_SMTP_PASSWORD')!,
-          },
+    // Send via Zoho SMTP only
+    const smtpPort = parseInt(Deno.env.get('ZOHO_SMTP_PORT') || '587');
+    const client = new SMTPClient({
+      connection: {
+        hostname: Deno.env.get('ZOHO_SMTP_HOST') || 'smtp.zoho.com',
+        port: smtpPort,
+        tls: smtpPort === 465,
+        auth: {
+          username: Deno.env.get('ZOHO_SMTP_USERNAME')!,
+          password: Deno.env.get('ZOHO_SMTP_PASSWORD')!,
         },
-      });
+      },
+    });
 
-      try {
-        await client.send({
-          from: `ChopTym <support@choptym.com>`,
-          to: 'choptym237@gmail.com',
-          subject: `🆕 New Order Placed: ${orderNumber} - ${customerName}`,
-          html,
-        });
-        console.log('Order placed admin email sent via Zoho SMTP');
-        sent = true;
-      } catch (smtpErr) {
-        console.error('Zoho SMTP send failed:', smtpErr);
-      }
-    }
-
-    if (!sent) {
-      throw new Error('Failed to send order placed admin notification');
-    }
+    await client.send({
+      from: `ChopTym <support@choptym.com>`,
+      to: 'choptym237@gmail.com',
+      subject: `🆕 New Order Placed: ${orderNumber} - ${customerName}`,
+      html,
+    });
+    console.log('Order placed admin email sent via Zoho SMTP');
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
