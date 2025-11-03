@@ -16,7 +16,7 @@ export function CustomOrderCard({ onCustomOrder }: CustomOrderCardProps) {
       </div>
       
       <div className="space-y-2">
-        <h3 className="text-xl font-semibold text-foreground">Custom Food Order</h3>
+        <h3 className="text-xl font-semibold text-foreground">Custom Order</h3>
         <p className="text-muted-foreground text-sm">
           Can't find what you're looking for? Order any dish from your favorite restaurant!
         </p>

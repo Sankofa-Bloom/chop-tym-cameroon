@@ -629,6 +629,17 @@ export default function Index() {
                     initial="initial"
                     animate="animate"
                   >
+                    {/* Show Custom Order Card first when dishes are available */}
+                    {filteredDishes.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        <CustomOrderCard onCustomOrder={handleCustomOrderClick} />
+                      </motion.div>
+                    )}
+                    
                     {filteredDishes.map((dish, index) => (
                       <FoodCard
                         key={dish.id}
