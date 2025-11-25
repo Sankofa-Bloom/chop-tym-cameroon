@@ -11,6 +11,87 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Rate limiting: Track IPs and phone numbers
+const rateLimitMap = new Map<string, { count: number, resetTime: number }>();
+const RATE_LIMIT_WINDOW = 3600000; // 1 hour in milliseconds
+const MAX_REQUESTS_PER_HOUR = 10; // Max 10 orders per hour per IP/phone
+
+function checkRateLimit(key: string): { allowed: boolean, message?: string } {
+  const now = Date.now();
+  const record = rateLimitMap.get(key);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return { allowed: true };
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_HOUR) {
+    const minutesUntilReset = Math.ceil((record.resetTime - now) / 60000);
+    return { 
+      allowed: false, 
+      message: `Rate limit exceeded. Please try again in ${minutesUntilReset} minutes.` 
+    };
+  }
+  
+  record.count++;
+  return { allowed: true };
+}
+
+// Input validation
+function validateOrderData(orderData: any): { valid: boolean, error?: string } {
+  // Validate customer name
+  if (!orderData.customer_name || typeof orderData.customer_name !== 'string') {
+    return { valid: false, error: 'Invalid customer name' };
+  }
+  if (orderData.customer_name.length > 100 || orderData.customer_name.length < 2) {
+    return { valid: false, error: 'Customer name must be between 2 and 100 characters' };
+  }
+  
+  // Validate phone number
+  if (!orderData.customer_phone || typeof orderData.customer_phone !== 'string') {
+    return { valid: false, error: 'Invalid phone number' };
+  }
+  // Cameroon phone format: +237 followed by 9 digits
+  const phoneRegex = /^\+237[2-9]\d{8}$/;
+  if (!phoneRegex.test(orderData.customer_phone.replace(/\s/g, ''))) {
+    return { valid: false, error: 'Invalid phone format. Use: +237 6XX XXX XXX' };
+  }
+  
+  // Validate delivery address
+  if (!orderData.delivery_address || typeof orderData.delivery_address !== 'string') {
+    return { valid: false, error: 'Invalid delivery address' };
+  }
+  if (orderData.delivery_address.length > 500 || orderData.delivery_address.length < 10) {
+    return { valid: false, error: 'Delivery address must be between 10 and 500 characters' };
+  }
+  
+  // Validate amounts
+  if (typeof orderData.total !== 'number' || orderData.total <= 0 || orderData.total > 10000000) {
+    return { valid: false, error: 'Invalid order total' };
+  }
+  if (typeof orderData.subtotal !== 'number' || orderData.subtotal <= 0) {
+    return { valid: false, error: 'Invalid subtotal' };
+  }
+  if (typeof orderData.delivery_fee !== 'number' || orderData.delivery_fee < 0) {
+    return { valid: false, error: 'Invalid delivery fee' };
+  }
+  
+  // Validate items array
+  if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
+    return { valid: false, error: 'Order must contain at least one item' };
+  }
+  if (orderData.items.length > 50) {
+    return { valid: false, error: 'Too many items in order' };
+  }
+  
+  // Validate notes length if present
+  if (orderData.notes && (typeof orderData.notes !== 'string' || orderData.notes.length > 1000)) {
+    return { valid: false, error: 'Notes must be less than 1000 characters' };
+  }
+  
+  return { valid: true };
+}
+
 serve(async (req: Request) => {
   // Handle CORS preflight requests  
   if (req.method === 'OPTIONS') {
@@ -19,15 +100,11 @@ serve(async (req: Request) => {
 
   try {
     console.log('Offline payment function called at:', new Date().toISOString());
-    console.log('Request method:', req.method);
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
     
     const requestData = await req.json();
-    console.log('Offline payment request received:', requestData, new Date().toISOString());
-
     const { orderData } = requestData;
 
-    // Validate required fields
+    // Basic validation
     if (!orderData || !orderData.order_number || !orderData.customer_name || !orderData.customer_phone) {
       return new Response(
         JSON.stringify({ error: 'Missing required order data' }),
@@ -38,9 +115,48 @@ serve(async (req: Request) => {
       );
     }
 
-    // Save order to database
-    let savedOrderId = null;
-    console.log('Saving offline order to database...');
+    // Input validation
+    const validation = validateOrderData(orderData);
+    if (!validation.valid) {
+      console.warn('Order validation failed:', validation.error);
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Rate limiting by IP address
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ipRateLimit = checkRateLimit(`ip:${clientIP}`);
+    if (!ipRateLimit.allowed) {
+      console.warn('Rate limit exceeded for IP:', clientIP);
+      return new Response(
+        JSON.stringify({ error: ipRateLimit.message }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Rate limiting by phone number
+    const normalizedPhone = orderData.customer_phone.replace(/\s/g, '');
+    const phoneRateLimit = checkRateLimit(`phone:${normalizedPhone}`);
+    if (!phoneRateLimit.allowed) {
+      console.warn('Rate limit exceeded for phone:', normalizedPhone);
+      return new Response(
+        JSON.stringify({ error: phoneRateLimit.message }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log('Rate limits passed. Saving order...');
     
     // Remove fields that don't exist in the orders table
     const { created_timestamp, normalized_phone, total_formatted, ...cleanOrderData } = orderData;
@@ -64,10 +180,9 @@ serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
-    } else if (orderResult) {
-      savedOrderId = orderResult.id;
-      console.log('Offline order saved with ID:', savedOrderId);
     }
+
+    console.log('Offline order saved with ID:', orderResult.id);
 
     // Send admin notification email immediately using Zoho only
     try {
@@ -107,7 +222,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        order_id: savedOrderId,
+        order_id: orderResult.id,
         message: 'Offline order created successfully'
       }),
       {

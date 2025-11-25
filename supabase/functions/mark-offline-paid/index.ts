@@ -8,7 +8,6 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req: Request) => {
   // Handle CORS preflight requests
@@ -17,8 +16,49 @@ serve(async (req: Request) => {
   }
 
   try {
+    // **CRITICAL SECURITY FIX**: Verify admin authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.warn('mark-offline-paid: No authorization header provided');
+      return new Response(
+        JSON.stringify({ success: false, message: 'Authentication required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Create authenticated client to verify user
+    const supabaseAuth = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: {
+          Authorization: authHeader
+        }
+      }
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    
+    if (authError || !user) {
+      console.warn('mark-offline-paid: Invalid authentication:', authError?.message);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Invalid authentication' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Check if user is admin
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: isAdmin, error: roleError } = await supabase.rpc('is_admin', { user_id: user.id });
+    
+    if (roleError || !isAdmin) {
+      console.warn('mark-offline-paid: User is not admin:', user.id);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Admin access required' }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
     const { order_id } = await req.json();
-    console.log('mark-offline-paid called for order:', order_id, 'at', new Date().toISOString());
+    console.log('mark-offline-paid called by admin:', user.id, 'for order:', order_id, 'at', new Date().toISOString());
 
     if (!order_id) {
       return new Response(
