@@ -371,9 +371,7 @@ export default function Index() {
                 </div>
                 <div className="container mx-auto max-w-7xl mt-3 p-3 bg-white/10 rounded-lg">
                   <p className="text-sm text-green-100">
-                    💰 Please complete your payment by transferring to: <strong>MTN: 670 416 449 (Mpah Ngwese)</strong>
-                    <br />
-                    Include your order number in the transfer message. You'll receive WhatsApp updates about your order!
+                    📞 You will receive WhatsApp updates about your order including payment and delivery details!
                   </p>
                 </div>
               </motion.div>
