@@ -145,9 +145,20 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     try {
       setLoading(true);
       
-      // Mark as paid via edge function (bypasses RLS safely)
+      // Get current session to authenticate the request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in as admin to mark orders as paid");
+        setLoading(false);
+        return;
+      }
+      
+      // Mark as paid via edge function with authentication
       const { data, error } = await supabase.functions.invoke('mark-offline-paid', {
-        body: { order_id: offlineOrderData.orderId }
+        body: { order_id: offlineOrderData.orderId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       console.log('mark-offline-paid result:', { data, error });
