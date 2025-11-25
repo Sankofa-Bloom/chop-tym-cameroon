@@ -43,15 +43,6 @@ verify_jwt = false
 [functions.mark-offline-paid]
 verify_jwt = false
 
-[functions.mtn-momo-create-payment]
-verify_jwt = false
-
-[functions.mtn-momo-status]
-verify_jwt = false
-
-[functions.mtn-momo-webhook]
-verify_jwt = false
-
 [functions.send-admin-order-placed]
 verify_jwt = false
 
