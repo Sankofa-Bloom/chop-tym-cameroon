@@ -176,17 +176,7 @@ export const OrderConfirmation = () => {
     {paymentStatus === 'success' && (
       <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
         <p className="text-sm text-green-800">
-          {orderDetails?.paymentMethod === 'offline' || searchParams.get('method') === 'offline' ? (
-            <>
-              💰 Please complete your payment by transferring to:
-              <br />
-              <strong>MTN: 670 416 449 (Mpah Ngwese)</strong>
-              <br />
-              Include your order reference in the transfer message.
-            </>
-          ) : (
-            "📞 You will receive a WhatsApp message with your order details and delivery updates."
-          )}
+          📞 You will receive a WhatsApp message with your order details, payment instructions, and delivery updates.
         </p>
       </div>
     )}
