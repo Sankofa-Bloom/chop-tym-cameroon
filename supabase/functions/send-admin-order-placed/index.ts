@@ -70,9 +70,11 @@ serve(async (req) => {
     const html = buildEmailHtml(order);
 
     await client.send({
-      from: `ChopTym <support@choptym.com>`,
+      from: "support@choptym.com",
+      fromName: "ChopTym",
       to: "choptym237@gmail.com",
       subject: `🆕 New Order Placed: ${orderNumber} - ${customerName}`,
+      content: html,
       html,
     });
 
