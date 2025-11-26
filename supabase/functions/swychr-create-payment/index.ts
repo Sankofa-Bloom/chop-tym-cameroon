@@ -179,29 +179,32 @@ serve(async (req: Request) => {
         .eq('id', savedOrderId);
     }
 
-    // Send admin notification email immediately when payment link is created
+    // Send admin notification email in background (non-blocking)
     if (orderData && paymentData.data?.payment_link) {
-      try {
-        console.log('Sending admin notification email...');
-        const { error: emailError } = await supabase.functions.invoke('send-admin-order-placed', {
-          body: {
-            orderData: {
-              ...orderData,
-              paymentUrl: paymentData.data.payment_link
+      const sendNotification = async () => {
+        try {
+          console.log('Sending admin notification email in background...');
+          const { error: emailError } = await supabase.functions.invoke('send-admin-order-placed', {
+            body: {
+              orderData: {
+                ...orderData,
+                paymentUrl: paymentData.data.payment_link
+              }
             }
+          });
+          
+          if (emailError) {
+            console.error('Failed to send admin notification:', emailError);
+          } else {
+            console.log('Admin notification sent successfully');
           }
-        });
-        
-        if (emailError) {
-          console.error('Failed to send admin notification:', emailError);
-          // Don't fail the payment creation if email fails
-        } else {
-          console.log('Admin notification sent successfully');
+        } catch (error) {
+          console.error('Error sending admin notification:', error);
         }
-      } catch (error) {
-        console.error('Error sending admin notification:', error);
-        // Don't fail the payment creation if email fails
-      }
+      };
+      
+      // Run notification in background without blocking response
+      EdgeRuntime.waitUntil(sendNotification());
     }
 
     return new Response(
