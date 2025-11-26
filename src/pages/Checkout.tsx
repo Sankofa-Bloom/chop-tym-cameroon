@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { OfflinePaymentDialog } from "@/components/OfflinePaymentDialog";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { validateOrderData, optimizeOrderData, normalizePhoneNumber } from "@/utils/checkoutOptimization";
 
@@ -50,15 +49,14 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
 
   const { createPaymentAndRedirect } = useAuth();
   const { paymentMethods, loading: paymentMethodsLoading } = usePaymentMethods();
+  
+  // Filter to only online payment methods
+  const onlinePaymentMethods = paymentMethods.filter(method => method.category === 'online');
 
   const { towns } = useTowns();
   const { streets } = useStreets(formData.town);
   const [selectedStreet, setSelectedStreet] = useState<any>(null);
   const [selectedTownData, setSelectedTownData] = useState<any>(null);
-  
-  // Dialog state for offline payment
-  const [showOfflineDialog, setShowOfflineDialog] = useState(false);
-  const [offlineOrderData, setOfflineOrderData] = useState<any>(null);
   
   // Calculate delivery fee based on town's free delivery setting and selected street's zone
   const deliveryFee = selectedTownData?.free_delivery ? 0 : (selectedStreet?.delivery_zone?.delivery_fee || 500);
@@ -80,15 +78,15 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     }
   }, [formData.town, towns]);
 
-  // Set default payment method to first available method
+  // Set default payment method to first available online method
   useEffect(() => {
-    if (paymentMethods.length > 0 && !formData.paymentMethod) {
+    if (onlinePaymentMethods.length > 0 && !formData.paymentMethod) {
       setFormData(prev => ({
         ...prev,
-        paymentMethod: paymentMethods[0].code
+        paymentMethod: onlinePaymentMethods[0].code
       }));
     }
-  }, [paymentMethods]);
+  }, [onlinePaymentMethods]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
@@ -134,60 +132,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     }
   };
 
-  const handleMarkAsPaid = async () => {
-    if (!offlineOrderData) {
-      toast.error("No order data available");
-      return;
-    }
-
-    console.log('Marking order as paid:', offlineOrderData);
-
-    try {
-      setLoading(true);
-      
-      // Get current session to authenticate the request
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("You must be logged in as admin to mark orders as paid");
-        setLoading(false);
-        return;
-      }
-      
-      // Mark as paid via edge function with authentication
-      const { data, error } = await supabase.functions.invoke('mark-offline-paid', {
-        body: { order_id: offlineOrderData.orderId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
-      console.log('mark-offline-paid result:', { data, error });
-
-      if (error) {
-        console.error('Function error:', error);
-        toast.error(`Failed to mark as paid: ${error.message || 'Unknown error'}`);
-        return;
-      }
-
-      if (!data?.success) {
-        console.error('Mark as paid failed:', data);
-        toast.error(data?.message || 'Failed to mark as paid');
-        return;
-      }
-
-      toast.success("Payment confirmed! Your order is now being processed.");
-      setShowOfflineDialog(false);
-      
-      // Refresh and navigate to home with order success parameters
-      window.location.href = '/?orderSuccess=true&orderNumber=' + offlineOrderData.orderNumber + '&total=' + offlineOrderData.total;
-    } catch (error: any) {
-      console.error('Error marking order as paid:', error);
-      toast.error(`Failed to mark as paid: ${error.message || 'Unknown error'}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -205,50 +149,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       
       // Format phone number for gateway metadata
       const phoneNumber = normalizePhoneNumber(formData.phone);
-
-      // Check if payment method is offline
-      const selectedMethod = paymentMethods.find(m => m.code === formData.paymentMethod);
-      if (selectedMethod?.category === 'offline') {
-        // For offline payment, save order and send admin notification
-        const baseOrderData = {
-          order_number: orderId,
-          customer_name: formData.fullName,
-          customer_phone: phoneNumber,
-          delivery_address: `${formData.address}, ${selectedStreet?.name}, ${formData.town}`,
-          town: formData.town,
-          items,
-          subtotal: total,
-          delivery_fee: deliveryFee,
-          total: finalTotal,
-          notes: formData.notes,
-          payment_method: 'offline'
-        };
-
-        const orderData = optimizeOrderData(baseOrderData);
-
-        const { data, error } = await supabase.functions.invoke('offline-payment', {
-          body: { orderData }
-        });
-
-        if (error || !data?.success) {
-          toast.error(error?.message || 'Failed to place offline order');
-          setLoading(false);
-          return;
-        }
-
-        toast.success("Order placed successfully!");
-        
-        // Store order data and show dialog instead of navigating
-        setOfflineOrderData({
-          orderNumber: orderId,
-          total: finalTotal,
-          customerInfo: formData,
-          orderId: data.order_id
-        });
-        setShowOfflineDialog(true);
-        setLoading(false);
-        return;
-      }
 
       // Prepare order data for database storage (if needed later)
       const orderData = {
@@ -498,96 +398,49 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
                   <p className="text-sm text-muted-foreground mt-2">Loading payment methods...</p>
                 </div>
               ) : (
-                <>
-                  {/* Online Payment Methods */}
-                  {paymentMethods.filter(method => method.category === 'online').length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-medium text-muted-foreground">Online Payments</h3>
-                      {paymentMethods.filter(method => method.category === 'online').map((method) => (
-                        <div 
-                          key={method.code}
-                          className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                            formData.paymentMethod === method.code 
-                              ? 'border-primary bg-primary/10' 
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                          onClick={() => handleInputChange('paymentMethod', method.code)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                              {formData.paymentMethod === method.code && (
-                                <div className="w-2 h-2 bg-primary rounded-full"></div>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-medium">{method.name}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {method.description}
+                <div className="space-y-3">
+                  {onlinePaymentMethods.length > 0 ? (
+                    onlinePaymentMethods.map((method) => (
+                      <div 
+                        key={method.code}
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                          formData.paymentMethod === method.code 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        onClick={() => handleInputChange('paymentMethod', method.code)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                            {formData.paymentMethod === method.code && (
+                              <div className="w-2 h-2 bg-primary rounded-full"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-medium">{method.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {method.description}
+                            </p>
+                            {method.fees && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Fees: {method.fees}
                               </p>
-                              {method.fees && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Fees: {method.fees}
-                                </p>
-                              )}
-                              {method.processing_time && (
-                                <p className="text-xs text-primary font-medium">
-                                  {method.processing_time}
-                                </p>
-                              )}
-                            </div>
+                            )}
+                            {method.processing_time && (
+                              <p className="text-xs text-primary font-medium">
+                                {method.processing_time}
+                              </p>
+                            )}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No payment methods available at the moment.
+                    </p>
                   )}
-
-                  {/* Offline Payment Methods */}
-                  {paymentMethods.filter(method => method.category === 'offline').length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-medium text-muted-foreground">Offline Payments</h3>
-                      {paymentMethods.filter(method => method.category === 'offline').map((method) => (
-                        <div 
-                          key={method.code}
-                          className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                            formData.paymentMethod === method.code 
-                              ? 'border-primary bg-primary/10' 
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                          onClick={() => handleInputChange('paymentMethod', method.code)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                              {formData.paymentMethod === method.code && (
-                                <div className="w-2 h-2 bg-primary rounded-full"></div>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-medium">{method.name}</h3>
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                  Manual Verification
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {method.description}
-                              </p>
-                              {method.fees && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Fees: {method.fees}
-                                </p>
-                              )}
-                              {method.processing_time && (
-                                <p className="text-xs text-primary font-medium">
-                                  Processing: {method.processing_time}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -608,18 +461,6 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
           </Button>
         </form>
       </div>
-      
-      {/* Offline Payment Dialog */}
-      <OfflinePaymentDialog
-        isOpen={showOfflineDialog}
-        onClose={() => setShowOfflineDialog(false)}
-        onMarkPaid={handleMarkAsPaid}
-        orderData={offlineOrderData || {
-          orderNumber: '',
-          total: 0,
-          customerInfo: { fullName: '', phone: '' }
-        }}
-      />
     </div>
   );
 };
