@@ -4,9 +4,10 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CreditCard, Truck } from 'lucide-react';
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,10 @@ export default function AdminSettings() {
   const [flatPrice, setFlatPrice] = useState(1000);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
+  
+  // Payment settings
+  const [paymentMode, setPaymentMode] = useState<'delivery' | 'online'>('delivery');
+  const [onlinePaymentsEnabled, setOnlinePaymentsEnabled] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -24,22 +29,32 @@ export default function AdminSettings() {
     try {
       const { data, error } = await supabase
         .from('app_settings')
-        .select('value')
-        .eq('key', 'pricing_mode')
-        .single();
+        .select('key, value');
 
       if (error) throw error;
-      if (data?.value && typeof data.value === 'object' && 'mode' in data.value) {
-        const settings = data.value as { 
-          mode: 'simple' | 'restaurant'; 
-          flat_price?: number;
-          availability_hours?: { start: string; end: string };
-        };
-        setPricingMode(settings.mode);
-        setFlatPrice(settings.flat_price || 1000);
-        setStartTime(settings.availability_hours?.start || '09:00');
-        setEndTime(settings.availability_hours?.end || '18:00');
-      }
+      
+      data?.forEach(setting => {
+        if (setting.key === 'pricing_mode' && setting.value && typeof setting.value === 'object' && 'mode' in setting.value) {
+          const pricingSettings = setting.value as { 
+            mode: 'simple' | 'restaurant'; 
+            flat_price?: number;
+            availability_hours?: { start: string; end: string };
+          };
+          setPricingMode(pricingSettings.mode);
+          setFlatPrice(pricingSettings.flat_price || 1000);
+          setStartTime(pricingSettings.availability_hours?.start || '09:00');
+          setEndTime(pricingSettings.availability_hours?.end || '18:00');
+        }
+        
+        if (setting.key === 'payment_mode' && setting.value && typeof setting.value === 'object') {
+          const paymentSettings = setting.value as {
+            mode: 'delivery' | 'online';
+            online_payments_enabled: boolean;
+          };
+          setPaymentMode(paymentSettings.mode);
+          setOnlinePaymentsEnabled(paymentSettings.online_payments_enabled);
+        }
+      });
     } catch (error) {
       console.error('Error fetching settings:', error);
       toast.error('Failed to load settings');
@@ -48,7 +63,7 @@ export default function AdminSettings() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSavePricing = async () => {
     setSaving(true);
     try {
       const { error } = await supabase
@@ -66,10 +81,33 @@ export default function AdminSettings() {
         .eq('key', 'pricing_mode');
 
       if (error) throw error;
-      toast.success('Settings updated successfully');
+      toast.success('Pricing settings updated successfully');
     } catch (error) {
-      console.error('Error saving settings:', error);
-      toast.error('Failed to save settings');
+      console.error('Error saving pricing settings:', error);
+      toast.error('Failed to save pricing settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSavePayment = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({
+          value: {
+            mode: paymentMode,
+            online_payments_enabled: onlinePaymentsEnabled
+          }
+        })
+        .eq('key', 'payment_mode');
+
+      if (error) throw error;
+      toast.success('Payment settings updated successfully');
+    } catch (error) {
+      console.error('Error saving payment settings:', error);
+      toast.error('Failed to save payment settings');
     } finally {
       setSaving(false);
     }
@@ -84,9 +122,73 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-4xl space-y-6">
       <h1 className="text-3xl font-bold mb-6">App Settings</h1>
       
+      {/* Payment Mode Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Mode
+          </CardTitle>
+          <CardDescription>
+            Control how customers pay for their orders
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <RadioGroup 
+            value={paymentMode} 
+            onValueChange={(value: 'delivery' | 'online') => setPaymentMode(value)}
+          >
+            <div className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="delivery" id="delivery" />
+              <div className="space-y-1 leading-none flex-1">
+                <Label htmlFor="delivery" className="font-medium cursor-pointer flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-green-600" />
+                  Payment on Delivery
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Customers pay when their order is delivered. Increases trust for new customers.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+              <RadioGroupItem value="online" id="online" />
+              <div className="space-y-1 leading-none flex-1">
+                <Label htmlFor="online" className="font-medium cursor-pointer flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-blue-600" />
+                  Online Payment Required
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Customers must pay online before their order is processed. Reduces no-shows.
+                </p>
+              </div>
+            </div>
+          </RadioGroup>
+
+          <div className="flex items-center space-x-2 pt-4 border-t">
+            <Switch
+              id="online-enabled"
+              checked={onlinePaymentsEnabled}
+              onCheckedChange={setOnlinePaymentsEnabled}
+            />
+            <Label htmlFor="online-enabled" className="cursor-pointer">
+              Enable online payment option alongside delivery payment
+            </Label>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            When enabled with "Payment on Delivery" mode, customers can choose to pay online or on delivery.
+          </p>
+
+          <Button onClick={handleSavePayment} disabled={saving} className="w-full sm:w-auto">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Payment Settings
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Pricing Mode Card */}
       <Card>
         <CardHeader>
           <CardTitle>Pricing Mode</CardTitle>
@@ -169,9 +271,9 @@ export default function AdminSettings() {
             </p>
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+          <Button onClick={handleSavePricing} disabled={saving} className="w-full sm:w-auto">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Settings
+            Save Pricing Settings
           </Button>
         </CardContent>
       </Card>
