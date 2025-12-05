@@ -48,3 +48,6 @@ verify_jwt = false
 
 [functions.send-admin-payment-confirmed]
 verify_jwt = false
+
+[functions.create-delivery-order]
+verify_jwt = false

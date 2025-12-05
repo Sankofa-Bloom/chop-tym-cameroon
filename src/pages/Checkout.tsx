@@ -1,6 +1,6 @@
 // Optimized checkout component for processing orders
 import { useState, useEffect } from "react";
-import { ArrowLeft, CreditCard, MapPin, Phone, User, Loader2 } from "lucide-react";
+import { ArrowLeft, CreditCard, MapPin, Phone, User, Loader2, Truck, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import { useAppSettings } from "@/hooks/useAppSettings";
 import { validateOrderData, optimizeOrderData, normalizePhoneNumber } from "@/utils/checkoutOptimization";
 
 interface CheckoutItem {
@@ -44,11 +45,12 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     notes: "",
     town: selectedTown,
     street: "",
-    paymentMethod: 'swychr' as string
+    paymentMethod: 'delivery' as string
   });
 
   const { createPaymentAndRedirect } = useAuth();
   const { paymentMethods, loading: paymentMethodsLoading } = usePaymentMethods();
+  const { paymentMode, loading: settingsLoading } = useAppSettings();
   
   // Filter to only online payment methods
   const onlinePaymentMethods = paymentMethods.filter(method => method.category === 'online');
@@ -78,15 +80,22 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     }
   }, [formData.town, towns]);
 
-  // Set default payment method to first available online method
+  // Set default payment method based on settings
   useEffect(() => {
-    if (onlinePaymentMethods.length > 0 && !formData.paymentMethod) {
-      setFormData(prev => ({
-        ...prev,
-        paymentMethod: onlinePaymentMethods[0].code
-      }));
+    if (!settingsLoading) {
+      if (paymentMode.mode === 'delivery') {
+        setFormData(prev => ({
+          ...prev,
+          paymentMethod: 'delivery'
+        }));
+      } else if (onlinePaymentMethods.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          paymentMethod: onlinePaymentMethods[0].code
+        }));
+      }
     }
-  }, [onlinePaymentMethods]);
+  }, [paymentMode, settingsLoading, onlinePaymentMethods.length]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-CM', {
@@ -132,8 +141,7 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
     }
   };
 
-  const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDeliveryPayment = async () => {
     setLoading(true);
 
     try {
@@ -146,23 +154,65 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
       }
 
       const orderId = await generateTownOrderId(formData.town);
-      
-      // Format phone number for gateway metadata
       const phoneNumber = normalizePhoneNumber(formData.phone);
 
-      // Prepare order data for database storage (if needed later)
       const orderData = {
+        order_number: orderId,
+        customer_name: formData.fullName,
+        customer_phone: phoneNumber,
+        delivery_address: `${formData.address}, ${selectedStreet?.name}, ${formData.town}`,
+        town: formData.town,
         items,
-        customerInfo: {
-          ...formData,
-          selectedZone: selectedStreet?.delivery_zone?.zone_name,
-          selectedStreet: selectedStreet?.name
-        },
         subtotal: total,
-        deliveryFee,
+        delivery_fee: deliveryFee,
         total: finalTotal,
-        timestamp: new Date().toISOString()
+        notes: formData.notes
       };
+
+      const { data, error } = await supabase.functions.invoke('create-delivery-order', {
+        body: { orderData }
+      });
+
+      if (error || !data?.success) {
+        toast.error(data?.error || 'Failed to place order');
+        setLoading(false);
+        return;
+      }
+
+      // Navigate to confirmation page
+      navigate('/order-confirmation', {
+        state: {
+          orderNumber: data.order_number,
+          orderData: {
+            ...orderData,
+            payment_method: 'delivery',
+            payment_status: 'pending_delivery'
+          }
+        }
+      });
+
+      onSuccess({ ...orderData, orderNumber: data.order_number });
+    } catch (error) {
+      console.error('Error in delivery checkout:', error);
+      toast.error('An error occurred. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleOnlinePayment = async () => {
+    setLoading(true);
+
+    try {
+      // Validate required fields quickly
+      const validation = validateOrderData(formData);
+      if (!validation.isValid) {
+        toast.error(validation.errors[0]);
+        setLoading(false);
+        return;
+      }
+
+      const orderId = await generateTownOrderId(formData.town);
+      const phoneNumber = normalizePhoneNumber(formData.phone);
 
       const { error } = await createPaymentAndRedirect({
         orderNumber: orderId,
@@ -204,15 +254,26 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
         toast.error(error.message);
         return;
       }
-
-      // onSuccess likely won't run due to redirect, but keep for safety
-      onSuccess({ ...orderData, orderNumber: orderId });
     } catch (error) {
-      console.error('Error in checkout process:', error);
+      console.error('Error in online checkout:', error);
       toast.error('An error occurred. Please try again.');
       setLoading(false);
     }
   };
+
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.paymentMethod === 'delivery') {
+      await handleDeliveryPayment();
+    } else {
+      await handleOnlinePayment();
+    }
+  };
+
+  // Determine which payment options to show
+  const showDeliveryOption = paymentMode.mode === 'delivery';
+  const showOnlineOptions = paymentMode.mode === 'online' || paymentMode.online_payments_enabled;
 
   return (
     <div className="min-h-screen bg-background">
@@ -392,50 +453,98 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
             </h2>
             
             <div className="space-y-4">
-              {paymentMethodsLoading ? (
+              {(paymentMethodsLoading || settingsLoading) ? (
                 <div className="text-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                   <p className="text-sm text-muted-foreground mt-2">Loading payment methods...</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {onlinePaymentMethods.length > 0 ? (
-                    onlinePaymentMethods.map((method) => (
-                      <div 
-                        key={method.code}
-                        className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
-                          formData.paymentMethod === method.code 
-                            ? 'border-primary bg-primary/10' 
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                        onClick={() => handleInputChange('paymentMethod', method.code)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                            {formData.paymentMethod === method.code && (
-                              <div className="w-2 h-2 bg-primary rounded-full"></div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-medium">{method.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {method.description}
+                  {/* Payment on Delivery Option */}
+                  {showDeliveryOption && (
+                    <div 
+                      className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                        formData.paymentMethod === 'delivery' 
+                          ? 'border-green-500 bg-green-500/10' 
+                          : 'border-border hover:border-green-500/50'
+                      }`}
+                      onClick={() => handleInputChange('paymentMethod', 'delivery')}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full border-2 border-green-500 flex items-center justify-center">
+                          {formData.paymentMethod === 'delivery' && (
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-green-600" />
+                            Payment on Delivery
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Pay cash when your order arrives
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                            <p className="text-xs text-green-600 font-medium">
+                              No upfront payment required
                             </p>
-                            {method.fees && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Fees: {method.fees}
-                              </p>
-                            )}
-                            {method.processing_time && (
-                              <p className="text-xs text-primary font-medium">
-                                {method.processing_time}
-                              </p>
-                            )}
                           </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
+                    </div>
+                  )}
+
+                  {/* Online Payment Options */}
+                  {showOnlineOptions && onlinePaymentMethods.length > 0 && (
+                    <>
+                      {showDeliveryOption && (
+                        <div className="relative py-2">
+                          <Separator />
+                          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
+                            or pay online
+                          </span>
+                        </div>
+                      )}
+                      {onlinePaymentMethods.map((method) => (
+                        <div 
+                          key={method.code}
+                          className={`border-2 rounded-xl p-4 cursor-pointer transition-colors ${
+                            formData.paymentMethod === method.code 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                          onClick={() => handleInputChange('paymentMethod', method.code)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                              {formData.paymentMethod === method.code && (
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-medium">{method.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {method.description}
+                              </p>
+                              {method.fees && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Fees: {method.fees}
+                                </p>
+                              )}
+                              {method.processing_time && (
+                                <p className="text-xs text-primary font-medium">
+                                  {method.processing_time}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {!showDeliveryOption && !showOnlineOptions && (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No payment methods available at the moment.
                     </p>
@@ -455,8 +564,10 @@ export const Checkout = ({ items, total, selectedTown, onBack, onSuccess }: Chec
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...
               </>
+            ) : formData.paymentMethod === 'delivery' ? (
+              `Place Order - Pay ${formatPrice(finalTotal)} on Delivery`
             ) : (
-              `Place Order - ${formatPrice(finalTotal)}`
+              `Pay Now - ${formatPrice(finalTotal)}`
             )}
           </Button>
         </form>
