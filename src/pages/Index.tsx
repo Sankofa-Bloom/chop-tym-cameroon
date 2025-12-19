@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package, Phone, Mail, UtensilsCrossed } from "lucide-react";
+import { Search, ShoppingCart, Star, Users, MapPin, Clock, Package, Phone, Mail, UtensilsCrossed, Truck } from "lucide-react";
 import { FoodCard } from "@/components/FoodCard";
 import { FoodDetail } from "@/components/FoodDetail";
 import { CartSheet } from "@/components/CartSheet";
@@ -20,9 +20,11 @@ import { Profile } from "@/components/Profile";
 import { Toaster } from "@/components/ui/sonner";
 import { useRestaurants, useDishes, useRestaurantDishes, Dish } from "@/hooks/useRealTimeData";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import { ServicesHub, ServiceType } from "@/components/ServicesHub";
+import { ServiceRequestForm } from "@/components/ServiceRequestForm";
 import heroImage from "@/assets/choptym-delivery-hero.jpg";
 
-type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile" | "custom";
+type AppState = "browsing" | "detail" | "checkout" | "confirmation" | "profile" | "custom" | "services" | "service-form";
 
 interface CartItem {
   id: string;
@@ -73,6 +75,7 @@ export default function Index() {
   const [showSearch, setShowSearch] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [selectedServiceType, setSelectedServiceType] = useState<ServiceType | null>(null);
 
   // Check for order success parameters
   useEffect(() => {
@@ -252,6 +255,22 @@ export default function Index() {
     setActiveTab("custom");
   };
 
+  const handleServicesClick = () => {
+    setAppState("services");
+    setActiveTab("custom");
+  };
+
+  const handleSelectService = (serviceType: ServiceType) => {
+    setSelectedServiceType(serviceType);
+    setAppState("service-form");
+  };
+
+  const handleServiceSuccess = () => {
+    setAppState("browsing");
+    setActiveTab("home");
+    setSelectedServiceType(null);
+  };
+
   // Filter dishes based on search query
   const filteredDishes = searchQuery 
     ? dishesWithPricing.filter(dish => 
@@ -324,6 +343,24 @@ export default function Index() {
             setAppState("browsing");
             setActiveTab("home");
           }}
+        />
+      ) : appState === "services" ? (
+        <ServicesHub
+          key="services"
+          selectedTown={selectedTown}
+          onBack={() => {
+            setAppState("browsing");
+            setActiveTab("home");
+          }}
+          onSelectService={handleSelectService}
+        />
+      ) : appState === "service-form" && selectedServiceType ? (
+        <ServiceRequestForm
+          key="service-form"
+          serviceType={selectedServiceType}
+          selectedTown={selectedTown}
+          onBack={() => setAppState("services")}
+          onSuccess={handleServiceSuccess}
         />
       ) : (
         <motion.div
@@ -565,16 +602,17 @@ export default function Index() {
                         className="bg-white text-primary hover:bg-white/90 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-4 text-lg rounded-full border-2 border-white/20"
                         onClick={() => handleSearchClick()}
                       >
-                        Browse Menu
+                        <UtensilsCrossed className="w-5 h-5 mr-2" />
+                        Order Food
                       </Button>
                       <Button 
                         size="lg" 
                         variant="outline"
                         className="bg-white/10 text-white border-white/30 hover:bg-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold px-8 py-4 text-lg rounded-full backdrop-blur-sm"
-                        onClick={handleCustomOrderClick}
+                        onClick={handleServicesClick}
                       >
-                        <Package className="w-5 h-5 mr-2" />
-                        Order Anything
+                        <Truck className="w-5 h-5 mr-2" />
+                        ChopTym Services
                       </Button>
                     </motion.div>
 
@@ -585,8 +623,8 @@ export default function Index() {
                       className="mt-6 pt-6 border-t border-white/20"
                     >
                       <p className="text-white/70 text-sm">
-                        <strong className="text-white">Can't find what you want?</strong> We deliver groceries, documents, 
-                        pharmacy items, gifts, and more from anywhere in {selectedTown}!
+                        <strong className="text-white">ChopTym Services:</strong> Errands, Package Delivery, Pickups & Drop-offs, 
+                        and Custom Requests in {selectedTown}!
                       </p>
                     </motion.div>
                   </motion.div>
@@ -704,6 +742,7 @@ export default function Index() {
             cartItemCount={cartItemCount}
             onSearchClick={handleSearchClick}
             onCustomOrderClick={handleCustomOrderClick}
+            onServicesClick={handleServicesClick}
           />
           
           <CartSheet 

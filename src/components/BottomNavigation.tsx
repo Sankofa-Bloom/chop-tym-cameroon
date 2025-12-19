@@ -1,4 +1,4 @@
-import { Home, Search, ShoppingCart, User, Package } from "lucide-react";
+import { Home, Search, ShoppingCart, User, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BottomNavigationProps {
@@ -8,6 +8,7 @@ interface BottomNavigationProps {
   cartItemCount?: number;
   onSearchClick?: () => void;
   onCustomOrderClick?: () => void;
+  onServicesClick?: () => void;
 }
 
 export const BottomNavigation = ({ 
@@ -16,7 +17,8 @@ export const BottomNavigation = ({
   onCartClick,
   cartItemCount = 0,
   onSearchClick,
-  onCustomOrderClick
+  onCustomOrderClick,
+  onServicesClick
 }: BottomNavigationProps) => {
   const tabs = [
     { 
@@ -35,12 +37,12 @@ export const BottomNavigation = ({
       }
     },
     { 
-      id: "custom", 
-      label: "Custom", 
-      icon: Package,
+      id: "services", 
+      label: "Services", 
+      icon: Truck,
       onClick: () => {
-        onTabChange?.("custom");
-        onCustomOrderClick?.();
+        onTabChange?.("services");
+        onServicesClick?.();
       }
     },
     { 
