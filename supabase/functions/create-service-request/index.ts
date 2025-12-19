@@ -124,23 +124,25 @@ PAYMENT PREFERENCE: ${payload.paymentMethod === "delivery" ? "Pay on Delivery" :
 
     console.log("Service request created successfully:", order.order_number);
 
-    // Send admin notification (fire and forget)
+    // Send service-specific notification (fire and forget)
     try {
-      await supabase.functions.invoke("send-admin-order-placed", {
+      await supabase.functions.invoke("send-service-notification", {
         body: {
-          orderNumber: order.order_number,
+          serviceNumber: order.order_number,
+          serviceType: payload.serviceType,
           customerName: order.customer_name,
           customerPhone: order.customer_phone,
           town: order.town,
-          total: "Price TBD",
+          pickupLocation: payload.pickupLocation,
+          dropoffLocation: payload.dropoffLocation,
+          description: payload.description,
+          optionalMessage: payload.optionalMessage,
           paymentMethod: order.payment_method,
-          items: order.items,
-          notes: order.notes,
         },
       });
-      console.log("Admin notification sent for service request");
+      console.log("Service notification sent successfully");
     } catch (notifError) {
-      console.error("Failed to send admin notification:", notifError);
+      console.error("Failed to send service notification:", notifError);
       // Don't fail the request if notification fails
     }
 
