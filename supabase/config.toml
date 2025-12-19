@@ -51,3 +51,6 @@ verify_jwt = false
 
 [functions.create-delivery-order]
 verify_jwt = false
+
+[functions.create-service-request]
+verify_jwt = false
