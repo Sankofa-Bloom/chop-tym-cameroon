@@ -34,6 +34,7 @@ const sidebarItems = [
   { title: "Delivery", url: "/admin/delivery", icon: MapPin },
   { title: "Payment Methods", url: "/admin/payment-methods", icon: CreditCard },
   { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
+  { title: "Service Requests", url: "/admin/services", icon: Zap },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 

@@ -14,6 +14,7 @@ import { DashboardOverview } from "@/components/admin/DashboardOverview";
 import { RestaurantManagement } from "@/components/admin/RestaurantManagement";
 import { DeliveryManagement } from "@/components/admin/DeliveryManagement";
 import { OrdersManagement } from "@/components/admin/OrdersManagement";
+import { ServiceRequestsManagement } from "@/components/admin/ServiceRequestsManagement";
 import AdminComplements from "./pages/admin/AdminComplements";
 import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -80,6 +81,11 @@ const App = () => {
             <Route path="/admin/orders" element={
               <ProtectedAdminRoute>
                 <AdminLayout><OrdersManagement /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/services" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><ServiceRequestsManagement /></AdminLayout>
               </ProtectedAdminRoute>
             } />
             <Route path="/admin/settings" element={
