@@ -179,6 +179,59 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          notes: string | null
+          order_id: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          status: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -562,7 +615,11 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_finance_access: { Args: { user_id?: string }; Returns: boolean }
+      has_insights_access: { Args: { user_id?: string }; Returns: boolean }
+      has_operations_access: { Args: { user_id?: string }; Returns: boolean }
       is_admin: { Args: { user_id?: string }; Returns: boolean }
+      is_any_admin: { Args: { user_id?: string }; Returns: boolean }
       is_restaurant_open: {
         Args: {
           restaurant_row: Database["public"]["Tables"]["restaurants"]["Row"]
@@ -572,7 +629,12 @@ export type Database = {
       make_user_admin: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role:
+        | "admin"
+        | "user"
+        | "admin_operations"
+        | "admin_finance"
+        | "admin_insights"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -700,7 +762,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: [
+        "admin",
+        "user",
+        "admin_operations",
+        "admin_finance",
+        "admin_insights",
+      ],
     },
   },
 } as const
