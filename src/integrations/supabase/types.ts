@@ -232,6 +232,171 @@ export type Database = {
           },
         ]
       }
+      operational_orders: {
+        Row: {
+          actual_amount: number | null
+          assigned_rider_id: string | null
+          created_at: string
+          created_by: string
+          customer_name: string
+          customer_phone: string
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          dropoff_location: string
+          estimated_amount: number
+          id: string
+          is_deleted: boolean
+          order_source: Database["public"]["Enums"]["operational_order_source"]
+          order_type: Database["public"]["Enums"]["operational_order_type"]
+          payment_method: string
+          payment_status: string
+          pickup_location: string
+          reference_id: string
+          status: Database["public"]["Enums"]["operational_order_status"]
+          town: string
+          updated_at: string
+        }
+        Insert: {
+          actual_amount?: number | null
+          assigned_rider_id?: string | null
+          created_at?: string
+          created_by: string
+          customer_name: string
+          customer_phone: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          dropoff_location: string
+          estimated_amount?: number
+          id?: string
+          is_deleted?: boolean
+          order_source: Database["public"]["Enums"]["operational_order_source"]
+          order_type: Database["public"]["Enums"]["operational_order_type"]
+          payment_method?: string
+          payment_status?: string
+          pickup_location: string
+          reference_id: string
+          status?: Database["public"]["Enums"]["operational_order_status"]
+          town?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_amount?: number | null
+          assigned_rider_id?: string | null
+          created_at?: string
+          created_by?: string
+          customer_name?: string
+          customer_phone?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          dropoff_location?: string
+          estimated_amount?: number
+          id?: string
+          is_deleted?: boolean
+          order_source?: Database["public"]["Enums"]["operational_order_source"]
+          order_type?: Database["public"]["Enums"]["operational_order_type"]
+          payment_method?: string
+          payment_status?: string
+          pickup_location?: string
+          reference_id?: string
+          status?: Database["public"]["Enums"]["operational_order_status"]
+          town?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_orders_assigned_rider_id_fkey"
+            columns: ["assigned_rider_id"]
+            isOneToOne: false
+            referencedRelation: "riders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_activity_log: {
+        Row: {
+          action_by: string
+          action_type: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          notes: string | null
+          operational_order_id: string
+          previous_value: Json | null
+        }
+        Insert: {
+          action_by: string
+          action_type: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          operational_order_id: string
+          previous_value?: Json | null
+        }
+        Update: {
+          action_by?: string
+          action_type?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          operational_order_id?: string
+          previous_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_activity_log_operational_order_id_fkey"
+            columns: ["operational_order_id"]
+            isOneToOne: false
+            referencedRelation: "operational_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_notes: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          is_deleted: boolean
+          note: string
+          operational_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          is_deleted?: boolean
+          note: string
+          operational_order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          is_deleted?: boolean
+          note?: string
+          operational_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_notes_operational_order_id_fkey"
+            columns: ["operational_order_id"]
+            isOneToOne: false
+            referencedRelation: "operational_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -487,6 +652,42 @@ export type Database = {
         }
         Relationships: []
       }
+      riders: {
+        Row: {
+          created_at: string
+          current_status: Database["public"]["Enums"]["rider_status"]
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_status?: Database["public"]["Enums"]["rider_status"]
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_status?: Database["public"]["Enums"]["rider_status"]
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       streets: {
         Row: {
           created_at: string
@@ -606,6 +807,7 @@ export type Database = {
     }
     Functions: {
       create_admin_user_role: { Args: { user_id: string }; Returns: undefined }
+      generate_operational_order_reference: { Args: never; Returns: string }
       generate_order_number: { Args: never; Returns: string }
       generate_town_order_number: {
         Args: { order_town: string }
@@ -635,6 +837,21 @@ export type Database = {
         | "admin_operations"
         | "admin_finance"
         | "admin_insights"
+      operational_order_source:
+        | "whatsapp"
+        | "phone_call"
+        | "walk_in"
+        | "emergency"
+      operational_order_status:
+        | "pending"
+        | "assigned"
+        | "picked_up"
+        | "in_transit"
+        | "delivered"
+        | "cancelled"
+        | "failed"
+      operational_order_type: "food" | "errand" | "parcel" | "custom"
+      rider_status: "available" | "busy" | "offline"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -769,6 +986,23 @@ export const Constants = {
         "admin_finance",
         "admin_insights",
       ],
+      operational_order_source: [
+        "whatsapp",
+        "phone_call",
+        "walk_in",
+        "emergency",
+      ],
+      operational_order_status: [
+        "pending",
+        "assigned",
+        "picked_up",
+        "in_transit",
+        "delivered",
+        "cancelled",
+        "failed",
+      ],
+      operational_order_type: ["food", "errand", "parcel", "custom"],
+      rider_status: ["available", "busy", "offline"],
     },
   },
 } as const
