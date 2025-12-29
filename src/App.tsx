@@ -18,6 +18,11 @@ import { ServiceRequestsManagement } from "@/components/admin/ServiceRequestsMan
 import AdminComplements from "./pages/admin/AdminComplements";
 import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminFinance from "./pages/admin/AdminFinance";
+import AdminTransactions from "./pages/admin/AdminTransactions";
+import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminInsights from "./pages/admin/AdminInsights";
+import AdminReports from "./pages/admin/AdminReports";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -94,8 +99,36 @@ const App = () => {
               </ProtectedAdminRoute>
             } />
             
+            {/* Finance Zone Routes */}
+            <Route path="/admin/finance" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminFinance /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/transactions" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminTransactions /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/revenue" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminRevenue /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            
+            {/* Insights Zone Routes */}
+            <Route path="/admin/insights" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminInsights /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/reports" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminReports /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
