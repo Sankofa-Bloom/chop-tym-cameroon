@@ -16,10 +16,15 @@ import {
   Star,
   HeartHandshake,
   AlertCircle,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Bike,
+  Box,
+  Navigation,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import heroImage from "@/assets/choptym-delivery-hero.jpg";
 
 const WHATSAPP_NUMBER = "+237670416449";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, '')}?text=Hi%20Choptym%2C%20I%20have%20a%20task%20for%20you`;
@@ -38,6 +43,29 @@ const staggerContainer = {
   }
 };
 
+const floatAnimation = {
+  animate: {
+    y: [0, -10, 0],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  }
+};
+
+const pulseAnimation = {
+  animate: {
+    scale: [1, 1.05, 1],
+    opacity: [0.7, 1, 0.7],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  }
+};
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -48,12 +76,12 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <img 
                 src="/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png" 
-                alt="Choptym"
+                alt="ChopTym Delivery Company"
                 className="w-10 h-10"
               />
               <div>
-                <h1 className="text-xl font-bold font-heading text-primary">Choptym</h1>
-                <p className="text-xs text-muted-foreground">Your delivery partner in Limbe</p>
+                <h1 className="text-xl font-bold font-heading text-primary">ChopTym</h1>
+                <p className="text-xs text-muted-foreground">Delivery Company</p>
               </div>
             </div>
             
@@ -76,8 +104,69 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-16 sm:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+      <section className="relative py-12 sm:py-20 overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={heroImage} 
+            alt="Delivery in action"
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
+        </div>
+
+        {/* Animated Floating Delivery Icons */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div 
+            className="absolute top-16 left-[10%] hidden lg:block"
+            animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Truck className="w-8 h-8 text-primary" />
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="absolute top-32 right-[12%] hidden lg:block"
+            animate={{ y: [0, -12, 0], rotate: [0, -5, 0] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Package className="w-7 h-7 text-primary" />
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="absolute bottom-32 left-[15%] hidden lg:block"
+            animate={{ y: [0, -10, 0], rotate: [0, 3, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Bike className="w-6 h-6 text-primary" />
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="absolute bottom-24 right-[18%] hidden lg:block"
+            animate={{ y: [0, -14, 0], rotate: [0, -4, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.7 }}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Box className="w-7 h-7 text-primary" />
+            </div>
+          </motion.div>
+
+          <motion.div 
+            className="absolute top-48 left-[5%] hidden xl:block"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center">
+              <Navigation className="w-5 h-5 text-primary/70" />
+            </div>
+          </motion.div>
+        </div>
         
         <motion.div 
           className="container mx-auto px-4 max-w-4xl text-center relative z-10"
@@ -85,6 +174,16 @@ export default function LandingPage() {
           animate="animate"
           variants={staggerContainer}
         >
+          {/* Company Badge */}
+          <motion.div 
+            className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6"
+            variants={fadeInUp}
+          >
+            <Truck className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">ChopTym Delivery Company</span>
+            <span className="text-xs text-muted-foreground">• Limbe, Cameroon</span>
+          </motion.div>
+
           <motion.h2 
             className="text-3xl sm:text-4xl md:text-5xl font-bold font-heading leading-tight mb-6 text-foreground"
             variants={fadeInUp}
@@ -97,7 +196,7 @@ export default function LandingPage() {
             className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            From pickups and deliveries to personal errands, Choptym handles the task, 
+            From pickups and deliveries to personal errands, <span className="text-foreground font-medium">ChopTym</span> handles the task, 
             keeps you informed, and makes sure nothing falls through the cracks.
           </motion.p>
 
@@ -149,37 +248,120 @@ export default function LandingPage() {
             </span>
           </motion.div>
 
-          {/* Process Snapshot */}
+          {/* Process Snapshot - Enhanced */}
           <motion.div 
             className="bg-card border border-border rounded-xl p-6 inline-block"
             variants={fadeInUp}
           >
+            <p className="text-xs text-muted-foreground mb-4 uppercase tracking-wider font-medium">How it works</p>
             <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
+              <motion.span 
+                className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full"
+                whileHover={{ scale: 1.05 }}
+              >
                 <MessageCircle className="w-4 h-4 text-primary" />
-                Send task
-              </span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
-              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="text-foreground">Send task</span>
+              </motion.span>
+              <ArrowRight className="w-4 h-4 text-primary hidden sm:block" />
+              <motion.span 
+                className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full"
+                whileHover={{ scale: 1.05 }}
+              >
                 <Users className="w-4 h-4 text-primary" />
-                Assigned
-              </span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
-              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="text-foreground">Assigned</span>
+              </motion.span>
+              <ArrowRight className="w-4 h-4 text-primary hidden sm:block" />
+              <motion.span 
+                className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full"
+                whileHover={{ scale: 1.05 }}
+              >
                 <Package className="w-4 h-4 text-primary" />
-                Picked up
-              </span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
-              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="text-foreground">Picked up</span>
+              </motion.span>
+              <ArrowRight className="w-4 h-4 text-primary hidden sm:block" />
+              <motion.span 
+                className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full"
+                whileHover={{ scale: 1.05 }}
+              >
                 <Truck className="w-4 h-4 text-primary" />
-                Delivered
-              </span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
-              <span className="flex items-center gap-1.5 text-foreground font-medium">
+                <span className="text-foreground">Delivered</span>
+              </motion.span>
+              <ArrowRight className="w-4 h-4 text-primary hidden sm:block" />
+              <motion.span 
+                className="flex items-center gap-1.5 bg-green-500/20 px-3 py-1.5 rounded-full"
+                whileHover={{ scale: 1.05 }}
+              >
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                Confirmed
-              </span>
+                <span className="text-foreground font-medium">Confirmed</span>
+              </motion.span>
             </div>
+          </motion.div>
+
+          {/* Delivery Visual Illustration */}
+          <motion.div 
+            className="mt-12 flex items-center justify-center gap-4"
+            variants={fadeInUp}
+          >
+            <motion.div 
+              className="flex items-center gap-2 text-muted-foreground"
+              animate={{ x: [0, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-xs hidden sm:block">Pickup</span>
+            </motion.div>
+            
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-primary/40"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+            
+            <motion.div 
+              className="relative"
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                <Bike className="w-7 h-7 text-primary-foreground" />
+              </div>
+              <motion.div 
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <Zap className="w-2.5 h-2.5 text-white" />
+              </motion.div>
+            </motion.div>
+            
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-primary/40"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 + 0.5 }}
+                />
+              ))}
+            </div>
+            
+            <motion.div 
+              className="flex items-center gap-2 text-muted-foreground"
+              animate={{ x: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <span className="text-xs hidden sm:block">Delivery</span>
+              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+              </div>
+            </motion.div>
           </motion.div>
         </motion.div>
       </section>
@@ -314,7 +496,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl sm:text-3xl font-bold font-heading mb-4">Why customers trust Choptym</h3>
+            <h3 className="text-2xl sm:text-3xl font-bold font-heading mb-4">Why customers trust ChopTym</h3>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Reliability isn't a feature — it's our foundation.
             </p>
@@ -446,7 +628,7 @@ export default function LandingPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <CheckCircle2 className="w-6 h-6 text-green-500" />
-                    <h4 className="font-semibold text-lg">What Choptym controls</h4>
+                    <h4 className="font-semibold text-lg">What ChopTym controls</h4>
                   </div>
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
@@ -554,11 +736,11 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <img 
                 src="/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png" 
-                alt="Choptym"
+                alt="ChopTym Delivery Company"
                 className="w-8 h-8"
               />
               <div>
-                <p className="font-semibold text-primary">Choptym</p>
+                <p className="font-semibold text-primary">ChopTym Delivery Company</p>
                 <p className="text-xs text-muted-foreground">Your trusted delivery partner in Limbe</p>
               </div>
             </div>
@@ -576,7 +758,7 @@ export default function LandingPage() {
           </div>
           
           <div className="mt-8 pt-6 border-t border-border text-center text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} Choptym. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} ChopTym Delivery Company. All rights reserved.</p>
           </div>
         </div>
       </footer>
