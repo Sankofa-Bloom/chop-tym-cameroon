@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -52,7 +53,8 @@ const App = () => {
         <PWAInstallPrompt />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/order" element={<Index />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/payment-callback" element={<OrderConfirmation />} />
             
