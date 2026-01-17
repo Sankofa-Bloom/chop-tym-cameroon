@@ -4,28 +4,28 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   
-  <!-- Homepage - Main food ordering interface -->
+  <!-- Homepage - Delivery & Errand Service Landing -->
   <url>
     <loc>https://choptym.com/</loc>
-    <lastmod>2025-09-30</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2025-01-17</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  
+  <!-- Food Ordering Page -->
+  <url>
+    <loc>https://choptym.com/order</loc>
+    <lastmod>2025-01-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
   
   <!-- Order Confirmation Page -->
   <url>
     <loc>https://choptym.com/order-confirmation</loc>
-    <lastmod>2025-09-30</lastmod>
+    <lastmod>2025-01-17</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <!-- Payment Callback Page -->
-  <url>
-    <loc>https://choptym.com/payment-callback</loc>
-    <lastmod>2025-09-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.5</priority>
   </url>
 
 </urlset>

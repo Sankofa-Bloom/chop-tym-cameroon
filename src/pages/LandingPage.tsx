@@ -70,47 +70,55 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 max-w-6xl">
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-sm" role="banner">
+        <nav className="container mx-auto px-4 py-4 max-w-6xl" aria-label="Main navigation">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <a href="/" className="flex items-center gap-3" aria-label="ChopTym Delivery Company - Home">
               <img 
                 src="/lovable-uploads/33b7898f-db40-4c09-88d0-be22465c7036.png" 
-                alt="ChopTym Delivery Company"
+                alt="ChopTym - Reliable Delivery Service in Limbe, Cameroon"
                 className="w-10 h-10"
+                width="40"
+                height="40"
               />
               <div>
-                <h1 className="text-xl font-bold font-heading text-primary">ChopTym</h1>
-                <p className="text-xs text-muted-foreground">Delivery Company</p>
+                <span className="text-xl font-bold font-heading text-primary">ChopTym</span>
+                <p className="text-xs text-muted-foreground">Delivery Company · Limbe</p>
               </div>
-            </div>
+            </a>
             
             <div className="flex items-center gap-3">
-              <Link to="/order">
+              <Link to="/order" aria-label="Order food delivery in Limbe">
                 <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2">
-                  <UtensilsCrossed className="w-4 h-4" />
+                  <UtensilsCrossed className="w-4 h-4" aria-hidden="true" />
                   Order Food
                 </Button>
               </Link>
-              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+              <a 
+                href={WHATSAPP_LINK} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Contact ChopTym on WhatsApp for delivery and errand services"
+              >
                 <Button size="sm" className="bg-[#25D366] hover:bg-[#20BD5A] text-white gap-2">
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4" aria-hidden="true" />
                   <span className="hidden sm:inline">WhatsApp</span>
                 </Button>
               </a>
             </div>
           </div>
-        </div>
+        </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-12 sm:py-20 overflow-hidden">
+      {/* Hero Section - Delivery Service in Limbe, Cameroon */}
+      <section className="relative py-12 sm:py-20 overflow-hidden" aria-labelledby="hero-heading">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
             src={heroImage} 
-            alt="Delivery in action"
+            alt="ChopTym delivery rider on motorcycle delivering packages in Limbe, Cameroon"
             className="w-full h-full object-cover opacity-20"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
         </div>
@@ -179,40 +187,47 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6"
             variants={fadeInUp}
           >
-            <Truck className="w-4 h-4 text-primary" />
+            <Truck className="w-4 h-4 text-primary" aria-hidden="true" />
             <span className="text-sm font-medium text-primary">ChopTym Delivery Company</span>
             <span className="text-xs text-muted-foreground">• Limbe, Cameroon</span>
           </motion.div>
 
-          <motion.h2 
+          <motion.h1 
+            id="hero-heading"
             className="text-3xl sm:text-4xl md:text-5xl font-bold font-heading leading-tight mb-6 text-foreground"
             variants={fadeInUp}
           >
-            Get it done properly —{" "}
-            <span className="text-primary">without delays, excuses, or uncertainty.</span>
-          </motion.h2>
+            Reliable Delivery Service in Limbe —{" "}
+            <span className="text-primary">No delays, no excuses, no uncertainty.</span>
+          </motion.h1>
           
           <motion.p 
             className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            From pickups and deliveries to personal errands, <span className="text-foreground font-medium">ChopTym</span> handles the task, 
-            keeps you informed, and makes sure nothing falls through the cracks.
+            From pickups and deliveries to personal errands across Cameroon, <span className="text-foreground font-medium">ChopTym</span> handles the task, 
+            keeps you informed via WhatsApp, and makes sure nothing falls through the cracks. Your trusted errand service in Limbe.
           </motion.p>
 
           <motion.div 
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
             variants={fadeInUp}
           >
-            <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+            <a 
+              href={WHATSAPP_LINK} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-full sm:w-auto"
+              aria-label="Send your delivery or errand task on WhatsApp"
+            >
               <Button size="lg" className="w-full sm:w-auto bg-[#25D366] hover:bg-[#20BD5A] text-white text-lg px-8 py-6 gap-3 shadow-lg hover:shadow-xl transition-all">
-                <MessageCircle className="w-5 h-5" />
+                <MessageCircle className="w-5 h-5" aria-hidden="true" />
                 Send your task on WhatsApp
               </Button>
             </a>
-            <Link to="/order" className="w-full sm:w-auto">
+            <Link to="/order" className="w-full sm:w-auto" aria-label="Order food delivery online in Limbe">
               <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 gap-3">
-                <UtensilsCrossed className="w-5 h-5" />
+                <UtensilsCrossed className="w-5 h-5" aria-hidden="true" />
                 Order Food Online
               </Button>
             </Link>
@@ -366,8 +381,8 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-16 bg-card/50">
+      {/* Services Section - Delivery and Errand Services in Limbe */}
+      <section className="py-16 bg-card/50" aria-labelledby="services-heading">
         <div className="container mx-auto px-4 max-w-5xl">
           <motion.div 
             className="text-center mb-12"
@@ -375,120 +390,125 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl sm:text-3xl font-bold font-heading mb-4">What we handle for you</h3>
+            <h2 id="services-heading" className="text-2xl sm:text-3xl font-bold font-heading mb-4">
+              Delivery & Errand Services in Limbe
+            </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Whether it's across town or a quick pickup, we take care of it so you don't have to stress.
+              Whether it's across Limbe or a quick pickup in Cameroon, we take care of it so you don't have to stress.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6" role="list">
             {/* Deliveries */}
-            <motion.div
+            <motion.article
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
+              role="listitem"
             >
               <Card className="h-full border-border/50 bg-card hover:border-primary/30 transition-colors">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <Truck className="w-6 h-6 text-primary" />
+                    <Truck className="w-6 h-6 text-primary" aria-hidden="true" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">Pickups & Deliveries</h4>
+                  <h3 className="text-lg font-semibold mb-2">Same-Day Delivery in Limbe</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Same-day delivery within Limbe. We pick up from any location and deliver to your destination.
+                    Fast and reliable courier service within Limbe, Cameroon. We pick up from any location and deliver to your destination the same day.
                   </p>
-                  <ul className="text-sm text-muted-foreground space-y-1.5">
+                  <ul className="text-sm text-muted-foreground space-y-1.5" aria-label="Delivery service features">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                      Food orders from restaurants
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
+                      Food delivery from restaurants
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                      Market shopping
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
+                      Market shopping delivery
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                      Package collection
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
+                      Package collection & delivery
                     </li>
                   </ul>
                 </CardContent>
               </Card>
-            </motion.div>
+            </motion.article>
 
             {/* Errands */}
-            <motion.div
+            <motion.article
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
+              role="listitem"
             >
               <Card className="h-full border-border/50 bg-card hover:border-primary/30 transition-colors">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <ShoppingBag className="w-6 h-6 text-primary" />
+                    <ShoppingBag className="w-6 h-6 text-primary" aria-hidden="true" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">Personal Errands</h4>
+                  <h3 className="text-lg font-semibold mb-2">Personal Errand Service</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Need something done but can't leave? We run errands on your behalf with regular updates.
+                    Need something done but can't leave? Our errand runners in Limbe handle tasks on your behalf with regular WhatsApp updates.
                   </p>
-                  <ul className="text-sm text-muted-foreground space-y-1.5">
+                  <ul className="text-sm text-muted-foreground space-y-1.5" aria-label="Errand service features">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                       Bill payments
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                      Queue waiting
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
+                      Queue waiting service
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                       Prescription pickups
                     </li>
                   </ul>
                 </CardContent>
               </Card>
-            </motion.div>
+            </motion.article>
 
             {/* Document Handling */}
-            <motion.div
+            <motion.article
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
+              role="listitem"
             >
               <Card className="h-full border-border/50 bg-card hover:border-primary/30 transition-colors">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <FileText className="w-6 h-6 text-primary" />
+                    <FileText className="w-6 h-6 text-primary" aria-hidden="true" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">Document Handling</h4>
+                  <h3 className="text-lg font-semibold mb-2">Document Courier Service</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Sensitive documents delivered with care. We understand the importance of your paperwork.
+                    Secure document handling and delivery across Limbe and Cameroon. We understand the importance of your paperwork.
                   </p>
-                  <ul className="text-sm text-muted-foreground space-y-1.5">
+                  <ul className="text-sm text-muted-foreground space-y-1.5" aria-label="Document service features">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                       Contract delivery
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                       Office documents
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                       Official submissions
                     </li>
                   </ul>
                 </CardContent>
               </Card>
-            </motion.div>
+            </motion.article>
           </div>
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-16">
+      {/* Trust Section - Why Choose ChopTym */}
+      <section className="py-16" aria-labelledby="trust-heading">
         <div className="container mx-auto px-4 max-w-5xl">
           <motion.div 
             className="text-center mb-12"
@@ -496,9 +516,11 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl sm:text-3xl font-bold font-heading mb-4">Why customers trust ChopTym</h3>
+            <h2 id="trust-heading" className="text-2xl sm:text-3xl font-bold font-heading mb-4">
+              Why Choose ChopTym for Delivery in Cameroon
+            </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Reliability isn't a feature — it's our foundation.
+              Trusted by 250+ customers and 10+ businesses in Limbe. Reliability isn't a feature — it's our foundation.
             </p>
           </motion.div>
 
@@ -544,8 +566,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-16 bg-card/50">
+      {/* Testimonials - Customer Reviews */}
+      <section className="py-16 bg-card/50" aria-labelledby="testimonials-heading">
         <div className="container mx-auto px-4 max-w-5xl">
           <motion.div 
             className="text-center mb-12"
@@ -553,7 +575,9 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl sm:text-3xl font-bold font-heading mb-4">What our customers say</h3>
+            <h2 id="testimonials-heading" className="text-2xl sm:text-3xl font-bold font-heading mb-4">
+              Customer Reviews from Limbe
+            </h2>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
