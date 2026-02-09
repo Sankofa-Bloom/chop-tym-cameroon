@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import heroImage from "@/assets/choptym-delivery-hero.jpg";
+import { PoweredByBadge } from "@/components/PoweredByBadge";
 
 const WHATSAPP_NUMBER = "+237670416449";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, '')}?text=Hi%20Choptym%2C%20I%20have%20a%20task%20for%20you`;
@@ -88,6 +89,9 @@ export default function LandingPage() {
             </a>
             
             <div className="flex items-center gap-3">
+              <Link to="/how-it-works" className="hidden sm:inline-block text-sm text-muted-foreground hover:text-foreground transition-colors">
+                How It Works
+              </Link>
               <Link to="/order" aria-label="Order food delivery in Limbe">
                 <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2">
                   <UtensilsCrossed className="w-4 h-4" aria-hidden="true" />
@@ -770,6 +774,9 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <Link to="/how-it-works" className="hover:text-foreground transition-colors">
+                How It Works
+              </Link>
               <a href="tel:+237670416449" className="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <Phone className="w-4 h-4" />
                 +237 670 416 449
@@ -784,6 +791,7 @@ export default function LandingPage() {
           <div className="mt-8 pt-6 border-t border-border text-center text-xs text-muted-foreground">
             <p>© {new Date().getFullYear()} ChopTym Delivery Company. All rights reserved.</p>
           </div>
+          <PoweredByBadge />
         </div>
       </footer>
     </div>
