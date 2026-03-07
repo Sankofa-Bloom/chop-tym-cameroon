@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoweredByBadge } from "@/components/PoweredByBadge";
+import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
 
 const WHATSAPP_NUMBER = "+237670416449";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, '')}?text=Hi%20Choptym%2C%20I%20have%20a%20task%20for%20you`;
