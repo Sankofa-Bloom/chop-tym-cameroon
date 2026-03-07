@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import HowItWorks from "./pages/HowItWorks";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -57,6 +59,8 @@ const App = () => {
             <Route path="/" element={<LandingPage />} />
             <Route path="/order" element={<Index />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/payment-callback" element={<OrderConfirmation />} />
             

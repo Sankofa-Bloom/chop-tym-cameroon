@@ -92,6 +92,9 @@ export default function LandingPage() {
               <Link to="/how-it-works" className="hidden sm:inline-block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 How It Works
               </Link>
+              <Link to="/blog" className="hidden sm:inline-block text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Blog
+              </Link>
               <Link to="/order" aria-label="Order food delivery in Limbe">
                 <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-2">
                   <UtensilsCrossed className="w-4 h-4" aria-hidden="true" />
@@ -776,6 +779,9 @@ export default function LandingPage() {
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link to="/how-it-works" className="hover:text-foreground transition-colors">
                 How It Works
+              </Link>
+              <Link to="/blog" className="hover:text-foreground transition-colors">
+                Blog
               </Link>
               <a href="tel:+237670416449" className="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <Phone className="w-4 h-4" />
