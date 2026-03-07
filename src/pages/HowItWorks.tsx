@@ -342,7 +342,9 @@ export default function HowItWorks() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Testimonials */}
+      <TestimonialsCarousel />
+
       <section className="py-20 bg-gradient-to-b from-primary/10 to-transparent" aria-labelledby="cta-heading">
         <motion.div
           className="container mx-auto px-4 max-w-3xl text-center"
