@@ -95,7 +95,7 @@ export const PWAInstallPrompt = () => {
                 Install ChopTym App
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Get faster access to your favorite meals with our app. Install now for the best experience!
+                Fast food delivery, errands, packages, and more. Get instant access to all ChopTym services via WhatsApp!
               </p>
               <div className="flex gap-2 mt-3">
                 <Button 
