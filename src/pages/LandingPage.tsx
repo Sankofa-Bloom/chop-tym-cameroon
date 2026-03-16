@@ -783,6 +783,9 @@ export default function LandingPage() {
               <Link to="/blog" className="hover:text-foreground transition-colors">
                 Blog
               </Link>
+              <Link to="/resources" className="hover:text-foreground transition-colors">
+                Resources
+              </Link>
               <a href="tel:+237670416449" className="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <Phone className="w-4 h-4" />
                 +237 670 416 449

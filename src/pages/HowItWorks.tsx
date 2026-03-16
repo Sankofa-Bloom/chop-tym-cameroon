@@ -406,6 +406,7 @@ export default function HowItWorks() {
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
               <Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link>
+              <Link to="/resources" className="hover:text-foreground transition-colors">Resources</Link>
               <Link to="/order" className="hover:text-foreground transition-colors">Order Food</Link>
               <a
                 href={WHATSAPP_LINK}
