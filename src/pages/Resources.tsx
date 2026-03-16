@@ -57,6 +57,20 @@ const Resources = () => {
                 {" – downloadable, curated lists of active startup investors, angels, VCs, and family offices."}
               </p>
             </div>
+            <div className="flex items-start gap-3">
+              <ExternalLink className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                <a
+                  href="https://www.sankofabloom.com/"
+                  target="_blank"
+                  rel="noopener"
+                  className="text-primary font-medium hover:underline"
+                >
+                  SankofaBloom.com
+                </a>
+                {" – turning African ingenuity into digital ecosystems that thrive globally. Technology studio building solutions rooted in culture for African markets."}
+              </p>
+            </div>
           </div>
         </div>
       </section>
