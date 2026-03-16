@@ -71,6 +71,20 @@ const Resources = () => {
                 {" – turning African ingenuity into digital ecosystems that thrive globally. Technology studio building solutions rooted in culture for African markets."}
               </p>
             </div>
+            <div className="flex items-start gap-3">
+              <ExternalLink className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                <a
+                  href="https://diginumsms.com/"
+                  target="_blank"
+                  rel="noopener"
+                  className="text-primary font-medium hover:underline"
+                >
+                  DigiNum.com
+                </a>
+                {" – instant access to virtual phone numbers for SMS verification. Simple, secure, and affordable — no SIM card required, with coverage in 50+ countries."}
+              </p>
+            </div>
           </div>
         </div>
       </section>
