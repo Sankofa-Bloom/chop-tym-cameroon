@@ -41,7 +41,7 @@ const Resources = () => {
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="rounded-xl border border-border bg-card p-8 md:p-10">
             <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-6">
-              Startup & Investor Resources
+              Startup, Tech & Investor Resources
             </h2>
             <div className="flex items-start gap-3">
               <ExternalLink className="w-5 h-5 text-primary mt-0.5 shrink-0" />
