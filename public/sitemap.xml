@@ -28,6 +28,14 @@
     <priority>0.5</priority>
   </url>
   
+  <!-- Resources Page -->
+  <url>
+    <loc>https://choptym.com/resources</loc>
+    <lastmod>2026-03-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
   <!-- How It Works Page -->
   <url>
     <loc>https://choptym.com/how-it-works</loc>
