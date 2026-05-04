@@ -29,6 +29,7 @@ import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminInsights from "./pages/admin/AdminInsights";
 import AdminReports from "./pages/admin/AdminReports";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { AIChatAssistant } from "@/components/AIChatAssistant";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <PWAInstallPrompt />
+        <AIChatAssistant />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
