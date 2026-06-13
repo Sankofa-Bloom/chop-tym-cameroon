@@ -1,43 +1,50 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are ChopTym's friendly AI customer service agent for a food & errands delivery service in Cameroon (Buea, Limbe, Douala).
+function buildSystemPrompt(activeTowns: string[], inactiveTowns: string[]) {
+  const active = activeTowns.length ? activeTowns.join(", ") : "Limbe";
+  const inactive = inactiveTowns.length ? inactiveTowns.join(", ") : "none";
+  return `You be ChopTym AI — friendly Cameroonian assistant for food, errands & delivery. 🛵
 
-Your job: help users place an order or service request through quick, easy chat. Keep responses SHORT (1-3 sentences). Be warm, use light emojis, and speak like a helpful local.
+VIBE:
+- Warm, short, sweet. Mix small small Cameroon Pidgin ("how far", "na so", "no wahala", "i go", "you wan chop?", "we don hear you").
+- Keep EVERY reply under 2 short sentences. No long talk.
+- Use light emojis. No menu prices — team go confirm.
 
-CONVERSATION FLOW:
-1. Greet, then ask what they need (food order, errands, package delivery, custom request).
-2. Ask their town (Buea, Limbe, Douala, or Other).
-3. Gather details step-by-step: items/dishes wanted, quantity, pickup/delivery address, phone number, any notes.
-4. Confirm the full summary back to them.
-5. When they confirm, call the "submit_order_request" tool.
+ACTIVE TOWNS (we dey deliver here): ${active}
+NOT ACTIVE YET (politely refuse + offer waitlist via WhatsApp): ${inactive}
 
-CRITICAL RULES:
-- Whenever helpful, propose 2-4 quick-reply options the user can tap. Return them in the "quick_replies" tool.
-- Always collect a phone number before submitting.
-- If user wants to talk to a human, tell them to tap "Continue on WhatsApp" below.
-- Don't invent menu prices — ask the user what they want and confirm price will be shared by the team.
-- After successful submission, tell them the team will contact them shortly via WhatsApp/phone.`;
+5-STEP FLOW (max):
+1. Greet + ask wetin dem want (quick_replies: 🍲 Food, 🛒 Errand, 📦 Package, 💬 Other).
+2. Ask town (quick_replies = ACTIVE TOWNS only + "Other").
+   - If user pick "Other" or any inactive town → tell them sweetly say we never reach there yet, and ask them tap "Continue on WhatsApp" make team add them for waitlist. STOP the flow.
+3. Ask wetin exactly dem want + address (one short message, free text).
+4. Ask phone number.
+5. Confirm short summary → call submit_order_request immediately on "yes".
+
+RULES:
+- ALWAYS use quick_replies tool when options dey (town, category, yes/no).
+- Never invent prices. Never ask too many questions for one turn.
+- If user wan human → tell them tap "Continue on WhatsApp" below.
+- After submit: short confirm message, mention team go call them on di phone.`;
+}
 
 const tools = [
   {
     type: "function",
     function: {
       name: "quick_replies",
-      description: "Show 2-4 tappable quick reply chips to the user to make answering easier. Use anytime a small set of choices makes sense (town, category, yes/no, payment method, etc.).",
+      description: "Show 2-4 tappable quick reply chips. Use anytime small choices make sense.",
       parameters: {
         type: "object",
         properties: {
-          message: { type: "string", description: "Your message to display above the chips." },
-          options: {
-            type: "array",
-            items: { type: "string" },
-            description: "2-4 short option labels (max ~25 chars each).",
-          },
+          message: { type: "string", description: "Short message above the chips." },
+          options: { type: "array", items: { type: "string" }, description: "2-4 short labels (max ~20 chars)." },
         },
         required: ["message", "options"],
         additionalProperties: false,
@@ -48,19 +55,16 @@ const tools = [
     type: "function",
     function: {
       name: "submit_order_request",
-      description: "Submit the gathered order/service request to the admin. Only call once the user has confirmed the summary.",
+      description: "Submit the gathered request to admin. Only call after user confirms.",
       parameters: {
         type: "object",
         properties: {
-          request_type: {
-            type: "string",
-            enum: ["food_order", "errands", "package_delivery", "pickup_dropoff", "custom"],
-          },
+          request_type: { type: "string", enum: ["food_order", "errands", "package_delivery", "pickup_dropoff", "custom"] },
           customer_name: { type: "string" },
           customer_phone: { type: "string" },
           town: { type: "string" },
           delivery_address: { type: "string" },
-          items_summary: { type: "string", description: "Plain-text summary of what the user wants." },
+          items_summary: { type: "string" },
           notes: { type: "string" },
         },
         required: ["request_type", "customer_phone", "town", "items_summary"],
@@ -118,6 +122,23 @@ async function sendAdminEmail(payload: any) {
   }
 }
 
+async function getTowns(): Promise<{ active: string[]; inactive: string[] }> {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data, error } = await supabase.from("towns").select("name, is_active");
+    if (error) throw error;
+    const active = (data || []).filter((t: any) => t.is_active).map((t: any) => t.name);
+    const inactive = (data || []).filter((t: any) => !t.is_active).map((t: any) => t.name);
+    return { active, inactive };
+  } catch (e) {
+    console.error("getTowns error:", e);
+    return { active: ["Limbe"], inactive: [] };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -125,6 +146,9 @@ serve(async (req) => {
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    const { active, inactive } = await getTowns();
+    const systemPrompt = buildSystemPrompt(active, inactive);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -134,7 +158,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
         tools,
       }),
     });
@@ -180,17 +204,16 @@ serve(async (req) => {
         if (Array.isArray(args.options)) quickReplies = args.options.slice(0, 4);
       } else if (name === "submit_order_request") {
         submitted = args;
-        // Fire-and-forget admin email
         // @ts-ignore EdgeRuntime exists in Supabase
         if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(sendAdminEmail(args));
         else sendAdminEmail(args);
         if (!reply) {
-          reply = `✅ Got it! I've sent your request to our team. They'll contact you on ${args.customer_phone} shortly. You can also tap "Continue on WhatsApp" below to chat with a human now.`;
+          reply = `✅ We don hear you! Team go call you for ${args.customer_phone} just now. 🛵`;
         }
       }
     }
 
-    if (!reply) reply = "Sorry, I didn't catch that. Could you say it again?";
+    if (!reply) reply = "Abeg say am again? 🙏";
 
     return new Response(
       JSON.stringify({ reply, quick_replies: quickReplies, submitted }),
