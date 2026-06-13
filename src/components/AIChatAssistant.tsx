@@ -23,8 +23,8 @@ export const AIChatAssistant = () => {
     {
       role: "assistant",
       content:
-        "Hi 👋 I'm ChopTym's AI assistant. I can help you place a food order, request errands, or arrange a delivery. What do you need today?",
-      quickReplies: ["🍲 Order Food", "🛒 Errands", "📦 Package Delivery", "💬 Custom Request"],
+        "How far 👋 Na ChopTym AI here. Wetin you wan make we do for you today?",
+      quickReplies: ["🍲 Food", "🛒 Errand", "📦 Package", "💬 Other"],
     },
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
