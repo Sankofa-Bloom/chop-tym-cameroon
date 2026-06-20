@@ -414,6 +414,29 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.div {...fadeUp} className="space-y-3">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="relative rounded-3xl overflow-hidden border border-border/60 shadow-xl aspect-[16/10]"
+            >
+              <img
+                src={serviceEscrow}
+                alt="ChopTym escrow — safe handoff between buyer and seller"
+                loading="lazy"
+                width={1024}
+                height={1024}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Funds held safely</p>
+                  <p className="text-sm font-bold">Released only on delivery</p>
+                </div>
+              </div>
+            </motion.div>
             <div className="grid grid-cols-2 gap-3">
               {["Reduced fraud risk", "Trusted transactions", "Remote purchasing", "Marketplace protection", "Peace of mind", "Verified handoff"].map((b) => (
                 <div key={b} className="flex items-start gap-2 p-3 rounded-xl bg-card border border-border/60">
