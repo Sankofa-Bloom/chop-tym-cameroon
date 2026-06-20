@@ -29,6 +29,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoweredByBadge } from "@/components/PoweredByBadge";
+import heroRider from "@/assets/hero-rider.jpg";
+import serviceFood from "@/assets/service-food.jpg";
+import serviceEscrow from "@/assets/service-escrow.jpg";
+import serviceErrand from "@/assets/service-errand.jpg";
 
 const WHATSAPP_NUMBER = "+237670416449";
 const WHATSAPP_DISPLAY = "+237 670 416 449";
@@ -142,25 +146,39 @@ export default function LandingPage() {
       </header>
 
       {/* HERO */}
-      <section className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 px-4">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_60%)]" />
-        <div className="container mx-auto max-w-5xl text-center">
-          <motion.div {...fadeUp}>
+      <section className="relative pt-10 pb-20 sm:pt-16 sm:pb-28 px-4 overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.12),transparent_60%)]" />
+        {/* Floating blobs */}
+        <motion.div
+          aria-hidden
+          className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/20 blur-3xl -z-10"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          aria-hidden
+          className="absolute bottom-0 -left-24 w-80 h-80 rounded-full bg-amber-400/20 blur-3xl -z-10"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+
+        <div className="container mx-auto max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
+          <motion.div {...fadeUp} className="text-center lg:text-left">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20 mb-5">
               <MapPin className="w-3.5 h-3.5" /> Limbe, Cameroon · Trusted since day one
             </span>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] mb-5">
-              The Most Trusted{" "}
-              <span className="text-gradient">Delivery & Errands</span> Service For Everyday Needs
+              Chill,{" "}
+              <span className="text-gradient">we dey bringam.</span>
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-3">
-              Need food delivered, documents processed, groceries purchased, parcels transported, errands completed, or items bought on your behalf?
+            <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-3">
+              Food, parcels, shopping, errands, documents, escrow payments — one trusted team handling what matters across the city.
             </p>
-            <p className="text-sm sm:text-base text-muted-foreground/90 max-w-2xl mx-auto mb-8">
-              ChopTym helps individuals and businesses save time by handling deliveries, purchases, logistics, errands, and everyday tasks — quickly, affordably, and reliably.
+            <p className="text-sm sm:text-base text-muted-foreground/90 max-w-xl mx-auto lg:mx-0 mb-8">
+              Send your request on WhatsApp. We pick up, deliver, and confirm — quickly, affordably, reliably.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+            <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 mb-10">
               <WhatsAppBtn label="Order on WhatsApp" />
               <a
                 href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, "")}?text=${encodeURIComponent("Hi ChopTym, I want to become a rider.")}`}
@@ -173,30 +191,96 @@ export default function LandingPage() {
                 </Button>
               </a>
             </div>
+
+            {/* Service chips */}
+            <motion.div
+              {...stagger}
+              initial="initial"
+              whileInView="whileInView"
+              className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-3 gap-3 max-w-xl mx-auto lg:mx-0"
+            >
+              {heroChips.map((c) => (
+                <motion.div
+                  key={c.label}
+                  variants={{ initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 } }}
+                  whileHover={{ y: -4 }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-card/70 backdrop-blur border border-border/60 hover:border-primary/40 hover:bg-card transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <c.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-foreground/80">{c.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
           </motion.div>
 
-          {/* Service chips */}
+          {/* Hero visual */}
           <motion.div
-            {...stagger}
-            initial="initial"
-            whileInView="whileInView"
-            className="grid grid-cols-3 sm:grid-cols-6 gap-3 max-w-3xl mx-auto"
+            initial={{ opacity: 0, scale: 0.92, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto w-full max-w-lg"
           >
-            {heroChips.map((c) => (
-              <motion.div
-                key={c.label}
-                variants={{ initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 } }}
-                className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-card/60 backdrop-blur border border-border/60 hover:border-primary/40 hover:bg-card transition-all"
-              >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                  <c.icon className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-medium text-foreground/80">{c.label}</span>
-              </motion.div>
-            ))}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="relative rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/30 border border-border/40 aspect-[4/5]"
+            >
+              <img
+                src={heroRider}
+                alt="ChopTym rider delivering across Limbe, Cameroon"
+                width={1536}
+                height={1024}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
+            </motion.div>
+
+            {/* Floating live badges */}
+            <motion.div
+              initial={{ opacity: 0, x: -30, y: -10 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              className="absolute -left-3 sm:-left-6 top-8 bg-card/95 backdrop-blur border border-border shadow-xl rounded-2xl p-3 pr-4 flex items-center gap-3"
+            >
+              <span className="relative flex w-2.5 h-2.5">
+                <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+                <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <div className="text-left">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Rider on the way</p>
+                <p className="text-sm font-bold">Arriving in 18 min</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30, y: 20 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ delay: 0.85, duration: 0.6 }}
+              className="absolute -right-3 sm:-right-6 bottom-10 bg-card/95 backdrop-blur border border-border shadow-xl rounded-2xl p-3 pr-4 flex items-center gap-3"
+            >
+              <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+                <Package className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Order #4421</p>
+                <p className="text-sm font-bold flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Delivered</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.05, duration: 0.6 }}
+              className="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-[#25D366] text-white shadow-xl rounded-full px-4 py-2 flex items-center gap-2 text-xs font-semibold"
+            >
+              <MessageCircle className="w-4 h-4" /> Live on WhatsApp
+            </motion.div>
           </motion.div>
         </div>
       </section>
+
 
       {/* WHAT WE DO */}
       <section className="py-16 sm:py-24 px-4 bg-card/30">
@@ -208,6 +292,44 @@ export default function LandingPage() {
               ChopTym is your trusted city assistant. If it needs to be delivered, purchased, processed, collected, submitted, or completed — we can help.
             </p>
           </motion.div>
+
+          {/* Image collage strip */}
+          <motion.div
+            {...stagger}
+            initial="initial"
+            whileInView="whileInView"
+            className="grid grid-cols-3 gap-3 sm:gap-4 mb-10 max-w-5xl mx-auto"
+          >
+            {[
+              { src: serviceFood, label: "Hot meals", icon: UtensilsCrossed },
+              { src: serviceErrand, label: "Shopping & errands", icon: ShoppingBag },
+              { src: serviceEscrow, label: "Safe escrow", icon: Lock },
+            ].map((m, i) => (
+              <motion.div
+                key={m.label}
+                variants={{ initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 } }}
+                whileHover={{ y: -6 }}
+                className={`relative rounded-3xl overflow-hidden border border-border/60 shadow-lg aspect-[3/4] sm:aspect-[4/5] group ${i === 1 ? "translate-y-4 sm:translate-y-6" : ""}`}
+              >
+                <img
+                  src={m.src}
+                  alt={m.label}
+                  loading="lazy"
+                  width={1024}
+                  height={1024}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 text-white">
+                  <div className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center">
+                    <m.icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold">{m.label}</span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
 
           <motion.div
             {...stagger}
@@ -292,6 +414,29 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.div {...fadeUp} className="space-y-3">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="relative rounded-3xl overflow-hidden border border-border/60 shadow-xl aspect-[16/10]"
+            >
+              <img
+                src={serviceEscrow}
+                alt="ChopTym escrow — safe handoff between buyer and seller"
+                loading="lazy"
+                width={1024}
+                height={1024}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/10 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Funds held safely</p>
+                  <p className="text-sm font-bold">Released only on delivery</p>
+                </div>
+              </div>
+            </motion.div>
             <div className="grid grid-cols-2 gap-3">
               {["Reduced fraud risk", "Trusted transactions", "Remote purchasing", "Marketplace protection", "Peace of mind", "Verified handoff"].map((b) => (
                 <div key={b} className="flex items-start gap-2 p-3 rounded-xl bg-card border border-border/60">
