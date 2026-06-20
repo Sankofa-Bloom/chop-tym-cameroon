@@ -293,6 +293,44 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
+          {/* Image collage strip */}
+          <motion.div
+            {...stagger}
+            initial="initial"
+            whileInView="whileInView"
+            className="grid grid-cols-3 gap-3 sm:gap-4 mb-10 max-w-5xl mx-auto"
+          >
+            {[
+              { src: serviceFood, label: "Hot meals", icon: UtensilsCrossed },
+              { src: serviceErrand, label: "Shopping & errands", icon: ShoppingBag },
+              { src: serviceEscrow, label: "Safe escrow", icon: Lock },
+            ].map((m, i) => (
+              <motion.div
+                key={m.label}
+                variants={{ initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 } }}
+                whileHover={{ y: -6 }}
+                className={`relative rounded-3xl overflow-hidden border border-border/60 shadow-lg aspect-[3/4] sm:aspect-[4/5] group ${i === 1 ? "translate-y-4 sm:translate-y-6" : ""}`}
+              >
+                <img
+                  src={m.src}
+                  alt={m.label}
+                  loading="lazy"
+                  width={1024}
+                  height={1024}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 text-white">
+                  <div className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center">
+                    <m.icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold">{m.label}</span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+
           <motion.div
             {...stagger}
             initial="initial"
