@@ -29,6 +29,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PoweredByBadge } from "@/components/PoweredByBadge";
+import heroRider from "@/assets/hero-rider.jpg";
+import serviceFood from "@/assets/service-food.jpg";
+import serviceEscrow from "@/assets/service-escrow.jpg";
+import serviceErrand from "@/assets/service-errand.jpg";
 
 const WHATSAPP_NUMBER = "+237670416449";
 const WHATSAPP_DISPLAY = "+237 670 416 449";
