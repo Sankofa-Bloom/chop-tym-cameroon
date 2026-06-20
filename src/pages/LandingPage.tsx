@@ -258,7 +258,6 @@ export default function LandingPage() {
               initial={{ opacity: 0, x: 30, y: 20 }}
               animate={{ opacity: 1, x: 0, y: 0 }}
               transition={{ delay: 0.85, duration: 0.6 }}
-              animate-floating
               className="absolute -right-3 sm:-right-6 bottom-10 bg-card/95 backdrop-blur border border-border shadow-xl rounded-2xl p-3 pr-4 flex items-center gap-3"
             >
               <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
