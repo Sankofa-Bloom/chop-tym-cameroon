@@ -29,7 +29,9 @@ import {
   ChevronDown,
   Cog,
   Eye,
-  LogOut
+  LogOut,
+  Users,
+  MessageCircle
 } from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminZones, AdminZone } from "@/hooks/useAdminZones";
@@ -76,6 +78,8 @@ const sidebarItems: Record<AdminZone, Array<{ title: string; url: string; icon: 
   operations: [
     { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
     { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
+    { title: "Customers", url: "/admin/customers", icon: Users },
+    { title: "WhatsApp Ops", url: "/admin/whatsapp", icon: MessageCircle },
     { title: "Service Requests", url: "/admin/services", icon: Zap },
     { title: "Restaurants", url: "/admin/restaurants", icon: Store },
     { title: "Dishes & Complements", url: "/admin/complements", icon: ChefHat },
