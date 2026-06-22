@@ -28,6 +28,9 @@ import AdminTransactions from "./pages/admin/AdminTransactions";
 import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminInsights from "./pages/admin/AdminInsights";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
+import AdminWhatsApp from "./pages/admin/AdminWhatsApp";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AIChatAssistant } from "@/components/AIChatAssistant";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -139,7 +142,24 @@ const App = () => {
                 <AdminLayout><AdminReports /></AdminLayout>
               </ProtectedAdminRoute>
             } />
-            
+
+            {/* Customer & WhatsApp Operations */}
+            <Route path="/admin/customers" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminCustomers /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/customers/:id" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminCustomerDetail /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/whatsapp" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminWhatsApp /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           </Routes>
         </BrowserRouter>
