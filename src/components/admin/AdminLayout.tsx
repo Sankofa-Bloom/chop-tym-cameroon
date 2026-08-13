@@ -32,7 +32,7 @@ import {
   LogOut,
   Users,
   MessageCircle
-} from "lucide-react";
+, Bike} from "lucide-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminZones, AdminZone } from "@/hooks/useAdminZones";
 import {
@@ -80,6 +80,7 @@ const sidebarItems: Record<AdminZone, Array<{ title: string; url: string; icon: 
     { title: "Orders", url: "/admin/orders", icon: ShoppingBag },
     { title: "Customers", url: "/admin/customers", icon: Users },
     { title: "WhatsApp Ops", url: "/admin/whatsapp", icon: MessageCircle },
+    { title: "Riders", url: "/admin/riders", icon: Bike },
     { title: "Service Requests", url: "/admin/services", icon: Zap },
     { title: "Restaurants", url: "/admin/restaurants", icon: Store },
     { title: "Dishes & Complements", url: "/admin/complements", icon: ChefHat },

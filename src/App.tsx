@@ -31,6 +31,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
 import AdminWhatsApp from "./pages/admin/AdminWhatsApp";
+import AdminRiders from "./pages/admin/AdminRiders";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AIChatAssistant } from "@/components/AIChatAssistant";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -152,6 +153,11 @@ const App = () => {
             <Route path="/admin/customers/:id" element={
               <ProtectedAdminRoute>
                 <AdminLayout><AdminCustomerDetail /></AdminLayout>
+              </ProtectedAdminRoute>
+            } />
+            <Route path="/admin/riders" element={
+              <ProtectedAdminRoute>
+                <AdminLayout><AdminRiders /></AdminLayout>
               </ProtectedAdminRoute>
             } />
             <Route path="/admin/whatsapp" element={

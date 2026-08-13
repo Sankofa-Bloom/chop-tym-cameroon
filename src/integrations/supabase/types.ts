@@ -1596,6 +1596,20 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_rider_locations: {
+        Args: never
+        Returns: {
+          active_orders_count: number
+          current_status: Database["public"]["Enums"]["rider_status"]
+          id: string
+          last_seen: string
+          lat: number
+          lng: number
+          max_active_orders: number
+          name: string
+          phone: string
+        }[]
+      }
       gettransactionid: { Args: never; Returns: unknown }
       has_finance_access: { Args: { user_id?: string }; Returns: boolean }
       has_insights_access: { Args: { user_id?: string }; Returns: boolean }
